@@ -189,6 +189,9 @@ export type MenuCategory =
 
 export interface MenuItem {
   id: ID;
+  /** Null means the dish is served at every villa. */
+  villaId?: ID;
+  sortOrder?: number;
   name: string;
   description: string;
   price: number;
@@ -301,17 +304,51 @@ export interface ActivityEvent {
 
 /* -------------------------------------------------------------------- misc */
 
-export type Role = "admin" | "guest";
+export type Role = "admin" | "staff" | "guest";
 
 export interface MockSession {
   role: Role;
-  /** Set for the guest role — the fixture customer they are signed in as. */
+  /** Set for the guest role — the customer record they are signed in as. */
   customerId?: ID;
+  /** Set for the staff role — which queue they see. */
+  team?: Team;
   name: string;
+  /** The sign-in address, used to re-authenticate before a password change. */
+  email?: string;
+}
+
+/** Everything about the property that used to be hardcoded in the UI. */
+export interface PropertySettings {
+  legalName: string;
+  tradingName: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
+  contactEmail: string;
+  contactPhone: string;
+  gstin: string;
+  pan: string;
+
+  upiId: string;
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  ifsc: string;
+  paymentNote: string;
+
+  invoicePrefix: string;
+  invoiceFooter: string;
+  invoiceTerms: string;
+  showGstinOnInvoice: boolean;
 }
 
 export interface AppNotification {
   id: ID;
+  /** Booking, order or request this is about, so the tray can link to it. */
+  entityId?: ID;
   kind: ActivityKind;
   title: string;
   detail: string;

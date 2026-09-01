@@ -12,7 +12,7 @@ import {
 } from "@/data/mocks/operations";
 import { payments as paymentSeed } from "@/data/mocks/payments";
 import { villas as villaSeed } from "@/data/mocks/villas";
-import { settledPaymentStatus } from "@/services/domain";
+import { orderTotal, settledPaymentStatus } from "@/services/domain";
 import type {
   ActivityEvent,
   ActivityKind,
@@ -27,6 +27,7 @@ import type {
   MenuItem,
   Payment,
   PaymentRejectionReason,
+  PropertySettings,
   Villa,
   VillaMode,
 } from "@/types";
@@ -48,6 +49,7 @@ export interface MockData {
   payments: Payment[];
   invoices: Invoice[];
   menuItems: MenuItem[];
+  settings: PropertySettings | null;
   foodOrders: FoodOrder[];
   requests: GuestRequest[];
   feedback: Feedback[];
@@ -55,7 +57,9 @@ export interface MockData {
   notifications: AppNotification[];
 
   updateBooking: (id: ID, patch: Partial<Booking>) => void;
-  createBooking: (booking: Booking) => void;
+  /** `newGuest` is supplied when the booking is for someone with no customer
+   *  record yet; the implementation creates both in one transaction. */
+  createBooking: (booking: Booking, newGuest?: NewGuest) => void;
   approvePayment: (paymentId: ID) => void;
   rejectPayment: (paymentId: ID, reason: PaymentRejectionReason, note?: string) => void;
   addPayment: (payment: Payment) => void;
@@ -69,6 +73,15 @@ export interface MockData {
   updateFeedback: (id: ID, patch: Partial<Feedback>) => void;
   logActivity: (entityId: ID, kind: ActivityKind, title: string, detail?: string) => void;
   markNotificationsRead: () => void;
+  updateSettings: (patch: Partial<PropertySettings>) => void;
+  saveMenuItem: (item: Partial<MenuItem> & { id?: ID }) => void;
+  deleteMenuItem: (id: ID) => void;
+}
+
+export interface NewGuest {
+  name: string;
+  phone: string;
+  email: string;
 }
 
 export const MockDataContext = createContext<MockData | null>(null);
@@ -175,6 +188,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       payments,
       invoices: invoiceSeed,
       menuItems: menuSeed,
+      settings: null,
       foodOrders,
       requests,
       feedback,
@@ -200,8 +214,28 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       },
       setVillaMode: (villaId, mode) => setVillas((prev) => patchById(prev, villaId, { mode })),
       updateVilla: (villaId, patch) => setVillas((prev) => patchById(prev, villaId, patch)),
+      // BR12 — billing an order moves its value onto the booking's food charge,
+      // so it appears on the invoice and in the balance. Guarded against a
+      // double-add if the same order is billed twice.
       setFoodOrderStatus: (orderId, status) =>
-        setFoodOrders((prev) => patchById(prev, orderId, { status })),
+        setFoodOrders((prev) => {
+          const order = prev.find((o) => o.id === orderId);
+          if (order && status === "billed" && order.status !== "billed") {
+            const value = orderTotal(order.lines);
+            setBookings((all) =>
+              all.map((booking) =>
+                booking.id === order.bookingId
+                  ? {
+                      ...booking,
+                      charges: { ...booking.charges, food: booking.charges.food + value },
+                    }
+                  : booking,
+              ),
+            );
+            logActivity(order.bookingId, "food", "Order billed to the room", order.reference);
+          }
+          return patchById(prev, orderId, { status });
+        }),
       createFoodOrder: (order) => {
         setFoodOrders((prev) => [order, ...prev]);
         logActivity(order.bookingId, "food", "Kitchen order placed", order.reference);
@@ -219,6 +253,11 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       logActivity,
       markNotificationsRead: () =>
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true }))),
+      // Settings and the menu are read-only in the offline harness; the
+      // Supabase provider implements them.
+      updateSettings: () => {},
+      saveMenuItem: () => {},
+      deleteMenuItem: () => {},
     }),
     [
       villas, bookings, payments, foodOrders, requests, feedback, activity, notifications,

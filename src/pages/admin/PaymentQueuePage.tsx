@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Check, CheckCheck, X } from "lucide-react";
@@ -22,14 +22,11 @@ const METHOD_LABEL = {
 
 export default function PaymentQueuePage() {
   const queue = usePaymentVerificationQueue();
-  const { approvePayment, rejectPayment, today } = useMockData();
+  const { approvePayment, rejectPayment } = useMockData();
+  // The queue shrinks as decisions are made, so the cursor is clamped where it
+  // is read rather than corrected in an effect — no cascading render.
   const [index, setIndex] = useState(0);
   const [rejecting, setRejecting] = useState(false);
-
-  // The queue shrinks as decisions are made; keep the cursor inside it.
-  useEffect(() => {
-    if (index > queue.length - 1) setIndex(Math.max(0, queue.length - 1));
-  }, [queue.length, index]);
 
   if (queue.length === 0) {
     return (
@@ -118,7 +115,7 @@ export default function PaymentQueuePage() {
                       {row.view.villa?.name} · {row.view.booking.reference}
                     </p>
                     <p className="mt-1 text-xs text-stone">
-                      Uploaded {relativeTime(row.payment.createdAt, new Date(`${today}T18:00:00`))}
+                      Uploaded {relativeTime(row.payment.createdAt)}
                     </p>
                   </button>
                 </li>
@@ -186,7 +183,16 @@ export default function PaymentQueuePage() {
                     </Field>
                     <Field label="Method">{METHOD_LABEL[payment.method]}</Field>
                     <Field label="Transaction / UTR">
-                      <span className="font-mono text-sm">{payment.reference}</span>
+                      {payment.reference ? (
+                        <span className="font-mono text-sm">{payment.reference}</span>
+                      ) : (
+                        <span className="text-sm text-stone-600">
+                          Not provided
+                          <span className="ml-1.5 text-xs">
+                            — match on the receipt and amount
+                          </span>
+                        </span>
+                      )}
                     </Field>
                     <Field label="Uploaded">{formatDateTime(payment.createdAt)}</Field>
                   </dl>

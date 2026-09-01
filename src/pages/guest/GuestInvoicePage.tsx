@@ -1,12 +1,12 @@
-import { toast } from "sonner";
-import { Download, Mail, Printer } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorState, Eyebrow } from "@/components/common";
 import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
+import { EmailGuestButton } from "@/components/booking/GuestAccessPanel";
 import { useGuestStay } from "@/hooks/useGuest";
 
 export default function GuestInvoicePage() {
-  const { view, invoice, customer } = useGuestStay();
+  const { view, invoice } = useGuestStay();
 
   if (!view) return <ErrorState className="m-5" title="No stay found" />;
 
@@ -24,24 +24,15 @@ export default function GuestInvoicePage() {
           <Printer aria-hidden />
           Print
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => toast.info("PDF download arrives with the Supabase phase")}
-        >
+        <Button variant="outline" onClick={() => window.print()}>
           <Download aria-hidden />
-          Download PDF
+          Save as PDF
         </Button>
-        <Button
-          variant="outline"
-          onClick={() =>
-            toast.info(`Would email a copy to ${customer?.email}`, {
-              description: "Email delivery is not wired up in this phase.",
-            })
-          }
-        >
-          <Mail aria-hidden />
-          Email me a copy
-        </Button>
+        <EmailGuestButton
+          bookingId={view.booking.id}
+          kind="invoice_ready"
+          label="Email me a copy"
+        />
       </div>
 
       <InvoiceDocument view={view} invoice={invoice} className="rounded-2xl" />

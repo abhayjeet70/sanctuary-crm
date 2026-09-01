@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, KeyRound } from "lucide-react";
-import { DevBadge, Eyebrow, Logo } from "@/components/common";
+import { Eyebrow, Logo } from "@/components/common";
 import { collage, photo } from "@/lib/assets";
-import { useSession } from "@/services/mock/MockSessionProvider";
-import type { Role } from "@/types";
+import { useSession } from "@/services/session";
+import { AuthPanel } from "./AuthPanel";
 import { cn } from "@/lib/utils";
 
 const HERO = photo.hills;
 
-/** Two soft parallax layers that respond to the pointer — the one piece of
- *  cinematic motion carried over from the reference, kept cheap and optional. */
+/** Demo accounts, seeded by supabase/migrations/..._demo_auth_users.sql. */
+const DEMO = [
+  { label: "Owner & reception", email: "admin@gmail.com", password: "demo123" },
+  { label: "Guest — Pooja Bothra", email: "user@gmail.com", password: "demo123" },
+  { label: "Housekeeping — staff queue", email: "housekeeping@gmail.com", password: "demo123" },
+];
+
 function useParallax() {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   useEffect(() => {
@@ -27,17 +32,27 @@ function useParallax() {
 }
 
 export default function LoginPage() {
-  const { signInAs } = useSession();
+  const { session, signIn } = useSession();
   const navigate = useNavigate();
-  const [pending, setPending] = useState<Role | null>(null);
   const { x, y } = useParallax();
 
-  const enter = (role: Role) => {
-    setPending(role);
-    signInAs(role);
-    // A beat of latency so the button's loading state is visible, the way the
-    // real sign-in will feel once Supabase Auth is wired in.
-    window.setTimeout(() => navigate(role === "admin" ? "/admin" : "/guest"), 420);
+  const [busy, setBusy] = useState(false);
+
+  // The session arrives asynchronously after signIn resolves, so the redirect
+  // watches for it rather than guessing where to go.
+  useEffect(() => {
+    if (!session) return;
+    navigate(
+      session.role === "admin" ? "/admin" : session.role === "staff" ? "/staff" : "/guest",
+      { replace: true },
+    );
+  }, [session, navigate]);
+
+  /** The demo buttons still sign in directly; the panel owns the real form. */
+  const enterAs = async (demoEmail: string, demoPassword: string) => {
+    setBusy(true);
+    const { error } = await signIn(demoEmail, demoPassword);
+    if (error) setBusy(false);
   };
 
   return (
@@ -49,11 +64,7 @@ export default function LoginPage() {
         className="absolute inset-0 size-full object-cover opacity-45 transition-transform duration-700 ease-out"
         style={{ transform: `scale(1.08) translate3d(${x * -18}px, ${y * -12}px, 0)` }}
       />
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-b from-ink/88 via-ink/65 to-ink/96"
-      />
-      {/* A low brass wash, so the accents read as light rather than paint. */}
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-ink/88 via-ink/65 to-ink/96" />
       <div
         aria-hidden
         className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(201,169,97,0.18),transparent_60%)]"
@@ -62,11 +73,13 @@ export default function LoginPage() {
       <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-6 py-10 sm:px-10">
         <header className="flex items-center justify-between gap-4">
           <Logo variant="onDark" size="h-20 sm:h-24" />
-          <DevBadge className="bg-gold/15 text-gold-200 ring-1 ring-gold/30" />
+          <span className="rounded-full bg-gold/15 px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-200 uppercase ring-1 ring-gold/30">
+            Staff & guest sign-in
+          </span>
         </header>
         <hr className="rule-gold mt-6 opacity-70" />
 
-        <div className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1.1fr_minmax(0,26rem)] lg:gap-16">
+        <div className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1.1fr_minmax(0,26rem)] lg:items-start lg:gap-16 lg:pt-16">
           {/* Left — the editorial column */}
           <div
             className="transition-transform duration-700 ease-out"
@@ -101,111 +114,58 @@ export default function LoginPage() {
 
             <p className="mt-10 max-w-lg text-base leading-relaxed text-sand/80">
               Three houses above the Nandi Hills escarpment — and one place for
-              everything that happens between an enquiry and a goodbye. Bookings,
-              payment verification, the kitchen board and the guest portal.
+              everything that happens between an enquiry and a goodbye.
             </p>
           </div>
 
           {/* Right — the way in */}
           <div className="flex flex-col gap-4">
-            <RoleCard
-              featured
-              eyebrow="Owner & reception"
-              title="Continue as Admin"
-              description="Dashboard, bookings, payment queue, calendar, kitchen and requests."
-              loading={pending === "admin"}
-              disabled={pending !== null}
-              onClick={() => enter("admin")}
-            />
-            <RoleCard
-              eyebrow="Signed in as Pooja Bothra"
-              title="Continue as Guest"
-              description="A confirmed whole-villa stay at Villa Maaya, 12–15 September."
-              loading={pending === "guest"}
-              disabled={pending !== null}
-              onClick={() => enter("guest")}
-            />
+            <AuthPanel />
 
-            <p className="mt-2 flex items-start gap-2 text-xs leading-relaxed text-sand/55">
-              <KeyRound className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              No password, no OTP, no auth provider. The chosen role is kept in
-              localStorage for the session.
-            </p>
+            {/* One-click demo accounts */}
+            <div className="rounded-2xl bg-ink/40 p-4 backdrop-blur-md ring-1 ring-gold/20">
+              <Eyebrow className="text-gold-400/75">Demo accounts</Eyebrow>
+              <div className="mt-3 flex flex-col gap-2">
+                {DEMO.map((account) => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void enterAs(account.email, account.password)}
+                    className="group flex items-center justify-between gap-3 rounded-xl bg-white/6 px-4 py-3 text-left transition-all hover:bg-white/12 hover:ring-1 hover:ring-gold/45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:opacity-60"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-white">{account.label}</span>
+                      <span className="block truncate font-mono text-xs text-sand/55">
+                        {account.email}
+                      </span>
+                    </span>
+                    <ArrowRight
+                      className="size-4 shrink-0 text-gold-400 transition-transform group-hover:translate-x-1"
+                      aria-hidden
+                    />
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-sand/55">
+                <KeyRound className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                Real Supabase accounts with a shared demo password. Delete them before the
+                property's own data is loaded.
+              </p>
+            </div>
           </div>
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-gold/20 pt-6 text-xs text-sand/60">
-          <span>Internal operations CRM · UI phase</span>
-          <Link to="/design-system" className="text-gold-400 underline underline-offset-4 transition-colors hover:text-gold-200">
+          <span>Homes of Sanctuary · operations CRM</span>
+          <Link
+            to="/design-system"
+            className="text-gold-400 underline underline-offset-4 transition-colors hover:text-gold-200"
+          >
             View the design system
           </Link>
         </footer>
       </div>
     </main>
-  );
-}
-
-function RoleCard({
-  featured = false,
-  eyebrow,
-  title,
-  description,
-  onClick,
-  loading,
-  disabled,
-}: {
-  /** The primary way in — a heavier brass edge and ring than the other card. */
-  featured?: boolean;
-  eyebrow: string;
-  title: string;
-  description: string;
-  onClick: () => void;
-  loading: boolean;
-  disabled: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-busy={loading}
-      className={cn(
-        "group relative overflow-hidden rounded-2xl bg-ink/45 p-6 text-left backdrop-blur-md transition-all",
-        "ring-1 ring-gold/25 hover:bg-ink/60 hover:ring-gold/70 hover:shadow-deep",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
-        "disabled:cursor-not-allowed disabled:opacity-60",
-        featured && "ring-gold/55",
-      )}
-    >
-      {/* A brass edge along the top — heavier on the primary way in. */}
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent",
-          featured ? "opacity-100" : "opacity-45",
-        )}
-      />
-      {/* Warmth pooling in from the corner, on hover. */}
-      <span
-        aria-hidden
-        className="absolute -top-16 -right-16 size-40 rounded-full bg-gold/15 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
-      />
-
-      <div className="relative">
-        <p className={cn("label-caps", featured ? "text-gold" : "text-gold-400/75")}>
-          {eyebrow}
-        </p>
-        <p className="mt-1.5 font-display text-2xl text-white">{title}</p>
-        <p className="mt-2 text-sm leading-relaxed text-sand/75">{description}</p>
-        <hr className={cn("rule-gold mt-5", !featured && "opacity-55")} />
-        <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-gold-200">
-          {loading ? "Signing in…" : "Enter"}
-          <ArrowRight
-            className="size-4 transition-transform group-hover:translate-x-1"
-            aria-hidden
-          />
-        </span>
-      </div>
-    </button>
   );
 }

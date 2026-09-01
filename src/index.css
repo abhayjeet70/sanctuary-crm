@@ -218,22 +218,46 @@
 /* The invoice is the only thing anyone prints. Everything else gets out of
    the way, and the document loses its screen chrome. */
 @media print {
-  body {
-    background: #fff;
+  /* Hiding a handful of landmarks was not enough: the booking header, the
+     action bar and the page shell are all plain divs, so they printed too.
+     Hide everything, then reveal only the invoice and its ancestors. Using
+     `visibility` rather than `display` keeps the layout intact while it is
+     lifted to the top of the page. */
+  body * {
+    visibility: hidden;
   }
-  aside,
-  nav,
-  header[class*="sidebar"],
-  [data-slot="tabs-list"],
-  .print\:hidden {
-    display: none !important;
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible;
   }
-  article[aria-label^="Invoice"] {
+  [data-print-root] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
     box-shadow: none !important;
     outline: 0 !important;
-    padding: 0 !important;
+    border-radius: 0 !important;
   }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  /* Long invoices should not split a row across a page break. */
+  tr,
+  dl > div {
+    break-inside: avoid;
+  }
+
   a[href]::after {
     content: "";
+  }
+
+  @page {
+    margin: 14mm;
   }
 }

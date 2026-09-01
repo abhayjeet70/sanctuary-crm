@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { EmptyState, ErrorState, Eyebrow, StatusBadge } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
-import { useMenu, useMockData } from "@/hooks/useData";
+import { useMenuForVilla, useMockData } from "@/hooks/useData";
 import { foodOrderStatus, titleCase } from "@/lib/status";
 import { formatDateTime, money } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
@@ -46,8 +46,9 @@ function DietDot({ isVeg }: { isVeg: boolean }) {
 }
 
 export default function GuestFoodPage() {
-  const menu = useMenu();
   const { view, customer, orders } = useGuestStay();
+  // A villa may run its own card, so the menu follows the stay.
+  const menu = useMenuForVilla(view?.booking.villaId);
   const { createFoodOrder } = useMockData();
 
   const [category, setCategory] = useState<MenuCategory | typeof ALL>(ALL);

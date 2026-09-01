@@ -1,44 +1,43 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Building, CreditCard, Smartphone, Upload, X } from "lucide-react";
+import { Building, Smartphone, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyState, ErrorState, Eyebrow, StatusBadge } from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { useGuestStay } from "@/hooks/useGuest";
-import { useMockData } from "@/hooks/useData";
+import { useMockData, useSettings } from "@/hooks/useData";
 import { paymentStatus, titleCase } from "@/lib/status";
 import { formatDateTime, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Payment, PaymentMethod } from "@/types";
+import {
+  ACCEPTED_RECEIPT_TYPES,
+  MAX_RECEIPT_BYTES,
+  uploadReceipt,
+} from "@/services/supabase/receipts";
 
-const MAX_MB = 5;
-const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const MAX_MB = MAX_RECEIPT_BYTES / (1024 * 1024);
+const ACCEPTED = ACCEPTED_RECEIPT_TYPES;
 
 export default function GuestPaymentPage() {
   const { view, payments } = useGuestStay();
   const { addPayment } = useMockData();
+  const settings = useSettings();
 
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
   const [method, setMethod] = useState<PaymentMethod>("upi");
   const [amount, setAmount] = useState("");
   const [reference, setReference] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
 
-  // Object URLs are a resource; release the previous one whenever it changes.
-  useEffect(() => {
-    if (!file) {
-      setPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+  // Derived during render; the effect exists only to release the previous URL,
+  // which is a real resource rather than a piece of state.
+  const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   if (!view) {
     return <ErrorState className="m-5" title="No stay found" />;
@@ -54,9 +53,11 @@ export default function GuestPaymentPage() {
         ? "Enter the amount you transferred."
         : undefined,
     reference:
-      reference.trim().length < 6
-        ? "Enter the transaction or UTR number from your receipt."
-        : undefined,
+      method === "bank_transfer" && !reference.trim()
+        ? "A bank transfer needs its UTR — it is how we match your payment to the statement."
+        : reference.trim() && reference.trim().length < 6
+          ? "That looks too short for a transaction reference."
+          : undefined,
   };
   const blocked = Object.values(errors).some(Boolean);
 
@@ -77,36 +78,53 @@ export default function GuestPaymentPage() {
     setFile(chosen);
   };
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
-    if (blocked) return;
+
+    if (blocked || !file) {
+      const missing = Object.values(errors).filter(Boolean);
+      toast.error(
+        missing.length === 1 ? "One thing is missing" : `${missing.length} things are missing`,
+        { description: missing.join(" ") },
+      );
+      return;
+    }
 
     setSending(true);
+
+    // The file goes to the private bucket first. If that fails there is no
+    // point writing a payment row that points at nothing.
+    const { path, error: uploadError } = await uploadReceipt(booking.id, file);
+    if (uploadError || !path) {
+      setSending(false);
+      toast.error("Could not upload the receipt", {
+        description: uploadError ?? "Please try again.",
+      });
+      return;
+    }
+
     const payment: Payment = {
       id: `p-${Date.now()}`,
       bookingId: booking.id,
       amount: Number(amount),
       method,
       reference: reference.trim(),
-      // Nothing is uploaded — this is the local preview, and in Phase 2 it
-      // becomes a path in the private `payment-receipts` bucket.
-      receiptImage: preview ?? undefined,
+      // A storage path, not a URL. The admin viewer signs it on demand.
+      receiptImage: path,
       status: "uploaded",
       createdAt: new Date().toISOString(),
     };
 
-    window.setTimeout(() => {
-      addPayment(payment);
-      setSending(false);
-      setFile(null);
-      setAmount("");
-      setReference("");
-      setSubmitted(false);
-      toast.success("Receipt submitted", {
-        description: "We will confirm it and update your booking, usually the same day.",
-      });
-    }, 700);
+    addPayment(payment);
+    setSending(false);
+    setFile(null);
+    setAmount("");
+    setReference("");
+    setSubmitted(false);
+    toast.success("Receipt submitted", {
+      description: "We will confirm it and update your booking, usually the same day.",
+    });
   };
 
   return (
@@ -144,7 +162,9 @@ export default function GuestPaymentPage() {
                   <Smartphone className="size-4 text-gold-700" aria-hidden />
                   UPI
                 </p>
-                <p className="mt-2 font-mono text-sm text-ink">sanctuary@hdfcbank</p>
+                <p className="mt-2 font-mono text-sm text-ink">
+                  {settings?.upiId || "Not set up yet"}
+                </p>
                 <p className="mt-1 text-xs text-stone-600">
                   Quote {booking.reference} in the note.
                 </p>
@@ -157,36 +177,38 @@ export default function GuestPaymentPage() {
                 <dl className="mt-2 space-y-0.5 text-sm">
                   <div className="flex justify-between gap-3">
                     <dt className="text-stone-600">A/C</dt>
-                    <dd className="font-mono text-ink">5010 0842 1173 09</dd>
+                    <dd className="font-mono text-ink">
+                      {settings?.accountNumber || "—"}
+                    </dd>
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt className="text-stone-600">IFSC</dt>
-                    <dd className="font-mono text-ink">HDFC0001284</dd>
+                    <dd className="font-mono text-ink">{settings?.ifsc || "—"}</dd>
                   </div>
                   <div className="flex justify-between gap-3">
                     <dt className="text-stone-600">Name</dt>
-                    <dd className="text-ink">Homes of Sanctuary</dd>
+                    <dd className="text-ink">{settings?.accountName || "—"}</dd>
                   </div>
+                  {settings?.bankName && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-stone-600">Bank</dt>
+                      <dd className="text-ink">{settings.bankName}</dd>
+                    </div>
+                  )}
                 </dl>
               </div>
             </div>
 
-            <Button
-              className="mt-5 w-full sm:w-auto"
-              onClick={() =>
-                toast.info("Card payments arrive with the gateway", {
-                  description: "For now, pay by UPI or bank transfer and upload the receipt.",
-                })
-              }
-            >
-              <CreditCard aria-hidden />
-              Pay now
-            </Button>
+            <p className="mt-5 rounded-xl bg-status-uploaded-bg p-4 text-sm leading-relaxed text-ink">
+              {settings?.paymentNote ||
+                "Transfer the amount using either method above, then upload your receipt below."}{" "}
+              We check it by hand and confirm your booking, usually the same day.
+            </p>
           </section>
 
           {/* ------------------------------------------------------- upload */}
           <form
-            onSubmit={submit}
+            onSubmit={(event) => void submit(event)}
             noValidate
             className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15"
           >
@@ -296,7 +318,10 @@ export default function GuestPaymentPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="amount">Amount transferred</Label>
+                  <Label htmlFor="amount">
+                    Amount transferred{" "}
+                    <span className="font-normal text-clay">required</span>
+                  </Label>
                   <Input
                     id="amount"
                     type="number"
@@ -304,7 +329,7 @@ export default function GuestPaymentPage() {
                     min={1}
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
-                    placeholder={String(totals.balance)}
+                    placeholder="Amount in rupees"
                     aria-invalid={submitted && Boolean(errors.amount)}
                     aria-describedby="amount-error"
                   />
@@ -323,25 +348,43 @@ export default function GuestPaymentPage() {
                   )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="reference">Transaction / UTR number</Label>
+                  <Label htmlFor="reference">
+                    Transaction / UTR number{" "}
+                    {method === "bank_transfer" ? (
+                      <span className="font-normal text-clay">required</span>
+                    ) : (
+                      <span className="font-normal text-stone-600">optional</span>
+                    )}
+                  </Label>
                   <Input
                     id="reference"
                     value={reference}
                     onChange={(event) => setReference(event.target.value)}
-                    placeholder="428106552931"
+                    placeholder={
+                      method === "upi"
+                        ? "If your UPI app shows one"
+                        : "Paste the UTR from your bank"
+                    }
                     aria-invalid={submitted && Boolean(errors.reference)}
                     aria-describedby="reference-error"
                   />
-                  {submitted && errors.reference && (
+                  {submitted && errors.reference ? (
                     <p id="reference-error" role="alert" className="text-xs text-status-cancelled">
                       {errors.reference}
                     </p>
+                  ) : (
+                    method === "upi" && (
+                      <p className="text-xs text-stone-600">
+                        Not on your screenshot? Leave it — we will match the payment from
+                        the receipt and the amount.
+                      </p>
+                    )
                   )}
                 </div>
               </div>
 
               <Button type="submit" className="w-full sm:w-auto" disabled={sending}>
-                {sending ? "Submitting…" : "Submit receipt"}
+                {sending ? "Uploading…" : "Submit receipt"}
               </Button>
             </div>
           </form>
@@ -371,8 +414,13 @@ export default function GuestPaymentPage() {
                         {money(payment.amount)}
                       </p>
                       <p className="mt-1 text-sm text-stone-600">
-                        {payment.method === "upi" ? "UPI" : "Bank transfer"} ·{" "}
-                        <span className="font-mono">{payment.reference}</span>
+                        {payment.method === "upi" ? "UPI" : "Bank transfer"}
+                        {payment.reference && (
+                          <>
+                            {" · "}
+                            <span className="font-mono">{payment.reference}</span>
+                          </>
+                        )}
                       </p>
                       <p className="mt-0.5 text-xs text-stone">
                         {formatDateTime(payment.createdAt)}

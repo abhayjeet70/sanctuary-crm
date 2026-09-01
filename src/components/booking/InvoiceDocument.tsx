@@ -1,5 +1,6 @@
 import { money, formatDate, formatDateRange, nightsBetween } from "@/lib/format";
 import { logo } from "@/lib/assets";
+import { useSettings } from "@/hooks/useData";
 import { cn } from "@/lib/utils";
 import type { BookingView } from "@/hooks/useData";
 import type { Invoice } from "@/types";
@@ -19,21 +20,34 @@ export function InvoiceDocument({
 }) {
   const { booking, villa, customer, roomNames, totals } = view;
   const nights = nightsBetween(booking.checkIn, booking.checkOut);
+  // Identity, tax numbers and payment details all come from Settings, so an
+  // invoice can never disagree with what the guest was told to pay into.
+  const settings = useSettings();
 
   return (
     <article
       className={cn("bg-white p-8 text-ink shadow-soft ring-1 ring-gold/15 sm:p-10", className)}
       aria-label={`Invoice for booking ${booking.reference}`}
+      data-print-root
     >
       <header className="flex flex-wrap items-start justify-between gap-6">
         <div>
           <img src={logo.onLight} alt="Homes of Sanctuary" className="h-16 w-auto rounded-md" />
           <p className="mt-4 text-sm leading-relaxed text-stone-600">
-            Homes of Sanctuary
+            {settings?.legalName ?? "Homes of Sanctuary"}
             <br />
-            Nandi Hills, Chikkaballapur
+            {settings?.addressLine1 ?? "Nandi Hills"}
+            {settings?.addressLine2 ? `, ${settings.addressLine2}` : ""}
             <br />
-            Karnataka 562103, India
+            {[settings?.state, settings?.postcode, settings?.country]
+              .filter(Boolean)
+              .join(" ") || "Karnataka 562103, India"}
+            {settings?.showGstinOnInvoice && settings.gstin && (
+              <>
+                <br />
+                GSTIN {settings.gstin}
+              </>
+            )}
           </p>
         </div>
         <div className="text-right">
@@ -155,14 +169,38 @@ export function InvoiceDocument({
 
       <hr className="rule-gold my-8" />
 
-      <footer className="text-xs leading-relaxed text-stone-600">
+      <footer className="space-y-2 text-xs leading-relaxed text-stone-600">
+        {(settings?.upiId || settings?.accountNumber) && (
+          <p>
+            Payment by
+            {settings?.upiId && (
+              <>
+                {" "}
+                UPI to <span className="font-mono text-ink">{settings.upiId}</span>
+              </>
+            )}
+            {settings?.upiId && settings?.accountNumber && " or"}
+            {settings?.accountNumber && (
+              <>
+                {" "}
+                transfer to <span className="font-mono text-ink">{settings.accountNumber}</span>
+                {settings.ifsc && (
+                  <>
+                    {" "}
+                    (IFSC <span className="font-mono text-ink">{settings.ifsc}</span>)
+                  </>
+                )}
+              </>
+            )}
+            . Please quote {booking.reference} so it can be matched.
+          </p>
+        )}
+        {settings?.invoiceTerms && <p className="whitespace-pre-line">{settings.invoiceTerms}</p>}
         <p>
-          Payment by UPI or bank transfer. Please quote {booking.reference} with your
-          transfer so it can be matched.
-        </p>
-        <p className="mt-2">
-          This is a mock invoice generated in the UI phase of the CRM and is not a
-          valid tax document.
+          {settings?.invoiceFooter ||
+            [settings?.tradingName, settings?.addressLine1, settings?.city]
+              .filter(Boolean)
+              .join(" · ")}
         </p>
       </footer>
     </article>

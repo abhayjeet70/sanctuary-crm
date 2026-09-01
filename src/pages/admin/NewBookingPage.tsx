@@ -19,6 +19,7 @@ import { useBookings, useCustomers, useMockData, useVillas } from "@/hooks/useDa
 import { bookingTotals, findConflicts } from "@/services/domain";
 import { bookingSource, sourceOptions } from "@/lib/status";
 import { formatDate, money, nightsBetween } from "@/lib/format";
+import { GST_RATES, suggestedGstRate } from "@/lib/tax";
 import { cn } from "@/lib/utils";
 import type { Booking, BookingSource } from "@/types";
 
@@ -156,13 +157,13 @@ export default function NewBookingPage() {
 
     setSaving(true);
     const id = `b-${Date.now()}`;
-    const customerId =
-      form.customerId === NEW_GUEST ? `c-${Date.now()}` : form.customerId;
+    const isNewGuest = form.customerId === NEW_GUEST;
 
     const booking: Booking = {
       id,
       reference: `HOS-${String(Date.now()).slice(-4)}`,
-      customerId,
+      // Ignored when `isNewGuest`: the RPC creates the customer and uses its id.
+      customerId: isNewGuest ? "" : form.customerId,
       villaId: form.villaId,
       roomIds: isSplit ? form.roomIds : [],
       bookingMode: isSplit ? "split" : "whole",
@@ -179,14 +180,19 @@ export default function NewBookingPage() {
       createdAt: new Date().toISOString(),
     };
 
-    // A beat, so the saving state is visible the way a real write will feel.
-    window.setTimeout(() => {
-      createBooking(booking);
-      toast.success(`${booking.reference} created`, {
-        description: `${villa?.name} · ${formatDate(booking.checkIn)}`,
-      });
-      navigate(`/admin/bookings/${id}`);
-    }, 500);
+    createBooking(
+      booking,
+      isNewGuest
+        ? { name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() }
+        : undefined,
+    );
+
+    // The reference is assigned by the database, so land on the list rather
+    // than guessing an id that does not exist yet.
+    toast.success("Booking created", {
+      description: `${villa?.name} · ${formatDate(form.checkIn)}`,
+    });
+    window.setTimeout(() => navigate("/admin/bookings"), 400);
   };
 
   const showError = (key: string) => submitted && key in errors;
@@ -238,11 +244,14 @@ export default function NewBookingPage() {
                   value={form.villaId}
                   onValueChange={(value) => {
                     const next = villas.find((v) => v.id === value);
+                    const rate = next?.baseRate ?? Number(form.nightlyRate);
                     setForm((prev) => ({
                       ...prev,
                       villaId: value,
                       roomIds: [],
-                      nightlyRate: String(next?.baseRate ?? prev.nightlyRate),
+                      nightlyRate: String(rate),
+                      // The legal rate follows the tariff, so it moves with it.
+                      taxRate: String(suggestedGstRate(rate)),
                     }));
                   }}
                 >
@@ -298,14 +307,27 @@ export default function NewBookingPage() {
                           <input
                             type="checkbox"
                             checked={checked}
-                            onChange={() =>
-                              set(
-                                "roomIds",
-                                checked
-                                  ? form.roomIds.filter((r) => r !== room.id)
-                                  : [...form.roomIds, room.id],
-                              )
-                            }
+                            onChange={() => {
+                              const nextRooms = checked
+                                ? form.roomIds.filter((r) => r !== room.id)
+                                : [...form.roomIds, room.id];
+                              // Price from the rooms actually taken. Leaving
+                              // the whole-villa rate here billed HOS-1020
+                              // 29,000 a night for two rooms worth 17,000.
+                              const roomTotal = (villa?.rooms ?? [])
+                                .filter((r) => nextRooms.includes(r.id))
+                                .reduce((sum, r) => sum + r.baseRate, 0);
+                              setForm((prev) => ({
+                                ...prev,
+                                roomIds: nextRooms,
+                                nightlyRate: String(
+                                  roomTotal > 0 ? roomTotal : villa?.baseRate ?? 0,
+                                ),
+                                taxRate: String(
+                                  suggestedGstRate(roomTotal > 0 ? roomTotal : villa?.baseRate ?? 0),
+                                ),
+                              }));
+                            }}
                             className="size-4 accent-[var(--color-clay)]"
                           />
                           <span className="font-medium text-ink">{room.name}</span>
@@ -502,15 +524,19 @@ export default function NewBookingPage() {
                   onChange={(event) => set("discount", event.target.value)}
                 />
               </Field>
-              <Field label="GST %" htmlFor="tax">
-                <Input
-                  id="tax"
-                  type="number"
-                  min={0}
-                  max={28}
-                  value={form.taxRate}
-                  onChange={(event) => set("taxRate", event.target.value)}
-                />
+              <Field label="GST" htmlFor="tax">
+                <Select value={form.taxRate} onValueChange={(value) => set("taxRate", value)}>
+                  <SelectTrigger id="tax" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GST_RATES.map((rate) => (
+                      <SelectItem key={rate.value} value={String(rate.value)}>
+                        {rate.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
               <Field label="Advance taken" htmlFor="advance">
                 <Input
@@ -524,6 +550,16 @@ export default function NewBookingPage() {
               </Field>
             </div>
             <p className="mt-3 text-xs text-stone-600">
+              {isSplit && form.roomIds.length > 0
+                ? `Rate covers ${form.roomIds.length} ${form.roomIds.length === 1 ? "room" : "rooms"} at ${villa?.name}.`
+                : `Rate covers the whole of ${villa?.name ?? "the villa"} — all ${villa?.bedrooms ?? 4} bedrooms.`}
+            </p>
+            <p className="mt-2 text-xs text-stone-600">
+              GST on accommodation is 12% up to a tariff of ₹7,500 a night and 18% above
+              it — {money(Number(form.nightlyRate) || 0)} suggests{" "}
+              <strong>{suggestedGstRate(Number(form.nightlyRate) || 0)}%</strong>.
+            </p>
+            <p className="mt-2 text-xs text-stone-600">
               An advance above zero saves the booking as <strong>confirmed</strong>. Leave it
               at zero and it saves as <strong>pending payment</strong>, and the guest is sent
               instructions.

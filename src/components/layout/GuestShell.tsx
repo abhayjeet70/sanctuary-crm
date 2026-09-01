@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
+  CalendarPlus,
   CalendarCheck,
   ChefHat,
   ConciergeBell,
@@ -13,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DevBadge, Logo } from "@/components/common";
 import { cn } from "@/lib/utils";
-import { useSession } from "@/services/mock/MockSessionProvider";
+import { useSession } from "@/services/session";
 
 /** Mobile-first: the five things a guest actually does live in a thumb-reachable
  *  bottom bar. The full set appears as a rail once there is room for it. */
@@ -26,6 +27,7 @@ const PRIMARY = [
 ] as const;
 
 const SECONDARY = [
+  { to: "/guest/book", label: "Book a stay", icon: CalendarPlus },
   { to: "/guest/booking", label: "Booking details", icon: CalendarCheck },
   { to: "/guest/invoice", label: "Invoice", icon: Receipt },
   { to: "/guest/feedback", label: "Feedback", icon: MessageSquareQuote },

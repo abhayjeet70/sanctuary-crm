@@ -12,12 +12,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ErrorState, Eyebrow, StatusBadge } from "@/components/common";
+import { Eyebrow, StatusBadge } from "@/components/common";
+import { collage, photo } from "@/lib/assets";
 import { useGuestStay } from "@/hooks/useGuest";
 import { bookingStatus, foodOrderStatus, paymentStatus } from "@/lib/status";
 import { formatDate, formatDateRange, money, nightsBetween } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
-import { useSession } from "@/services/mock/MockSessionProvider";
+import { useSession } from "@/services/session";
 
 const LINKS = [
   { to: "/guest/booking", label: "Booking", hint: "Dates, rooms and guests", icon: Receipt },
@@ -32,13 +33,57 @@ export default function GuestDashboardPage() {
   const { session } = useSession();
   const { view, orders, requests, today } = useGuestStay();
 
+  // No booking yet is a perfectly normal state for a new account — it is an
+  // invitation to book, not an error.
   if (!view) {
     return (
-      <ErrorState
-        className="m-5"
-        title="No stay found"
-        description="There is no booking attached to this guest yet."
-      />
+      <div className="p-5 sm:p-8">
+        <section className="relative overflow-hidden rounded-2xl bg-ink text-sand">
+          <img
+            src={photo.hills}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 size-full object-cover opacity-40"
+          />
+          <div className="relative p-8 sm:p-12">
+            <Eyebrow className="text-gold-400">Nandi Hills · Bengaluru</Eyebrow>
+            <h1 className="display-caps mt-3 text-4xl text-white sm:text-5xl">
+              Welcome, {session?.name?.split(" ")[0]}
+            </h1>
+            <hr className="rule-gold mt-6 w-40" />
+            <p className="mt-5 max-w-lg text-sand/80">
+              You have no stay booked yet. Three houses sit above the escarpment — pick
+              your dates and we will hold one for you.
+            </p>
+            <Button
+              asChild
+              className="mt-6 bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
+            >
+              <Link to="/guest/book">
+                Book a stay
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+            <p className="mt-4 text-xs text-sand/55">
+              Already booked with us over the phone? Ask us to link your booking to this
+              email address.
+            </p>
+          </div>
+        </section>
+
+        <ul className="mt-6 grid gap-3 sm:grid-cols-3">
+          {collage.slice(0, 3).map((image) => (
+            <li key={image.src} className="overflow-hidden rounded-2xl ring-1 ring-gold/20">
+              <img
+                src={image.src}
+                alt={image.alt}
+                loading="lazy"
+                className="h-40 w-full object-cover transition-transform duration-700 hover:scale-105"
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
     );
   }
 

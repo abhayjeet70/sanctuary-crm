@@ -156,6 +156,9 @@ kitchen or the manager and advances it → the guest sees the status change.
 | 9 | Guest requests | Both | Guest request form; admin assignment board |
 | 10 | Feedback | Both | Guest rating form; admin review and reply |
 
+All ten are built. `/admin/bookings/:id/edit` is the single link without a page
+behind it — editing an existing booking was not built in this phase.
+
 ---
 
 ## 9. User stories

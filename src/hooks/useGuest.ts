@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import { useBookingViews, useMockData } from "@/hooks/useData";
-import { MOCK_GUEST_BOOKING_ID, useSession } from "@/services/mock/MockSessionProvider";
+import { useSession } from "@/services/session";
 import { holdsInventory } from "@/services/domain";
 
 /**
  * Everything the guest portal needs about the signed-in guest and their stay.
  *
- * Phase 2: the customer comes from the Supabase session rather than the mock
- * one, and the current booking is a query filtered by `customer_id` under RLS.
- * The shape returned here does not change.
+ * The customer id comes from the profile attached to the Supabase session, and
+ * RLS means the collections already contain only this guest's rows — the filter
+ * below is for picking the right stay, not for keeping other guests out.
  */
 export function useGuestStay() {
   const { session } = useSession();
@@ -32,8 +32,7 @@ export function useGuestStay() {
       own
         .filter((v) => holdsInventory(v.booking) && v.booking.checkIn > today)
         .sort((a, b) => a.booking.checkIn.localeCompare(b.booking.checkIn))[0] ??
-      own.sort((a, b) => b.booking.checkOut.localeCompare(a.booking.checkOut))[0] ??
-      views.find((v) => v.booking.id === MOCK_GUEST_BOOKING_ID);
+      own.sort((a, b) => b.booking.checkOut.localeCompare(a.booking.checkOut))[0];
 
     const bookingId = current?.booking.id;
 

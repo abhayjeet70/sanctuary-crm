@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
   CalendarDays,
@@ -13,6 +13,7 @@ import {
   Users,
   Wallet,
   Menu as MenuIcon,
+  ChevronRight,
   Building2,
   BookOpen,
 } from "lucide-react";
@@ -23,7 +24,8 @@ import { DevBadge, Logo } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import { useMockData, useNotifications, usePaymentVerificationQueue } from "@/hooks/useData";
-import { useSession } from "@/services/mock/MockSessionProvider";
+import { useSession } from "@/services/session";
+import type { AppNotification } from "@/types";
 import { initials } from "@/lib/format";
 
 const NAV = [
@@ -93,13 +95,43 @@ function NavItems({ onNavigate, collapsed }: { onNavigate?: () => void; collapse
   );
 }
 
+/** Where a notification takes you. Falls back to the section when the event
+ *  carries no specific record. */
+function destinationFor(item: AppNotification) {
+  const section = {
+    payment: "/admin/payments",
+    booking: "/admin/bookings",
+    food: "/admin/food",
+    request: "/admin/requests",
+    feedback: "/admin/feedback",
+    invoice: "/admin/invoices",
+    note: "/admin/bookings",
+  }[item.kind];
+
+  if (!item.entityId) return section;
+  // Payments and bookings both point at a booking; the others live on a board
+  // where the section itself is the right landing place.
+  if (item.kind === "payment") return "/admin/payments";
+  if (item.kind === "booking" || item.kind === "note" || item.kind === "feedback") {
+    return `/admin/bookings/${item.entityId}`;
+  }
+  return section;
+}
+
 function NotificationTray() {
   const notifications = useNotifications();
   const { markNotificationsRead } = useMockData();
   const unread = notifications.filter((n) => !n.read).length;
+  const [open, setOpen] = useState(false);
 
   return (
-    <Sheet onOpenChange={(open) => open && markNotificationsRead()}>
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) markNotificationsRead();
+      }}
+    >
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -121,17 +153,27 @@ function NotificationTray() {
           <DevBadge />
           <ul className="mt-4 divide-y divide-stone/20">
             {notifications.map((item) => (
-              <li key={item.id} className="py-3">
-                <div className="flex items-start gap-2">
+              <li key={item.id}>
+                <Link
+                  to={destinationFor(item)}
+                  onClick={() => setOpen(false)}
+                  className="-mx-2 flex items-start gap-2 rounded-lg px-2 py-3 transition-colors hover:bg-gold/8"
+                >
                   {!item.read && (
                     <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-clay" aria-hidden />
                   )}
-                  <div className={cn(item.read && "pl-3.5")}>
-                    <p className="text-sm font-medium text-ink">{item.title}</p>
-                    <p className="mt-0.5 text-sm text-stone-600">{item.detail}</p>
-                    <p className="mt-1 text-xs text-stone">{formatDateTime(item.at)}</p>
-                  </div>
-                </div>
+                  <span className={cn("min-w-0 flex-1", item.read && "pl-3.5")}>
+                    <span className="block text-sm font-medium text-ink">{item.title}</span>
+                    <span className="mt-0.5 block text-sm text-stone-600">{item.detail}</span>
+                    <span className="mt-1 block text-xs text-stone">
+                      {formatDateTime(item.at)}
+                    </span>
+                  </span>
+                  <ChevronRight
+                    className="mt-1 size-4 shrink-0 text-stone"
+                    aria-hidden
+                  />
+                </Link>
               </li>
             ))}
           </ul>

@@ -136,6 +136,18 @@ export function useBookingInvoice(bookingId: ID | undefined) {
 /* --------------------------------------------------------------------- food */
 
 export const useMenu = () => useMockData().menuItems;
+
+/** Property settings — payment details, invoice identity. Null while loading. */
+export const useSettings = () => useMockData().settings;
+
+/** The menu a given villa serves: its own dishes plus the ones served everywhere. */
+export function useMenuForVilla(villaId: ID | undefined) {
+  const menu = useMockData().menuItems;
+  return useMemo(
+    () => menu.filter((item) => !item.villaId || item.villaId === villaId),
+    [menu, villaId],
+  );
+}
 export const useFoodOrders = () => useMockData().foodOrders;
 
 export function useFoodOrderViews() {

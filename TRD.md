@@ -172,10 +172,9 @@ Sanctuary-crm/
 | `/guest/feedback` | guest | Rating + comment |
 | `*` | public | Not found |
 
-**Status:** `/login`, `/design-system` and the role guards are built. Admin and
-guest currently land on holding screens (`AdminPlaceholder`, `GuestPlaceholder`)
-that read real fixture data through the hooks — proving the data layer — pending
-the module build-out.
+**Status:** every route in this table is built and renders on fixture data. The
+holding screens (`ModulePending`, `AdminPlaceholder`, `GuestPlaceholder`) have
+been deleted. `/admin/bookings/:id/edit` is the one link with no page behind it.
 
 ---
 
@@ -392,6 +391,7 @@ Tailwind's default breakpoints are used unchanged: `sm` 640 · `md` 768 · `lg` 
 | Figma MCP | Connector present but **not authorised** in this session | Not used. No Figma file was provided, so nothing was lost — but be aware the connector needs authorising in claude.ai settings before any Figma-driven work. |
 | Adobe MCP | Connector present but **not authorised** | Not used. Not relevant to this phase. |
 | Storybook | Not installed | Deliberately skipped. `/design-system` is the living style guide; Storybook would be a second build pipeline to maintain for the same purpose. |
+| Vitest / Playwright | Not installed | Two dependency-free node scripts cover what matters — `npm run test` for the domain rules, `npm run smoke` for render safety (§15). |
 
 ---
 
@@ -410,8 +410,13 @@ Tailwind's default breakpoints are used unchanged: `sm` 640 · `md` 768 · `lg` 
 5. **Notifications are static fixtures** in a tray labelled as mock.
 6. **Images are placeholders** from `picsum.photos`, and the app needs network
    access to render them.
-7. **One bundle, 585 kB** (177 kB gzipped). Route-level `React.lazy` is the fix
-   and is worth doing once the module count justifies it, not before.
+7. **One bundle, 768 kB** (218 kB gzipped), served eagerly. Route-level
+   `React.lazy` was considered and rejected: this is an internal tool opened
+   daily on a desktop and cached after the first load, so splitting buys nothing
+   real while adding a spinner to every first navigation and blinding the smoke
+   harness (a lazy route suspends, so `renderToString` returns the fallback
+   instead of the page). Revisit only if the app is opened on hill-country
+   mobile data often enough to matter.
 8. **No unit-test framework.** One dependency-free self-check covers the domain
    rules (§15). Adding Vitest is a Phase 2 decision.
 9. **Times are naive.** All fixture timestamps are `+05:30`; there is no timezone
@@ -440,6 +445,19 @@ cross-villa isolation, and month/year rollover in `addDays`.
 
 ## 16. PHASE 2 — wiring in Supabase
 
+### 16.0 What the client currently enforces that the server must take over
+
+Three rules live only in the browser today and are advisory until Phase 2 moves
+them server-side:
+
+- **BR5, conflicts** — `findConflicts()` blocks the booking form (§16.6).
+- **Payment approval** — `approvePayment()` decides the resulting status via
+  `settledPaymentStatus()`. This becomes an RPC; a client must never write
+  `verified_by` (§16.3).
+- **BR12, billed food** — `setFoodOrderStatus(id, "billed")` adds the order
+  total to `bookings.charges.food`. This becomes a trigger on `food_orders`, so
+  the two numbers cannot drift apart.
+
 ### 16.1 Which mock functions become Supabase queries
 
 The seam is `MockDataProvider`. Every collection it holds becomes a query and
@@ -458,7 +476,7 @@ every mutator becomes a write. `src/hooks/useData.ts` keeps its exact API, so
 | `approvePayment(id)` | RPC `approve_payment(payment_id)` — must be a **single transaction**: update the payment, increment `bookings.amount_paid`, set booking status, insert the activity row. Doing this as three client calls invites a half-applied state. |
 | `rejectPayment(id, reason, note)` | RPC `reject_payment(...)` — same reasoning (BR8). |
 | `createBooking(data)` | RPC `create_booking(...)` that re-runs the conflict check inside the transaction (§16.6). |
-| `setFoodOrderStatus` | `from("food_orders").update({ status })` |
+| `setFoodOrderStatus` | `from("food_orders").update({ status })`, plus a trigger that folds a billed order into the booking's food charge (BR12) |
 | `createRequest` · `updateRequest` · `createFeedback` · `updateFeedback` | direct writes |
 
 **Recommended addition at this point:** TanStack Query, so the provider becomes a

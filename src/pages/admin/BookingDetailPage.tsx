@@ -8,7 +8,6 @@ import {
   Download,
   LogIn,
   LogOut,
-  Mail,
   Printer,
   StickyNote,
   UserX,
@@ -35,6 +34,8 @@ import {
 } from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
+import { EmailGuestButton, GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
+import { SendBookingDetails } from "@/components/booking/SendBookingDetails";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
 import { RejectPaymentDialog } from "@/components/payment/RejectPaymentDialog";
 import {
@@ -309,8 +310,15 @@ export default function BookingDetailPage() {
                           {money(payment.amount)}
                         </p>
                         <p className="mt-1 text-sm text-stone-600">
-                          {payment.method === "upi" ? "UPI" : "Bank transfer"} ·{" "}
-                          <span className="font-mono">{payment.reference}</span>
+                          {payment.method === "upi" ? "UPI" : "Bank transfer"}
+                          {payment.reference ? (
+                            <>
+                              {" · "}
+                              <span className="font-mono">{payment.reference}</span>
+                            </>
+                          ) : (
+                            <span className="text-stone"> · no reference given</span>
+                          )}
                         </p>
                         <p className="mt-0.5 text-xs text-stone">
                           Uploaded {formatDateTime(payment.createdAt)}
@@ -374,22 +382,15 @@ export default function BookingDetailPage() {
                 <Printer aria-hidden />
                 Print
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toast.info("PDF export arrives with the Supabase phase")}
-              >
+              <Button variant="outline" size="sm" onClick={() => window.print()}>
                 <Download aria-hidden />
-                Download PDF
+                Save as PDF
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toast.info(`Would email ${customer?.email}`)}
-              >
-                <Mail aria-hidden />
-                Email to guest
-              </Button>
+              <EmailGuestButton
+                bookingId={booking.id}
+                kind="invoice_ready"
+                label="Email to guest"
+              />
             </div>
             <InvoiceDocument view={view} invoice={invoice} className="rounded-xl" />
           </TabsContent>
@@ -413,6 +414,10 @@ export default function BookingDetailPage() {
               className="mt-4"
             />
           </section>
+
+          <SendBookingDetails view={view} />
+
+          <GuestAccessPanel bookingId={booking.id} guestEmail={customer?.email} />
 
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
             <Eyebrow className="text-gold-700">Guest preferences</Eyebrow>

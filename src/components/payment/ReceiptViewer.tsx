@@ -1,15 +1,18 @@
-import { useState } from "react";
-import { FileWarning, Maximize2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FileText, FileWarning, Maximize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/common";
+import { resolveReceiptUrl } from "@/services/supabase/receipts";
 
 /**
- * Shows a payment receipt, with a click-to-enlarge view for reading a UTR off a
- * phone screenshot.
+ * Shows a payment receipt, with click-to-enlarge for reading a UTR off a phone
+ * screenshot.
  *
- * Phase 2: `src` becomes a short-lived signed URL from the private
- * `payment-receipts` bucket. This component does not care where it came from.
+ * `src` is a storage PATH, not a URL — the `payment-receipts` bucket is private
+ * because receipts carry bank details. This resolves it to a short-lived signed
+ * URL on mount, and storage RLS means a path the viewer has no right to see
+ * simply fails to sign.
  */
 export function ReceiptViewer({
   src,
@@ -20,9 +23,34 @@ export function ReceiptViewer({
   alt: string;
   className?: string;
 }) {
+  const [url, setUrl] = useState<string | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">(
     src ? "loading" : "error",
   );
+
+  useEffect(() => {
+    let active = true;
+    if (!src) {
+      setState("error");
+      return;
+    }
+    setState("loading");
+
+    void resolveReceiptUrl(src).then((resolved) => {
+      if (!active) return;
+      if (!resolved) {
+        setState("error");
+        return;
+      }
+      setUrl(resolved);
+      // A PDF has nothing to decode, so it is ready as soon as it is signed.
+      if (resolved.includes(".pdf")) setState("ready");
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [src]);
 
   if (!src || state === "error") {
     return (
@@ -42,6 +70,8 @@ export function ReceiptViewer({
     );
   }
 
+  const isPdf = url?.includes(".pdf");
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -54,13 +84,24 @@ export function ReceiptViewer({
           aria-label="Enlarge receipt"
         >
           {state === "loading" && <Skeleton className="absolute inset-0 rounded-xl" />}
-          <img
-            src={src}
-            alt={alt}
-            onLoad={() => setState("ready")}
-            onError={() => setState("error")}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+
+          {url && isPdf ? (
+            <span className="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-6 text-stone-600">
+              <FileText className="size-8 text-gold-700" aria-hidden />
+              <span className="text-xs">PDF receipt — open to read</span>
+            </span>
+          ) : (
+            url && (
+              <img
+                src={url}
+                alt={alt}
+                onLoad={() => setState("ready")}
+                onError={() => setState("error")}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            )
+          )}
+
           <span
             aria-hidden
             className="absolute right-2 bottom-2 flex items-center gap-1.5 rounded-lg bg-ink/80 px-2 py-1 text-xs text-sand opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
@@ -70,9 +111,20 @@ export function ReceiptViewer({
           </span>
         </button>
       </DialogTrigger>
+
       <DialogContent className="max-w-3xl">
         <DialogTitle className="sr-only">{alt}</DialogTitle>
-        <img src={src} alt={alt} className="max-h-[80vh] w-full rounded-lg object-contain" />
+        {url && isPdf ? (
+          <object data={url} type="application/pdf" className="h-[80vh] w-full rounded-lg">
+            <a href={url} target="_blank" rel="noreferrer" className="text-clay underline">
+              Open the receipt in a new tab
+            </a>
+          </object>
+        ) : (
+          url && (
+            <img src={url} alt={alt} className="max-h-[80vh] w-full rounded-lg object-contain" />
+          )
+        )}
       </DialogContent>
     </Dialog>
   );

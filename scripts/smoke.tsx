@@ -1,30 +1,32 @@
 /* Renders every route to a string. A blank page in the browser is a render-time
- * throw, and this catches it without a browser. Run: npm run smoke */
+ * throw, and this catches it without a browser and without a network call.
+ *
+ * The session and data contexts are filled directly from the fixtures, so this
+ * exercises the real page components while staying entirely offline — the
+ * Supabase client is never imported. Run: npm run smoke */
 import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { TooltipProvider } from "../src/components/ui/tooltip";
 import { AppRoutes } from "../src/routes/AppRoutes";
 import { MockDataProvider } from "../src/services/mock/MockDataProvider";
-import { MockSessionProvider } from "../src/services/mock/MockSessionProvider";
+import { SessionContext } from "../src/services/session";
+import type { MockSession } from "../src/types";
 
-const store = new Map<string, string>();
 Object.assign(globalThis, {
-  localStorage: {
-    getItem: (k: string) => store.get(k) ?? null,
-    setItem: (k: string, v: string) => void store.set(k, v),
-    removeItem: (k: string) => void store.delete(k),
-  },
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
 });
 
 const ROUTES = [
   "/login",
+  "/reset-password",
   "/design-system",
   "/admin",
   "/admin/dashboard",
   "/admin/bookings",
   "/admin/bookings/new",
   "/admin/bookings/b-1001",
+  "/admin/bookings/b-1001/edit",
+  "/admin/bookings/b-1010/edit",
   "/admin/bookings/b-1005",
   "/admin/bookings/nonexistent",
   "/admin/payments",
@@ -40,16 +42,43 @@ const ROUTES = [
   "/admin/invoices",
   "/admin/settings",
   "/guest",
+  "/guest/dashboard",
+  "/guest/book",
+  "/guest/booking",
+  "/guest/payment",
+  "/guest/invoice",
+  "/guest/amenities",
+  "/guest/food",
+  "/guest/requests",
+  "/guest/feedback",
+  "/staff",
   "/nope",
 ];
+
 let failed = 0;
 
-for (const role of ["admin", "guest"] as const) {
-  store.set("hos.mock-session", JSON.stringify({ role, name: "Smoke", customerId: "c-pooja" }));
+for (const role of ["admin", "staff", "guest"] as const) {
+  const session: MockSession =
+    role === "admin"
+      ? { role, name: "Anjali Rao" }
+      : role === "staff"
+        ? { role, name: "Lakshmi (Housekeeping)", team: "housekeeping" }
+        : { role, name: "Pooja Bothra", customerId: "c-pooja" };
+
+  const sessionValue = {
+    session,
+    loading: false,
+    signIn: async () => ({ error: null }),
+    signUp: async () => ({ error: null, needsConfirmation: true }),
+    signOut: async () => {},
+    resetPassword: async () => ({ error: null }),
+    updatePassword: async () => ({ error: null }),
+  };
+
   for (const route of ROUTES) {
     try {
       const html = renderToString(
-        <MockSessionProvider>
+        <SessionContext.Provider value={sessionValue}>
           <MockDataProvider>
             <TooltipProvider>
               <MemoryRouter initialEntries={[route]}>
@@ -57,13 +86,22 @@ for (const role of ["admin", "guest"] as const) {
               </MemoryRouter>
             </TooltipProvider>
           </MockDataProvider>
-        </MockSessionProvider>,
+        </SessionContext.Provider>,
       );
+
       // A cross-role route renders a <Navigate> and therefore no markup —
       // that is the guard working, not a crash.
+      // A route belonging to another role renders a <Navigate> and no markup.
+      const owner = route.startsWith("/admin")
+        ? "admin"
+        : route.startsWith("/staff")
+          ? "staff"
+          : route.startsWith("/guest")
+            ? "guest"
+            : null;
       const redirects =
-        route === "/admin" ||
-        (role === "admin" ? route === "/guest" : route.startsWith("/admin"));
+        route === "/admin" || route === "/guest" || (owner !== null && owner !== role);
+
       if (redirects) {
         console.log(`  ok   ${role.padEnd(5)} ${route}  (redirected by RequireRole)`);
       } else if (html.length < 200) {

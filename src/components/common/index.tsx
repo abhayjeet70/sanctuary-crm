@@ -178,7 +178,14 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded-lg bg-sand-300/70", className)} aria-hidden />;
 }
 
-/** The badge that makes it obvious this build has no real auth behind it. */
+/**
+ * Marks the build as running on demo data.
+ *
+ * Authentication, the database and storage are real; what is still seeded is
+ * the content, and the two shared-password demo accounts. Keeping this honest
+ * matters — a badge that overstates what is fake is as misleading as one that
+ * understates it.
+ */
 export function DevBadge({ className }: { className?: string }) {
   return (
     <span
@@ -186,12 +193,13 @@ export function DevBadge({ className }: { className?: string }) {
         "inline-flex items-center gap-1.5 rounded-full bg-clay/12 px-2.5 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-clay uppercase",
         className,
       )}
-      title="No real authentication — role is chosen on the login screen"
+      title="Real Supabase auth and database, seeded with demo content. No payment gateway, email or WhatsApp yet."
     >
       <FlaskConical className="size-3" aria-hidden />
-      Dev / mock login
+      Demo data
     </span>
   );
 }
 export { Logo } from "./Logo";
+export { PasswordInput } from "./PasswordInput";
 export { ActivityTimeline } from "./ActivityTimeline";
