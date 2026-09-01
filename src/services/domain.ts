@@ -111,3 +111,18 @@ export function settledPaymentStatus(
 
 export const orderTotal = (lines: { price: number; quantity: number }[]) =>
   lines.reduce((sum, line) => sum + line.price * line.quantity, 0);
+
+/**
+ * The notification to announce, given what has already been on screen.
+ *
+ * `seen` being null means nothing has been shown yet — the first load, where
+ * every stored notification is history rather than news. Announcing then would
+ * pop a card for a week-old payment every time someone signs in.
+ */
+export function firstUnannounced<T extends { id: string; read: boolean }>(
+  notifications: T[],
+  seen: Set<string> | null,
+): T | undefined {
+  if (seen === null) return undefined;
+  return notifications.find((n) => !seen.has(n.id) && !n.read);
+}

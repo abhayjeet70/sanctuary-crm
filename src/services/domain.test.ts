@@ -2,7 +2,14 @@
  * of real logic in this UI-only phase. Run with: npx tsx src/services/domain.test.ts */
 import assert from "node:assert/strict";
 import type { Booking } from "../types";
-import { addDays, bookingTotals, datesOverlap, findConflicts, settledPaymentStatus } from "./domain";
+import {
+  addDays,
+  bookingTotals,
+  datesOverlap,
+  findConflicts,
+  firstUnannounced,
+  settledPaymentStatus,
+} from "./domain";
 
 const booking = (over: Partial<Booking>): Booking => ({
   id: "x",
@@ -79,5 +86,15 @@ assert.equal(settledPaymentStatus(c, 12000), "paid");   // overpayment still rea
 /* --- date maths --------------------------------------------------------- */
 assert.equal(addDays("2026-09-30", 1), "2026-10-01");
 assert.equal(addDays("2026-01-01", -1), "2025-12-31");
+
+/* --- which notification gets announced ---------------------------------- */
+const n = (id: string, read = false) => ({ id, read });
+// First load announces nothing, however much history is sitting there.
+assert.equal(firstUnannounced([n("a"), n("b")], null), undefined);
+// A new unread one is announced.
+assert.deepEqual(firstUnannounced([n("c"), n("a")], new Set(["a", "b"])), n("c"));
+// Already seen, or arriving already read, is not news.
+assert.equal(firstUnannounced([n("a"), n("b")], new Set(["a", "b"])), undefined);
+assert.equal(firstUnannounced([n("c", true)], new Set(["a"])), undefined);
 
 console.log("domain.ts — all checks passed");

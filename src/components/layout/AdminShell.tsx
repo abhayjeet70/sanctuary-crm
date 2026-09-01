@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -14,6 +14,7 @@ import {
   Wallet,
   Menu as MenuIcon,
   ChevronRight,
+  X,
   Building2,
   BookOpen,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import { useMockData, useNotifications, usePaymentVerificationQueue } from "@/hooks/useData";
 import { useSession } from "@/services/session";
+import { firstUnannounced } from "@/services/domain";
 import type { AppNotification } from "@/types";
 import { initials } from "@/lib/format";
 
@@ -124,6 +126,25 @@ function NotificationTray() {
   const unread = notifications.filter((n) => !n.read).length;
   const [open, setOpen] = useState(false);
 
+  // What has already been on screen. Seeded on the first pass so signing in
+  // does not fire off the whole backlog as if it had just happened.
+  const seen = useRef<Set<string> | null>(null);
+  const [flash, setFlash] = useState<AppNotification | null>(null);
+
+  useEffect(() => {
+    const fresh = firstUnannounced(notifications, seen.current);
+    seen.current = new Set(notifications.map((n) => n.id));
+    if (fresh) setFlash(fresh);
+  }, [notifications]);
+
+  // Its own effect, keyed on the notification rather than the list: a refetch
+  // while the card is up would otherwise cancel the timer and strand it.
+  useEffect(() => {
+    if (!flash) return;
+    const timer = window.setTimeout(() => setFlash(null), 10_000);
+    return () => window.clearTimeout(timer);
+  }, [flash]);
+
   return (
     <Sheet
       open={open}
@@ -132,19 +153,58 @@ function NotificationTray() {
         if (next) markNotificationsRead();
       }}
     >
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative text-sand hover:bg-sand/12"
-          aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
-        >
-          <Bell aria-hidden />
-          {unread > 0 && (
-            <span className="absolute top-1 right-1 size-2 rounded-full bg-clay" aria-hidden />
-          )}
-        </Button>
-      </SheetTrigger>
+      <div className="relative">
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative text-sand hover:bg-sand/12"
+            aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+          >
+            <Bell aria-hidden />
+            {unread > 0 && (
+              <span
+                aria-hidden
+                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay px-1 text-[0.625rem] leading-none font-semibold text-white tabular-nums ring-2 ring-ink"
+              >
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </Button>
+        </SheetTrigger>
+
+        {flash && !open && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute top-full right-0 z-50 mt-2 w-[19rem] animate-flash-in rounded-xl bg-white p-3 text-left shadow-deep ring-1 ring-gold/25"
+          >
+            <span
+              aria-hidden
+              className="absolute -top-1 right-4 size-2 rotate-45 bg-white ring-1 ring-gold/25"
+            />
+            <div className="relative flex items-start gap-2">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-clay" aria-hidden />
+              <Link
+                to={destinationFor(flash)}
+                onClick={() => setFlash(null)}
+                className="min-w-0 flex-1"
+              >
+                <span className="block text-sm font-medium text-ink">{flash.title}</span>
+                <span className="mt-0.5 block text-sm text-stone-600">{flash.detail}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setFlash(null)}
+                aria-label="Dismiss"
+                className="-mt-1 -mr-1 rounded-md p-1 text-stone hover:bg-sand-200 hover:text-ink"
+              >
+                <X className="size-3.5" aria-hidden />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Notifications</SheetTitle>

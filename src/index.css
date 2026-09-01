@@ -261,3 +261,14 @@
     margin: 14mm;
   }
 }
+
+/* The notification card dropping in under the bell. There is no animation
+   plugin in this project, and one keyframe does not justify adding one. */
+@keyframes flash-in {
+  from { opacity: 0; transform: translateY(-0.25rem); }
+  to { opacity: 1; transform: none; }
+}
+.animate-flash-in { animation: flash-in 180ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-flash-in { animation: none; }
+}
