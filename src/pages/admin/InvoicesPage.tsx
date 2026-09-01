@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState, PageHeader, StatCard, StatusBadge } from "@/components/common";
+import { SendInvoice } from "@/components/booking/SendInvoice";
 import { useBookingViews, useInvoices } from "@/hooks/useData";
 import { titleCase } from "@/lib/status";
 import { formatDate, money } from "@/lib/format";
@@ -34,7 +35,7 @@ export default function InvoicesPage() {
       <PageHeader
         eyebrow={`${invoices.length} raised`}
         title="Invoices"
-        description="Every invoice against a booking. Open a booking to print, download or email it."
+        description="Every invoice against a booking. Issue it to the guest portal, or send it on WhatsApp or email."
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -89,10 +90,13 @@ export default function InvoicesPage() {
                   <TableCell className="text-right tabular-nums">
                     {view && view.totals.balance > 0 ? money(view.totals.balance) : "—"}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button asChild variant="link" size="sm">
-                      <Link to={`/admin/bookings/${invoice.bookingId}`}>Open</Link>
-                    </Button>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <SendInvoice view={view!} invoice={invoice} />
+                      <Button asChild variant="link" size="sm">
+                        <Link to={`/admin/bookings/${invoice.bookingId}`}>Open</Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

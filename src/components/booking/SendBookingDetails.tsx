@@ -34,7 +34,7 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
     `Paid ${money(totals.paid)}\n` +
     `Balance ${money(totals.balance)}\n\n` +
     (totals.balance > 0
-      ? `Pay by UPI to sanctuary@hdfcbank quoting ${booking.reference}, then upload the receipt in your guest portal.\n\n`
+      ? `Pay by UPI to ${settings?.upiId ?? "the account on your invoice"} quoting ${booking.reference}, then upload the receipt in your guest portal.\n\n`
       : "") +
     `${settings?.tradingName ?? "Homes of Sanctuary"}, ${settings?.addressLine1 ?? "Nandi Hills"}`;
 

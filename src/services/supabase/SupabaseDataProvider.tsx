@@ -441,6 +441,17 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      setInvoiceStatus: (id, status) => {
+        void (async () => {
+          const { error } = await supabase
+            .from("invoices")
+            .update({ status })
+            .eq("id", id);
+          if (report(error, "Could not update the invoice")) return;
+          await refetch();
+        })();
+      },
+
       updateSettings: (patch) => {
         void (async () => {
           const columns: Record<string, unknown> = {};

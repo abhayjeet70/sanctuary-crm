@@ -73,6 +73,8 @@ export interface MockData {
   updateFeedback: (id: ID, patch: Partial<Feedback>) => void;
   logActivity: (entityId: ID, kind: ActivityKind, title: string, detail?: string) => void;
   markNotificationsRead: () => void;
+  /** Issue a draft invoice (or void one). Only issued invoices reach the guest. */
+  setInvoiceStatus: (id: ID, status: Invoice["status"]) => void;
   updateSettings: (patch: Partial<PropertySettings>) => void;
   saveMenuItem: (item: Partial<MenuItem> & { id?: ID }) => void;
   deleteMenuItem: (id: ID) => void;
@@ -253,8 +255,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       logActivity,
       markNotificationsRead: () =>
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true }))),
-      // Settings and the menu are read-only in the offline harness; the
-      // Supabase provider implements them.
+      // Settings, invoices and the menu are read-only in the offline harness;
+      // the Supabase provider implements them.
+      setInvoiceStatus: () => {},
       updateSettings: () => {},
       saveMenuItem: () => {},
       deleteMenuItem: () => {},
