@@ -1,0 +1,239 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  /* --- Brand palette --- */
+  --color-ink: #142731;
+  --color-ink-700: #1d3742;
+  --color-ink-500: #2f5060;
+  --color-ink-300: #5c7a87;
+
+  --color-sand: #f4efe8;
+  --color-sand-200: #ece5db;
+  --color-sand-300: #e0d7c9;
+  --color-paper: #fbf8f4;
+
+  --color-stone: #a69c8e;
+  --color-stone-300: #c4bcb0;
+  --color-stone-600: #7e756a;
+
+  --color-clay: #b5654a;
+  --color-clay-600: #9c5239;
+  --color-clay-200: #e5c9bd;
+
+  /* --- Gold / brass, taken from the property mark ---
+     `gold` is decorative: rules, dividers, large display type, icons on ink.
+     `gold-700` is the only one that clears AA for body text on light ground. */
+  --color-gold: #c9a961;
+  --color-gold-200: #ecdfbd;
+  --color-gold-400: #d8bd82;
+  --color-gold-700: #8a6d2f;
+
+  /* --- Crisp white, for cards that need to lift off the sand --- */
+  --color-white: #ffffff;
+
+  /* --- Desaturated status tones --- */
+  --color-status-pending: #c08a3e;
+  --color-status-pending-bg: #f6eddd;
+  --color-status-uploaded: #8a7fa6;
+  --color-status-uploaded-bg: #eeebf4;
+  --color-status-confirmed: #6e8b6a;
+  --color-status-confirmed-bg: #e7eee5;
+  --color-status-cancelled: #a9756f;
+  --color-status-cancelled-bg: #f2e6e4;
+  --color-status-completed: #7e756a;
+  --color-status-completed-bg: #ece8e2;
+  --color-status-inhouse: #4a7c8c;
+  --color-status-inhouse-bg: #e3edf1;
+
+  /* --- Type --- */
+  --font-display: "Playfair Display", "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* --- Soft, earthy shadows (no hard borders) --- */
+  --shadow-soft: 0 1px 2px rgba(20, 39, 49, 0.04), 0 8px 24px rgba(20, 39, 49, 0.06);
+  --shadow-lift: 0 2px 4px rgba(20, 39, 49, 0.05), 0 18px 44px rgba(20, 39, 49, 0.1);
+  --shadow-deep: 0 24px 68px rgba(20, 39, 49, 0.18);
+}
+
+
+/* ------------------------------------------------------------------
+   shadcn/ui semantic tokens, mapped onto the Sanctuary brand palette.
+   Components stay stock; only these variables carry the brand.
+   ------------------------------------------------------------------ */
+:root {
+  --radius: 0.875rem;
+
+  --background: #f4efe8;
+  --foreground: #142731;
+
+  --card: #fbf8f4;
+  --card-foreground: #142731;
+  --popover: #fbf8f4;
+  --popover-foreground: #142731;
+
+  --primary: #142731;
+  --primary-foreground: #f4efe8;
+
+  --secondary: #ece5db;
+  --secondary-foreground: #142731;
+
+  --muted: #ece5db;
+  --muted-foreground: #7e756a;
+
+  --accent: #e0d7c9;
+  --accent-foreground: #142731;
+
+  --destructive: #a9756f;
+  --destructive-foreground: #fbf8f4;
+
+  --border: #ddd4c7;
+  --input: #d3c9ba;
+  --ring: #b5654a;
+
+  --sidebar: #142731;
+  --sidebar-foreground: #e6ddd1;
+  --sidebar-primary: #b5654a;
+  --sidebar-primary-foreground: #fbf8f4;
+  --sidebar-accent: #1d3742;
+  --sidebar-accent-foreground: #f4efe8;
+  --sidebar-border: #24404c;
+  --sidebar-ring: #b5654a;
+
+  --chart-1: #b5654a;
+  --chart-2: #6e8b6a;
+  --chart-3: #4a7c8c;
+  --chart-4: #c08a3e;
+  --chart-5: #8a7fa6;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+@layer base {
+  * {
+    border-color: --alpha(var(--color-stone) / 35%);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    margin: 0;
+    background: var(--color-sand);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-clay);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--color-clay-200);
+  }
+}
+
+@utility display-caps {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  line-height: 0.92;
+}
+
+/** The brass gradient from the mark — for display type and icon fills. */
+@utility text-gold-gradient {
+  background: linear-gradient(135deg, #ecdfbd 0%, #c9a961 45%, #9c7c36 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/** A hairline rule in brass, at the weight the brand uses. */
+@utility rule-gold {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    --alpha(var(--color-gold) / 55%) 20%,
+    --alpha(var(--color-gold) / 55%) 80%,
+    transparent
+  );
+}
+
+@utility label-caps {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-stone-600);
+}
+
+/* The invoice is the only thing anyone prints. Everything else gets out of
+   the way, and the document loses its screen chrome. */
+@media print {
+  body {
+    background: #fff;
+  }
+  aside,
+  nav,
+  header[class*="sidebar"],
+  [data-slot="tabs-list"],
+  .print\:hidden {
+    display: none !important;
+  }
+  article[aria-label^="Invoice"] {
+    box-shadow: none !important;
+    outline: 0 !important;
+    padding: 0 !important;
+  }
+  a[href]::after {
+    content: "";
+  }
+}
