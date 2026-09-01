@@ -76,7 +76,7 @@ export default function SettingsPage() {
       />
 
       <Tabs defaultValue="payment">
-        <TabsList>
+        <TabsList className="max-w-full overflow-x-auto">
           <TabsTrigger value="payment">Payment</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
           <TabsTrigger value="property">Property</TabsTrigger>
