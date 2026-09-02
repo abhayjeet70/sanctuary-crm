@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Eye, EyeOff, Save, Wifi } from "lucide-react";
+import { ArrowLeft, Check, Eye, EyeOff, Pencil, Plus, Save, Wifi, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,11 +15,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ErrorState, Eyebrow, StatusBadge } from "@/components/common";
+import { RoomDialog } from "@/components/admin/RoomDialog";
 import { useBookings, useCustomers, useMockData, useVilla } from "@/hooks/useData";
 import { bookingsOnDate } from "@/services/domain";
 import { formatDateRange, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { VillaMode } from "@/types";
+import type { Room, VillaMode } from "@/types";
 
 export default function VillaDetailPage() {
   const { id } = useParams();
@@ -31,6 +32,9 @@ export default function VillaDetailPage() {
   const [pendingMode, setPendingMode] = useState<VillaMode | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [draft, setDraft] = useState<Record<string, string> | null>(null);
+  // null = closed, "new" = adding, a Room = editing that one.
+  const [roomEdit, setRoomEdit] = useState<Room | "new" | null>(null);
+  const [amenity, setAmenity] = useState("");
 
   if (!villa) {
     return (
@@ -48,6 +52,7 @@ export default function VillaDetailPage() {
   const live = bookingsOnDate(bookings, villa.id, today);
   const split = villa.mode === "split";
   const fields = draft ?? {
+    capacity: String(villa.capacity),
     baseRate: String(villa.baseRate),
     weekendRate: String(villa.weekendRate),
     seasonalRate: String(villa.seasonalRate),
@@ -61,6 +66,7 @@ export default function VillaDetailPage() {
 
   const save = () => {
     updateVilla(villa.id, {
+      capacity: Number(fields.capacity),
       baseRate: Number(fields.baseRate),
       weekendRate: Number(fields.weekendRate),
       seasonalRate: Number(fields.seasonalRate),
@@ -154,10 +160,17 @@ export default function VillaDetailPage() {
           {/* -------------------------------------------------------- rooms */}
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-xl text-ink">Rooms</h2>
-              <p className="text-sm text-stone-600">
-                {split ? "Individually bookable" : "Held together as one unit"}
-              </p>
+              <div>
+                <h2 className="text-xl text-ink">Rooms</h2>
+                <p className="mt-1 text-sm text-stone-600">
+                  {villa.bedrooms} bedrooms ·{" "}
+                  {split ? "individually bookable" : "held together as one unit"}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setRoomEdit("new")}>
+                <Plus aria-hidden />
+                Add room
+              </Button>
             </div>
             <hr className="rule-gold my-4" />
             <ul className="grid gap-3 sm:grid-cols-2">
@@ -181,10 +194,20 @@ export default function VillaDetailPage() {
                           Sleeps {room.capacity} · {money(room.baseRate)} / night
                         </p>
                       </div>
-                      <StatusBadge
-                        label={holder ? "Occupied" : "Available"}
-                        tone={holder ? "inhouse" : "confirmed"}
-                      />
+                      <span className="flex items-center gap-1">
+                        <StatusBadge
+                          label={holder ? "Occupied" : "Available"}
+                          tone={holder ? "inhouse" : "confirmed"}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Edit ${room.name}`}
+                          onClick={() => setRoomEdit(room)}
+                        >
+                          <Pencil aria-hidden />
+                        </Button>
+                      </span>
                     </div>
                     {holder && (
                       <p className="mt-3 border-t border-status-inhouse/20 pt-3 text-sm">
@@ -230,6 +253,18 @@ export default function VillaDetailPage() {
                 />
               </div>
 
+              <div className="space-y-1.5 sm:max-w-40">
+                <Label htmlFor="capacity">Sleeps (whole villa)</Label>
+                <Input
+                  id="capacity"
+                  type="number"
+                  min={1}
+                  max={40}
+                  value={fields.capacity}
+                  onChange={(event) => set("capacity", event.target.value)}
+                />
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-3">
                 <RateField id="baseRate" label="Base rate" value={fields.baseRate} onChange={set} />
                 <RateField id="weekendRate" label="Weekend rate" value={fields.weekendRate} onChange={set} />
@@ -262,17 +297,58 @@ export default function VillaDetailPage() {
           {/* ---------------------------------------------------- amenities */}
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
             <h2 className="text-xl text-ink">Amenities</h2>
+            <p className="mt-1 text-sm text-stone-600">
+              Shown to guests in the portal, on this villa only.
+            </p>
             <hr className="rule-gold my-4" />
             <ul className="flex flex-wrap gap-2">
-              {villa.amenities.map((amenity) => (
+              {villa.amenities.map((item) => (
                 <li
-                  key={amenity}
-                  className="rounded-full bg-sand-200 px-3 py-1.5 text-sm text-ink"
+                  key={item}
+                  className="flex items-center gap-1 rounded-full bg-sand-200 py-1.5 pr-1.5 pl-3 text-sm text-ink"
                 >
-                  {amenity}
+                  {item}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${item}`}
+                    onClick={() =>
+                      updateVilla(villa.id, {
+                        amenities: villa.amenities.filter((a) => a !== item),
+                      })
+                    }
+                    className="rounded-full p-0.5 text-stone hover:bg-white hover:text-ink"
+                  >
+                    <X className="size-3.5" aria-hidden />
+                  </button>
                 </li>
               ))}
             </ul>
+
+            <form
+              className="mt-4 flex max-w-sm gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const value = amenity.trim();
+                if (!value) return;
+                if (villa.amenities.includes(value)) {
+                  setAmenity("");
+                  return toast.error(`${value} is already listed`);
+                }
+                updateVilla(villa.id, { amenities: [...villa.amenities, value] });
+                setAmenity("");
+              }}
+            >
+              <Input
+                aria-label="New amenity"
+                value={amenity}
+                onChange={(event) => setAmenity(event.target.value)}
+                placeholder="Plunge pool"
+              />
+              <Button type="submit" variant="outline">
+                <Plus aria-hidden />
+                Add
+              </Button>
+            </form>
           </section>
         </div>
 
@@ -383,6 +459,18 @@ export default function VillaDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {roomEdit && (
+        <RoomDialog
+          villaId={villa.id}
+          room={roomEdit === "new" ? null : roomEdit}
+          occupied={
+            roomEdit !== "new" &&
+            live.some((b) => b.roomIds.length === 0 || b.roomIds.includes(roomEdit.id))
+          }
+          onClose={() => setRoomEdit(null)}
+        />
+      )}
     </div>
   );
 }

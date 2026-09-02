@@ -28,6 +28,7 @@ import type {
   Payment,
   PaymentRejectionReason,
   PropertySettings,
+  Room,
   Villa,
   VillaMode,
 } from "@/types";
@@ -65,6 +66,10 @@ export interface MockData {
   addPayment: (payment: Payment) => void;
   setVillaMode: (villaId: ID, mode: VillaMode) => void;
   updateVilla: (villaId: ID, patch: Partial<Villa>) => void;
+  /** Add a room, or edit one. Omit `id` to add. */
+  saveRoom: (villaId: ID, room: Partial<Room> & { id?: ID }) => void;
+  /** Refused by the database while a booking still holds the room. */
+  deleteRoom: (roomId: ID) => void;
   setFoodOrderStatus: (orderId: ID, status: FoodOrderStatus) => void;
   createFoodOrder: (order: FoodOrder) => void;
   createRequest: (request: GuestRequest) => void;
@@ -257,6 +262,8 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true }))),
       // Settings, invoices and the menu are read-only in the offline harness;
       // the Supabase provider implements them.
+      saveRoom: () => {},
+      deleteRoom: () => {},
       setInvoiceStatus: () => {},
       updateSettings: () => {},
       saveMenuItem: () => {},

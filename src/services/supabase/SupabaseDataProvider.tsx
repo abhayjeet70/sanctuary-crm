@@ -338,10 +338,40 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           if (patch.wifiNetwork !== undefined) columns.wifi_network = patch.wifiNetwork;
           if (patch.wifiPassword !== undefined) columns.wifi_password = patch.wifiPassword;
           if (patch.mode !== undefined) columns.mode = patch.mode;
+          if (patch.name !== undefined) columns.name = patch.name;
+          if (patch.capacity !== undefined) columns.capacity = patch.capacity;
+          if (patch.amenities !== undefined) columns.amenities = patch.amenities;
+          if (patch.status !== undefined) columns.status = patch.status;
           if (!Object.keys(columns).length) return;
 
           const { error } = await supabase.from("villas").update(columns).eq("id", villaId);
           if (report(error, "Could not save the villa")) return;
+          await refetch();
+        })();
+      },
+
+      saveRoom: (villaId, room) => {
+        void (async () => {
+          const columns = {
+            villa_id: villaId,
+            name: room.name,
+            capacity: room.capacity ?? 2,
+            base_rate: room.baseRate ?? 0,
+          };
+          const { error } = room.id
+            ? await supabase.from("rooms").update(columns).eq("id", room.id)
+            : await supabase.from("rooms").insert(columns);
+          if (report(error, "Could not save the room")) return;
+          await refetch();
+        })();
+      },
+
+      deleteRoom: (roomId) => {
+        void (async () => {
+          const { error } = await supabase.from("rooms").delete().eq("id", roomId);
+          // The guard trigger's message names the bookings in the way — it is
+          // more useful than anything this layer could invent.
+          if (report(error, "Could not remove the room")) return;
           await refetch();
         })();
       },

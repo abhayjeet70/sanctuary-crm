@@ -263,7 +263,7 @@ export default function SettingsPage() {
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
             <Eyebrow className="text-gold-700">Villas</Eyebrow>
             <p className="mt-2 text-sm text-stone-600">
-              Rates, times, amenities and Wi-Fi live on each villa.
+              Rooms, capacity, rates, times, amenities and Wi-Fi live on each villa.
             </p>
             <ul className="mt-4 space-y-3">
               {villas.map((villa) => (
@@ -278,7 +278,8 @@ export default function SettingsPage() {
                     <p className="font-medium text-ink">{villa.name}</p>
                     <p className="text-xs text-stone-600">
                       {villa.mode === "whole" ? "Whole villa" : "Split into rooms"} ·{" "}
-                      {money(villa.baseRate)} base · check-in {villa.checkInTime}
+                      {villa.bedrooms} rooms · sleeps {villa.capacity} ·{" "}
+                      {money(villa.baseRate)} base
                     </p>
                   </div>
                   <Button asChild variant="outline" size="sm">
