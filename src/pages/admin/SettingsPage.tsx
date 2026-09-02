@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DevBadge, Eyebrow, LoadingState, PageHeader } from "@/components/common";
+import { Eyebrow, LoadingState, PageHeader } from "@/components/common";
 import { MenuManager } from "./MenuManager";
 import { ChangePassword } from "./ChangePassword";
 import { useMockData, useSettings, useVillas } from "@/hooks/useData";
@@ -236,9 +236,6 @@ export default function SettingsPage() {
 
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
             <Eyebrow className="text-gold-700">This build</Eyebrow>
-            <div className="mt-3">
-              <DevBadge />
-            </div>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-600">
               Signed in as {session?.name} · {session?.role}. Authentication, the database
               and storage are real. There is no payment gateway by design — guests pay by

@@ -140,6 +140,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       "notifications",
       "bookings",
       "payments",
+      "invoices",
       "food_orders",
       "guest_requests",
     ]) {

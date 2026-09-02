@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { DevBadge, Logo } from "@/components/common";
+import { Logo } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import { useMockData, useNotifications, usePaymentVerificationQueue } from "@/hooks/useData";
@@ -210,7 +210,6 @@ function NotificationTray() {
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>
         <div className="px-4">
-          <DevBadge />
           <ul className="mt-4 divide-y divide-stone/20">
             {notifications.map((item) => (
               <li key={item.id}>
@@ -265,7 +264,6 @@ export function AdminShell() {
         </div>
         <div className="space-y-3 px-2 pt-4">
           <hr className="rule-gold" />
-          <DevBadge className="bg-sand/10 text-clay-200" />
           <div className="flex items-center gap-2">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-clay text-xs font-semibold text-sand">
               {initials(session?.name ?? "")}

@@ -1,8 +1,11 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
+  Bell,
   CalendarPlus,
   CalendarCheck,
   ChefHat,
+  ChevronRight,
   ConciergeBell,
   Home,
   LogOut,
@@ -10,11 +13,16 @@ import {
   Receipt,
   Sparkles,
   Wallet,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DevBadge, Logo } from "@/components/common";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Logo } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/services/session";
+import { useNotifications, useMockData } from "@/hooks/useData";
+import { formatDateTime } from "@/lib/format";
+import type { AppNotification } from "@/types";
 
 /** Mobile-first: the five things a guest actually does live in a thumb-reachable
  *  bottom bar. The full set appears as a rail once there is room for it. */
@@ -33,6 +41,139 @@ const SECONDARY = [
   { to: "/guest/feedback", label: "Feedback", icon: MessageSquareQuote },
 ] as const;
 
+/** Where a guest notification takes you. */
+function guestDestinationFor(item: AppNotification): string {
+  if (item.kind === "invoice") return "/guest/invoice";
+  if (item.kind === "payment") return "/guest/payment";
+  return "/guest/dashboard";
+}
+
+function GuestNotificationTray() {
+  const notifications = useNotifications();
+  const { markNotificationsRead } = useMockData();
+  // Guests only see invoice & payment notifications
+  const guestNotifs = notifications.filter((n) =>
+    ["invoice", "payment"].includes(n.kind),
+  );
+  const unread = guestNotifs.filter((n) => !n.read).length;
+  const [open, setOpen] = useState(false);
+
+  const seen = useRef<Set<string> | null>(null);
+  const [flash, setFlash] = useState<AppNotification | null>(null);
+
+  useEffect(() => {
+    const allIds = new Set(guestNotifs.map((n) => n.id));
+    if (seen.current === null) {
+      seen.current = allIds;
+      return;
+    }
+    const fresh = guestNotifs.find((n) => !seen.current!.has(n.id));
+    seen.current = allIds;
+    if (fresh) setFlash(fresh);
+  }, [guestNotifs]);
+
+  useEffect(() => {
+    if (!flash) return;
+    const timer = window.setTimeout(() => setFlash(null), 10_000);
+    return () => window.clearTimeout(timer);
+  }, [flash]);
+
+  if (guestNotifs.length === 0) return null;
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) markNotificationsRead();
+      }}
+    >
+      <div className="relative">
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative text-sand/70 hover:bg-sand/12 hover:text-sand"
+            aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+          >
+            <Bell aria-hidden />
+            {unread > 0 && (
+              <span
+                aria-hidden
+                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay px-1 text-[0.625rem] leading-none font-semibold text-white tabular-nums ring-2 ring-ink"
+              >
+                {unread > 9 ? "9+" : unread}
+              </span>
+            )}
+          </Button>
+        </SheetTrigger>
+
+        {flash && !open && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute top-full right-0 z-50 mt-2 w-[19rem] animate-flash-in rounded-xl bg-white p-3 text-left shadow-deep ring-1 ring-gold/25"
+          >
+            <span
+              aria-hidden
+              className="absolute -top-1 right-4 size-2 rotate-45 bg-white ring-1 ring-gold/25"
+            />
+            <div className="relative flex items-start gap-2">
+              <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-clay" aria-hidden />
+              <Link
+                to={guestDestinationFor(flash)}
+                onClick={() => setFlash(null)}
+                className="min-w-0 flex-1"
+              >
+                <span className="block text-sm font-medium text-ink">{flash.title}</span>
+                <span className="mt-0.5 block text-sm text-stone-600">{flash.detail}</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setFlash(null)}
+                aria-label="Dismiss"
+                className="-mt-1 -mr-1 rounded-md p-1 text-stone hover:bg-sand-200 hover:text-ink"
+              >
+                <X className="size-3.5" aria-hidden />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Notifications</SheetTitle>
+        </SheetHeader>
+        <div className="px-4">
+          <ul className="mt-4 divide-y divide-stone/20">
+            {guestNotifs.map((item) => (
+              <li key={item.id}>
+                <Link
+                  to={guestDestinationFor(item)}
+                  onClick={() => setOpen(false)}
+                  className="-mx-2 flex items-start gap-2 rounded-lg px-2 py-3 transition-colors hover:bg-gold/8"
+                >
+                  {!item.read && (
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-clay" aria-hidden />
+                  )}
+                  <span className={cn("min-w-0 flex-1", item.read && "pl-3.5")}>
+                    <span className="block text-sm font-medium text-ink">{item.title}</span>
+                    <span className="mt-0.5 block text-sm text-stone-600">{item.detail}</span>
+                    <span className="mt-1 block text-xs text-stone">
+                      {formatDateTime(item.at)}
+                    </span>
+                  </span>
+                  <ChevronRight className="mt-1 size-4 shrink-0 text-stone" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export function GuestShell() {
   const { session, signOut } = useSession();
   const navigate = useNavigate();
@@ -49,7 +190,7 @@ export function GuestShell() {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
           <Logo variant="onDark" size="h-11 sm:h-12" />
           <div className="flex items-center gap-2">
-            <DevBadge className="hidden bg-gold/15 text-gold-200 ring-1 ring-gold/30 sm:inline-flex" />
+            <GuestNotificationTray />
             <Button
               variant="ghost"
               size="sm"
