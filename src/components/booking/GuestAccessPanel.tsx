@@ -28,9 +28,12 @@ interface InviteResult {
  */
 export function GuestAccessPanel({
   bookingId,
+  customerId,
   guestEmail,
 }: {
-  bookingId: string;
+  bookingId?: string;
+  /** For a guest with no booking yet — an enquiry reception has recorded. */
+  customerId?: string;
   guestEmail?: string;
 }) {
   const [result, setResult] = useState<InviteResult | null>(null);
@@ -46,7 +49,11 @@ export function GuestAccessPanel({
   const invite = async (send: boolean) => {
     setBusy(true);
     const { data, error } = await supabase.functions.invoke<InviteResult>("invite-guest", {
-      body: { bookingId, redirectTo: `${window.location.origin}/guest/dashboard`, send },
+      body: {
+        ...(bookingId ? { bookingId } : { customerId }),
+        redirectTo: `${window.location.origin}/guest/dashboard`,
+        send,
+      },
     });
     setBusy(false);
 

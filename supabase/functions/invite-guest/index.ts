@@ -28,13 +28,21 @@ Deno.serve(async (req) => {
   const supabase = await callerClient(req);
   if (!supabase) return fail("Sign in first", 401);
 
-  let body: { bookingId?: string; redirectTo?: string; send?: boolean };
+  let body: {
+    bookingId?: string;
+    /** A guest with no booking yet — an enquiry reception has recorded. */
+    customerId?: string;
+    redirectTo?: string;
+    send?: boolean;
+  };
   try {
     body = await req.json();
   } catch {
     return fail("Body must be JSON");
   }
-  if (!body.bookingId) return fail("bookingId is required");
+  if (!body.bookingId && !body.customerId) {
+    return fail("bookingId or customerId is required");
+  }
 
   // ---- Authorise the caller, using THEIR permissions, before going near the
   // service-role key.
@@ -42,25 +50,46 @@ Deno.serve(async (req) => {
   if (roleError) return fail(roleError.message, 400);
   if (!isAdmin) return fail("Only staff can give a guest portal access", 403);
 
-  const { data: booking, error: readError } = await supabase
-    .from("bookings")
-    .select("id, reference, check_in, check_out, customer_id, customers(name, email, phone), villas(name, check_in_time)")
-    .eq("id", body.bookingId)
-    .maybeSingle();
+  // Either route ends with a customer and, when there is one, their stay.
+  let booking: Record<string, unknown> | null = null;
+  let guest: Record<string, string> = {};
+  let customerId: string | undefined = body.customerId;
 
-  if (readError) return fail(readError.message, 400);
-  if (!booking) return fail("Booking not found", 404);
+  if (body.bookingId) {
+    const { data, error: readError } = await supabase
+      .from("bookings")
+      .select("id, reference, check_in, check_out, customer_id, customers(name, email, phone), villas(name, check_in_time)")
+      .eq("id", body.bookingId)
+      .maybeSingle();
 
-  const guest = (booking.customers ?? {}) as Record<string, string>;
-  const villa = (booking.villas ?? {}) as Record<string, string>;
+    if (readError) return fail(readError.message, 400);
+    if (!data) return fail("Booking not found", 404);
+    booking = data as Record<string, unknown>;
+    guest = (data.customers ?? {}) as Record<string, string>;
+    customerId = data.customer_id as string;
+  } else {
+    const { data, error: readError } = await supabase
+      .from("customers")
+      .select("id, name, email, phone")
+      .eq("id", body.customerId)
+      .maybeSingle();
+
+    if (readError) return fail(readError.message, 400);
+    if (!data) return fail("Guest not found", 404);
+    guest = data as unknown as Record<string, string>;
+  }
+
+  const villa = ((booking?.villas as Record<string, string>) ?? {}) as Record<string, string>;
   const email = guest.email?.trim().toLowerCase();
   if (!email) return fail("That guest has no email address on file", 422);
 
-  const { data: totals } = await supabase
-    .from("booking_totals")
-    .select("total, balance")
-    .eq("booking_id", booking.id)
-    .maybeSingle();
+  const { data: totals } = booking
+    ? await supabase
+        .from("booking_totals")
+        .select("total, balance")
+        .eq("booking_id", booking.id as string)
+        .maybeSingle()
+    : { data: null };
 
   // ---- Privileged section.
   const { createClient } = await import("jsr:@supabase/supabase-js@2");
@@ -129,18 +158,25 @@ Deno.serve(async (req) => {
   if (userId) {
     await admin
       .from("profiles")
-      .update({ customer_id: booking.customer_id })
+      .update({ customer_id: customerId })
       .eq("id", userId)
       .eq("role", "guest");
   }
 
-  const message =
-    `Hello ${guest.name ?? "there"}, your stay at ${villa.name ?? "Homes of Sanctuary"} is booked.\n\n` +
-    `Booking ${booking.reference}\n` +
-    `${booking.check_in} to ${booking.check_out}, check-in from ${villa.check_in_time ?? "14:00"}\n` +
-    `Total ${rupees(totals?.total ?? 0)}, balance ${rupees(totals?.balance ?? 0)}\n\n` +
-    `Open your booking, pay and upload your receipt here:\n${link.properties?.action_link}\n\n` +
-    `The link signs you in and lets you set a password.`;
+  // With no booking there is nothing to summarise, so the message is only the
+  // way in — which is the whole point of inviting someone who has not booked.
+  const b = (booking ?? {}) as Record<string, string>;
+  const message = booking
+    ? `Hello ${guest.name ?? "there"}, your stay at ${villa.name ?? "Homes of Sanctuary"} is booked.\n\n` +
+      `Booking ${b.reference}\n` +
+      `${b.check_in} to ${b.check_out}, check-in from ${villa.check_in_time ?? "14:00"}\n` +
+      `Total ${rupees(totals?.total ?? 0)}, balance ${rupees(totals?.balance ?? 0)}\n\n` +
+      `Open your booking, pay and upload your receipt here:\n${link.properties?.action_link}\n\n` +
+      `The link signs you in and lets you set a password.`
+    : `Hello ${guest.name ?? "there"}, here is your Homes of Sanctuary guest portal.\n\n` +
+      `Open it here:\n${link.properties?.action_link}\n\n` +
+      `The link signs you in and lets you set a password. Your booking will appear ` +
+      `there once it is confirmed.`;
 
   return json({
     ok: true,

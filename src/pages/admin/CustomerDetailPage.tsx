@@ -19,6 +19,7 @@ import {
   useRequestViews,
 } from "@/hooks/useData";
 import { CustomerDialog } from "@/components/admin/CustomerDialog";
+import { GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
 import { bookingStatus, paymentStatus, requestStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateRange, initials, money } from "@/lib/format";
 
@@ -126,6 +127,13 @@ export default function CustomerDetailPage() {
           </p>
         )}
       </section>
+
+      {/* A guest reception adds by hand has no way into the portal until
+          someone hands them one. Their booking, when it exists, offers the
+          same thing — this covers the enquiry that has not booked yet. */}
+      {customer.email && (
+        <GuestAccessPanel customerId={customer.id} guestEmail={customer.email} />
+      )}
 
       {/* ----------------------------------------------------------- figures */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
