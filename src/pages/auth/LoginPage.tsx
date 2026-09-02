@@ -9,11 +9,24 @@ import { cn } from "@/lib/utils";
 
 const HERO = photo.hills;
 
-/** Demo accounts, seeded by supabase/migrations/..._demo_auth_users.sql. */
+/**
+ * Demo accounts, seeded by supabase/migrations/..._demo_auth_users.sql.
+ *
+ * Dev only. One of these is an admin with a shared four-character password, so
+ * on a public URL the panel is an open door to the whole operation — Vite
+ * strips it from the production bundle rather than merely hiding it.
+ */
+// The shared password comes from the environment and is deliberately absent
+// from the deployed build, which is what actually keeps it out of the bundle —
+// a hidden panel would still have shipped the password to anyone who greps the
+// JavaScript. No VITE_DEMO_PASSWORD, no panel.
+const DEMO_PASSWORD = ((import.meta.env ?? {}) as Record<string, string | undefined>)
+  .VITE_DEMO_PASSWORD;
+
 const DEMO = [
-  { label: "Owner & reception", email: "admin@gmail.com", password: "demo123" },
-  { label: "Guest — Pooja Bothra", email: "user@gmail.com", password: "demo123" },
-  { label: "Housekeeping — staff queue", email: "housekeeping@gmail.com", password: "demo123" },
+  { label: "Owner & reception", email: "admin@gmail.com" },
+  { label: "Guest — Pooja Bothra", email: "user@gmail.com" },
+  { label: "Housekeeping — staff queue", email: "housekeeping@gmail.com" },
 ];
 
 function useParallax() {
@@ -49,9 +62,9 @@ export default function LoginPage() {
   }, [session, navigate]);
 
   /** The demo buttons still sign in directly; the panel owns the real form. */
-  const enterAs = async (demoEmail: string, demoPassword: string) => {
+  const enterAs = async (demoEmail: string) => {
     setBusy(true);
-    const { error } = await signIn(demoEmail, demoPassword);
+    const { error } = await signIn(demoEmail, DEMO_PASSWORD!);
     if (error) setBusy(false);
   };
 
@@ -122,7 +135,8 @@ export default function LoginPage() {
           <div className="flex flex-col gap-4">
             <AuthPanel />
 
-            {/* One-click demo accounts */}
+            {/* One-click demo accounts — development builds only */}
+            {DEMO_PASSWORD && (
             <div className="rounded-2xl bg-ink/40 p-4 backdrop-blur-md ring-1 ring-gold/20">
               <Eyebrow className="text-gold-400/75">Demo accounts</Eyebrow>
               <div className="mt-3 flex flex-col gap-2">
@@ -131,7 +145,7 @@ export default function LoginPage() {
                     key={account.email}
                     type="button"
                     disabled={busy}
-                    onClick={() => void enterAs(account.email, account.password)}
+                    onClick={() => void enterAs(account.email)}
                     className="group flex items-center justify-between gap-3 rounded-xl bg-white/6 px-4 py-3 text-left transition-all hover:bg-white/12 hover:ring-1 hover:ring-gold/45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:opacity-60"
                   >
                     <span className="min-w-0">
@@ -149,10 +163,11 @@ export default function LoginPage() {
               </div>
               <p className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-sand/55">
                 <KeyRound className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                Real Supabase accounts with a shared demo password. Delete them before the
-                property's own data is loaded.
+                Real Supabase accounts, shown only because VITE_DEMO_PASSWORD is set
+                locally. Delete the accounts before the property's own data is loaded.
               </p>
             </div>
+            )}
           </div>
         </div>
 
