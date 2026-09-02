@@ -67,7 +67,7 @@ export default function CustomerDetailPage() {
             {initials(customer.name)}
           </span>
           <div className="min-w-0 flex-1">
-            <Eyebrow className="text-gold-700">{titleCase(customer.guestType)} guest</Eyebrow>
+            <Eyebrow className="text-gold-700">Guest</Eyebrow>
             <h1 className="display-caps mt-1.5 text-3xl text-ink">{customer.name}</h1>
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-stone-600">
               <a

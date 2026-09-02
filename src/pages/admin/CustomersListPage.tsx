@@ -11,18 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EmptyState, PageHeader, StatusBadge } from "@/components/common";
+import { EmptyState, PageHeader } from "@/components/common";
 import { useBookingViews, useCustomers } from "@/hooks/useData";
 import { formatDate, initials, money } from "@/lib/format";
-import type { GuestType } from "@/types";
-
-const GUEST_TYPE: Record<GuestType, { label: string; tone: "confirmed" | "uploaded" | "pending" | "completed" }> = {
-  new: { label: "New", tone: "uploaded" },
-  returning: { label: "Returning", tone: "confirmed" },
-  vip: { label: "VIP", tone: "pending" },
-  corporate: { label: "Corporate", tone: "completed" },
-};
-
 export default function CustomersListPage() {
   const customers = useCustomers();
   const views = useBookingViews();
@@ -99,7 +90,6 @@ export default function CustomersListPage() {
                 <TableRow>
                   <TableHead>Guest</TableHead>
                   <TableHead>Contact</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead className="text-center">Bookings</TableHead>
                   <TableHead>Last stay</TableHead>
                   <TableHead className="text-right">Lifetime spend</TableHead>
@@ -107,7 +97,6 @@ export default function CustomersListPage() {
               </TableHeader>
               <TableBody>
                 {rows.map(({ customer, bookingCount, spend, lastStay }) => {
-                  const type = GUEST_TYPE[customer.guestType];
                   return (
                     <TableRow key={customer.id} className="group">
                       <TableCell>
@@ -126,9 +115,6 @@ export default function CustomersListPage() {
                       <TableCell>
                         <span className="block text-ink">{customer.phone}</span>
                         <span className="block text-xs text-stone-600">{customer.email}</span>
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge label={type.label} tone={type.tone} />
                       </TableCell>
                       <TableCell className="text-center tabular-nums">{bookingCount}</TableCell>
                       <TableCell className="text-stone-600">
