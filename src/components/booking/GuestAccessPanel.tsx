@@ -208,7 +208,7 @@ export function EmailGuestButton({
       toast.warning("Nothing was sent", {
         description:
           email?.reason === "no email provider configured"
-            ? "Run: npm run configure-email to set this up."
+            ? "Set SMTP_HOST, SMTP_USER and SMTP_PASS as function secrets, or run npm run configure-email for Resend."
             : (email?.reason ?? "The provider rejected the message."),
       });
     }

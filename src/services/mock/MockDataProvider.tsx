@@ -29,6 +29,7 @@ import type {
   PaymentRejectionReason,
   PropertySettings,
   Room,
+  Customer,
   Villa,
   VillaMode,
 } from "@/types";
@@ -67,6 +68,8 @@ export interface MockData {
   setVillaMode: (villaId: ID, mode: VillaMode) => void;
   updateVilla: (villaId: ID, patch: Partial<Villa>) => void;
   /** Add a room, or edit one. Omit `id` to add. */
+  /** Add a guest, or edit one. Omit `id` to add. */
+  saveCustomer: (customer: Partial<Customer> & { id?: ID }) => void;
   saveRoom: (villaId: ID, room: Partial<Room> & { id?: ID }) => void;
   /** Refused by the database while a booking still holds the room. */
   deleteRoom: (roomId: ID) => void;
@@ -78,6 +81,9 @@ export interface MockData {
   updateFeedback: (id: ID, patch: Partial<Feedback>) => void;
   logActivity: (entityId: ID, kind: ActivityKind, title: string, detail?: string) => void;
   markNotificationsRead: () => void;
+  /** Raise a draft invoice against a booking. The number is allocated by the
+   *  database, so two people raising one at once cannot collide. */
+  createInvoice: (bookingId: ID) => void;
   /** Issue a draft invoice (or void one). Only issued invoices reach the guest. */
   setInvoiceStatus: (id: ID, status: Invoice["status"]) => void;
   updateSettings: (patch: Partial<PropertySettings>) => void;
@@ -262,8 +268,10 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true }))),
       // Settings, invoices and the menu are read-only in the offline harness;
       // the Supabase provider implements them.
+      saveCustomer: () => {},
       saveRoom: () => {},
       deleteRoom: () => {},
+      createInvoice: () => {},
       setInvoiceStatus: () => {},
       updateSettings: () => {},
       saveMenuItem: () => {},

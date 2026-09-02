@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Search, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,12 +13,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState, PageHeader } from "@/components/common";
+import { CustomerDialog } from "@/components/admin/CustomerDialog";
 import { useBookingViews, useCustomers } from "@/hooks/useData";
 import { formatDate, initials, money } from "@/lib/format";
 export default function CustomersListPage() {
   const customers = useCustomers();
   const views = useBookingViews();
   const [search, setSearch] = useState("");
+  // ?add=1 is how the dashboard's "Add customer" quick action lands here.
+  const [params, setParams] = useSearchParams();
+  const adding = params.get("add") === "1";
+  const setAdding = (open: boolean) => setParams(open ? { add: "1" } : {}, { replace: true });
 
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -56,7 +62,15 @@ export default function CustomersListPage() {
         eyebrow={`${customers.length} guests on record`}
         title="Guests"
         description="Everyone who has stayed or is due to, with their history and what they prefer."
+        actions={
+          <Button onClick={() => setAdding(true)}>
+            <UserPlus aria-hidden />
+            Add guest
+          </Button>
+        }
       />
+
+      {adding && <CustomerDialog customer={null} onClose={() => setAdding(false)} />}
 
       <div className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12">
         <div className="max-w-md space-y-1.5">

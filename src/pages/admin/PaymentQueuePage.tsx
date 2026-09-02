@@ -81,7 +81,7 @@ export default function PaymentQueuePage() {
       <PageHeader
         eyebrow={`${queue.length} awaiting a decision`}
         title="Payment verification"
-        description="Oldest first. Open the receipt, check the amount and the reference, then decide."
+        description="Newest first. Open the receipt, check the amount and the reference, then decide."
       />
 
       <div className="grid gap-6 xl:grid-cols-[19rem_1fr]">

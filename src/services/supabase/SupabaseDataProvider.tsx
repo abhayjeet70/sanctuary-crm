@@ -350,6 +350,24 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      saveCustomer: (customer) => {
+        void (async () => {
+          const columns = {
+            name: customer.name,
+            phone: customer.phone ?? "",
+            email: customer.email ?? "",
+            city: customer.city ?? "",
+            preferences: customer.preferences ?? [],
+            notes: customer.notes || null,
+          };
+          const { error } = customer.id
+            ? await supabase.from("customers").update(columns).eq("id", customer.id)
+            : await supabase.from("customers").insert(columns);
+          if (report(error, "Could not save the guest")) return;
+          await refetch();
+        })();
+      },
+
       saveRoom: (villaId, room) => {
         void (async () => {
           const columns = {
@@ -468,6 +486,18 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         void (async () => {
           await supabase.from("notifications").update({ read: true }).eq("read", false);
           await refetch();
+        })();
+      },
+
+      createInvoice: (bookingId) => {
+        void (async () => {
+          const { data, error } = await supabase.rpc("create_invoice", {
+            p_booking_id: bookingId,
+          });
+          if (report(error, "Could not raise the invoice")) return;
+          await refetch();
+          const number = (data as { number?: string } | null)?.number;
+          if (number) toast.success(`${number} raised`);
         })();
       },
 

@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Receipt } from "lucide-react";
+import { Eye, Plus, Printer, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -11,6 +12,14 @@ import {
 } from "@/components/ui/table";
 import { EmptyState, PageHeader, StatCard, StatusBadge } from "@/components/common";
 import { SendInvoice } from "@/components/booking/SendInvoice";
+import { NewInvoiceDialog } from "@/components/admin/NewInvoiceDialog";
+import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useBookingViews, useInvoices } from "@/hooks/useData";
 import { titleCase } from "@/lib/status";
 import { formatDate, money } from "@/lib/format";
@@ -18,6 +27,8 @@ import { formatDate, money } from "@/lib/format";
 export default function InvoicesPage() {
   const invoices = useInvoices();
   const views = useBookingViews();
+  const [creating, setCreating] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
 
   const rows = invoices
     .map((invoice) => ({
@@ -36,7 +47,15 @@ export default function InvoicesPage() {
         eyebrow={`${invoices.length} raised`}
         title="Invoices"
         description="Every invoice against a booking. Issue it to the guest portal, or send it on WhatsApp or email."
+        actions={
+          <Button onClick={() => setCreating(true)}>
+            <Plus aria-hidden />
+            New invoice
+          </Button>
+        }
       />
+
+      {creating && <NewInvoiceDialog onClose={() => setCreating(false)} />}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Invoices" value={rows.length} icon={<Receipt className="size-4" />} />
@@ -92,6 +111,14 @@ export default function InvoicesPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`View ${invoice.number}`}
+                        onClick={() => setViewing(invoice.id)}
+                      >
+                        <Eye aria-hidden />
+                      </Button>
                       <SendInvoice view={view!} invoice={invoice} />
                       <Button asChild variant="link" size="sm">
                         <Link to={`/admin/bookings/${invoice.bookingId}`}>Open</Link>
@@ -103,6 +130,34 @@ export default function InvoicesPage() {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {/* The document itself, so a number can be checked without leaving the
+          list. Printing from here prints the invoice, not the page. */}
+      {viewing && (
+        <Dialog open onOpenChange={(open) => !open && setViewing(null)}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+            <DialogHeader className="print:hidden">
+              <DialogTitle className="flex items-center justify-between gap-3">
+                {rows.find((r) => r.invoice.id === viewing)?.invoice.number}
+                <Button variant="outline" size="sm" onClick={() => window.print()}>
+                  <Printer aria-hidden />
+                  Print
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            {(() => {
+              const row = rows.find((r) => r.invoice.id === viewing);
+              return row?.view ? (
+                <InvoiceDocument
+                  view={row.view}
+                  invoice={row.invoice}
+                  className="mt-4 rounded-xl"
+                />
+              ) : null;
+            })()}
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -87,7 +87,7 @@ export function SendInvoice({ view, invoice }: { view: BookingView; invoice: Inv
       toast.warning("Email is not configured", {
         description:
           result?.reason === "no email provider configured"
-            ? "Run: npm run configure-email — or send it on WhatsApp, which needs no setup."
+            ? "Set SMTP_HOST, SMTP_USER and SMTP_PASS as function secrets (or run npm run configure-email for Resend) — or send it on WhatsApp, which needs none of that."
             : (result?.reason ?? "The provider rejected the message."),
       });
     }

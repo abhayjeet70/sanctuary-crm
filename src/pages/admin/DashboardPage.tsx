@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 const QUICK_ACTIONS = [
   { to: "/admin/bookings/new", label: "New booking", icon: Plus, primary: true },
-  { to: "/admin/customers", label: "Add customer", icon: UserPlus },
+  { to: "/admin/customers?add=1", label: "Add customer", icon: UserPlus },
   { to: "/admin/payments", label: "Verify payment", icon: Wallet },
   { to: "/admin/food", label: "Add food order", icon: ChefHat },
   { to: "/admin/requests", label: "View requests", icon: ClipboardList },

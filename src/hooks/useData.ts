@@ -104,7 +104,8 @@ export function useBookingPayments(bookingId: ID | undefined) {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-/** The daily verification screen: every receipt still awaiting a decision. */
+/** The daily verification screen: every receipt still awaiting a decision,
+ *  newest first — a guest who has just paid is the one waiting on the phone. */
 export function usePaymentVerificationQueue() {
   const views = useBookingViews();
   const { payments } = useMockData();
@@ -112,7 +113,7 @@ export function usePaymentVerificationQueue() {
     () =>
       payments
         .filter((p) => p.status === "uploaded")
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map((payment) => ({
           payment,
           view: views.find((v) => v.booking.id === payment.bookingId),

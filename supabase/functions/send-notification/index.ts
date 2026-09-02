@@ -44,9 +44,51 @@ function compose(kind: Kind, ctx: Record<string, string | number>) {
   }
 }
 
+/**
+ * Send over plain SMTP.
+ *
+ * Supabase has no API for sending arbitrary mail — its own sender only ever
+ * handles auth messages (confirm, invite, recover). So a booking or invoice
+ * email needs a provider of its own, and SMTP means that can be the same Gmail
+ * or hosting mailbox the property already uses, with no new account.
+ */
+async function sendViaSmtp(to: string, subject: string, body: string) {
+  const host = Deno.env.get("SMTP_HOST");
+  const user = Deno.env.get("SMTP_USER");
+  const pass = Deno.env.get("SMTP_PASS");
+  if (!host || !user || !pass) return null;
+
+  const port = Number(Deno.env.get("SMTP_PORT") ?? 465);
+  const { SMTPClient } = await import("https://deno.land/x/denomailer@1.6.0/mod.ts");
+  const client = new SMTPClient({
+    connection: { hostname: host, port, tls: port === 465, auth: { username: user, password: pass } },
+  });
+
+  try {
+    await client.send({
+      from: Deno.env.get("NOTIFY_FROM") ?? user,
+      to,
+      subject,
+      content: body,
+    });
+    return { delivered: true };
+  } catch (error) {
+    return { delivered: false, reason: `SMTP refused the message: ${error}` };
+  } finally {
+    await client.close().catch(() => {});
+  }
+}
+
 async function sendEmail(to: string, subject: string, body: string) {
   const apiKey = Deno.env.get("RESEND_API_KEY");
-  if (!apiKey) return { delivered: false, reason: "no email provider configured" };
+  if (!apiKey) {
+    // No Resend key: fall back to SMTP if the property configured one.
+    const smtp = await sendViaSmtp(to, subject, body);
+    return smtp ?? {
+      delivered: false,
+      reason: "no email provider configured",
+    };
+  }
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",

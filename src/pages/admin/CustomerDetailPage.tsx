@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, Mail, MapPin, Pencil, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -17,6 +18,7 @@ import {
   useMockData,
   useRequestViews,
 } from "@/hooks/useData";
+import { CustomerDialog } from "@/components/admin/CustomerDialog";
 import { bookingStatus, paymentStatus, requestStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateRange, initials, money } from "@/lib/format";
 
@@ -27,6 +29,7 @@ export default function CustomerDetailPage() {
   const requests = useRequestViews();
   const feedback = useFeedbackViews();
   const { invoices, activity } = useMockData();
+  const [editing, setEditing] = useState(false);
 
   if (!stats) {
     return (
@@ -90,7 +93,15 @@ export default function CustomerDetailPage() {
               </span>
             </div>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Pencil aria-hidden />
+            Edit
+          </Button>
         </div>
+
+        {editing && (
+          <CustomerDialog customer={customer} onClose={() => setEditing(false)} />
+        )}
 
         {customer.preferences.length > 0 && (
           <>
