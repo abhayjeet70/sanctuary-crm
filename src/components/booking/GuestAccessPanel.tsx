@@ -51,7 +51,9 @@ export function GuestAccessPanel({
     const { data, error } = await supabase.functions.invoke<InviteResult>("invite-guest", {
       body: {
         ...(bookingId ? { bookingId } : { customerId }),
-        redirectTo: `${window.location.origin}/guest/dashboard`,
+        // Land on the password screen, not the dashboard: the link is the
+        // only way in until they have chosen one.
+        redirectTo: `${window.location.origin}/reset-password`,
         send,
       },
     });

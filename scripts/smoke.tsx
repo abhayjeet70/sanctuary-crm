@@ -116,5 +116,39 @@ for (const role of ["admin", "staff", "guest"] as const) {
   }
 }
 
+/* A guarded route must WAIT while the session is loading, not redirect.
+ * A sign-in link arrives as /guest/dashboard#access_token=...; redirecting
+ * during that first async moment discards the URL and the sign-in with it. */
+{
+  const pending = renderToString(
+    <SessionContext.Provider
+      value={{
+        session: null,
+        loading: true,
+        signIn: async () => ({ error: null }),
+        signUp: async () => ({ error: null, needsConfirmation: true }),
+        signOut: async () => {},
+        resetPassword: async () => ({ error: null }),
+        updatePassword: async () => ({ error: null }),
+      }}
+    >
+      <MockDataProvider>
+        <TooltipProvider>
+          <MemoryRouter initialEntries={["/guest/dashboard"]}>
+            <AppRoutes />
+          </MemoryRouter>
+        </TooltipProvider>
+      </MockDataProvider>
+    </SessionContext.Provider>,
+  );
+
+  if (pending.includes("Signing you in")) {
+    console.log("  ok   guard waits while the session is loading");
+  } else {
+    failed++;
+    console.error("  FAIL guard redirected while the session was still loading");
+  }
+}
+
 console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes render");
 process.exit(failed ? 1 : 0);

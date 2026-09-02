@@ -43,12 +43,28 @@ import type { Role } from "@/types";
  * React Router stays exactly as it is, no framework migration.
  */
 function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
-  const { session } = useSession();
+  const { session, loading } = useSession();
   const location = useLocation();
 
+  // Wait for the session before deciding. A magic link arrives as
+  // /guest/dashboard#access_token=…, and redirecting during that first
+  // async moment threw the URL — and the sign-in with it — away.
+  if (loading) return <AuthPending />;
   if (!session) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   if (session.role !== role) return <Navigate to={homeFor(session.role)} replace />;
   return <>{children}</>;
+}
+
+/** Shown only for the moment it takes to read the stored session, or to
+ *  exchange the token in a sign-in link. */
+function AuthPending() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-sand">
+      <p className="text-sm text-stone-600" role="status" aria-live="polite">
+        Signing you in…
+      </p>
+    </div>
+  );
 }
 
 /** Where each role belongs. One definition, used by the guard and the root. */
@@ -57,7 +73,8 @@ function homeFor(role: Role) {
 }
 
 function RootRedirect() {
-  const { session } = useSession();
+  const { session, loading } = useSession();
+  if (loading) return <AuthPending />;
   if (!session) return <Navigate to="/login" replace />;
   return <Navigate to={homeFor(session.role)} replace />;
 }

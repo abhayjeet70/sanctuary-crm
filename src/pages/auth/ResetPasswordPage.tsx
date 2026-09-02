@@ -60,7 +60,14 @@ export default function ResetPasswordPage() {
           className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent"
         />
         <Logo variant="onDark" size="h-14" />
-        <p className="mt-5 font-display text-2xl text-white">Choose a new password</p>
+        <p className="mt-5 font-display text-2xl text-white">
+          {session ? `Welcome, ${session.name}` : "Choose a new password"}
+        </p>
+        {session && (
+          <p className="mt-1.5 text-sm leading-relaxed text-sand/70">
+            You are signed in. Choose a password so you can get back in without a link.
+          </p>
+        )}
 
         <div className="mt-5 space-y-4">
           {(
@@ -102,12 +109,21 @@ export default function ResetPasswordPage() {
             <ArrowRight aria-hidden />
           </Button>
 
-          <Link
-            to="/login"
-            className="block text-center text-xs text-sand/60 underline underline-offset-4 hover:text-sand"
-          >
-            Back to sign in
-          </Link>
+          {session ? (
+            <Link
+              to={session.role === "admin" ? "/admin" : session.role === "staff" ? "/staff" : "/guest"}
+              className="block text-center text-xs text-sand/60 underline underline-offset-4 hover:text-sand"
+            >
+              Skip for now
+            </Link>
+          ) : (
+            <Link
+              to="/login"
+              className="block text-center text-xs text-sand/60 underline underline-offset-4 hover:text-sand"
+            >
+              Back to sign in
+            </Link>
+          )}
         </div>
       </form>
     </main>
