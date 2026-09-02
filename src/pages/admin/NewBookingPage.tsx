@@ -18,7 +18,7 @@ import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { useBookings, useCustomers, useMockData, useVillas } from "@/hooks/useData";
 import { bookingTotals, findConflicts } from "@/services/domain";
 import { bookingSource, sourceOptions } from "@/lib/status";
-import { formatDate, money, nightsBetween } from "@/lib/format";
+import { cleanPhone, formatDate, isPhone, money, nightsBetween } from "@/lib/format";
 import { GST_RATES, suggestedGstRate } from "@/lib/tax";
 import { cn } from "@/lib/utils";
 import type { Booking, BookingSource } from "@/types";
@@ -94,7 +94,7 @@ export default function NewBookingPage() {
 
     if (form.customerId === NEW_GUEST) {
       if (!form.name.trim()) next.name = "The guest's name is required.";
-      if (!/^[+\d][\d\s-]{7,}$/.test(form.phone.trim()))
+      if (!isPhone(form.phone))
         next.phone = "Enter a reachable phone number.";
       if (form.email && !/^\S+@\S+\.\S+$/.test(form.email))
         next.email = "That does not look like a complete email address.";
@@ -470,7 +470,7 @@ export default function NewBookingPage() {
                     id="phone"
                     type="tel"
                     value={form.phone}
-                    onChange={(event) => set("phone", event.target.value)}
+                    onChange={(event) => set("phone", cleanPhone(event.target.value))}
                     placeholder="+91 98860 71592"
                   />
                 </Field>

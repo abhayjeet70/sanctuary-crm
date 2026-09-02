@@ -65,3 +65,19 @@ export const initials = (name: string) =>
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+
+/**
+ * Phone numbers.
+ *
+ * `type="tel"` is a keyboard hint, not a constraint — browsers accept any text
+ * in it. `cleanPhone` drops what cannot be part of a number as it is typed,
+ * and `isPhone` is the check before saving. Formats vary too much to validate
+ * properly, so the rule is only: allowed characters, and enough digits to dial.
+ */
+export const cleanPhone = (value: string) => value.replace(/[^\d+\s()-]/g, "");
+
+export const isPhone = (value: string) => {
+  const trimmed = value.trim();
+  if (!/^\+?[\d\s()-]+$/.test(trimmed)) return false;
+  return (trimmed.match(/\d/g)?.length ?? 0) >= 8;
+};

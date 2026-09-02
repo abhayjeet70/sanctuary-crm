@@ -2,6 +2,7 @@
  * of real logic in this UI-only phase. Run with: npx tsx src/services/domain.test.ts */
 import assert from "node:assert/strict";
 import type { Booking } from "../types";
+import { cleanPhone, isPhone } from "../lib/format";
 import {
   addDays,
   bookingTotals,
@@ -96,5 +97,14 @@ assert.deepEqual(firstUnannounced([n("c"), n("a")], new Set(["a", "b"])), n("c")
 // Already seen, or arriving already read, is not news.
 assert.equal(firstUnannounced([n("a"), n("b")], new Set(["a", "b"])), undefined);
 assert.equal(firstUnannounced([n("c", true)], new Set(["a"])), undefined);
+
+/* --- phone numbers ------------------------------------------------------ */
+assert.equal(cleanPhone("dsdsds"), "");
+assert.equal(cleanPhone("+91 98860-71592abc"), "+91 98860-71592");
+assert.equal(isPhone("+91 98860 71592"), true);
+assert.equal(isPhone("(080) 4123 4567"), true);
+assert.equal(isPhone("dsdsds"), false);
+assert.equal(isPhone("98860"), false);      // too few digits to dial
+assert.equal(isPhone("+91 98860 7159x"), false);
 
 console.log("domain.ts — all checks passed");

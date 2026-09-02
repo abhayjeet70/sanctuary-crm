@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCustomers, useMockData } from "@/hooks/useData";
+import { cleanPhone, isPhone } from "@/lib/format";
 import type { Customer } from "@/types";
 
 /**
@@ -43,6 +44,9 @@ export function CustomerDialog({
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (name.trim().length < 2) return toast.error("Enter the guest's name");
+    if (phone.trim() && !isPhone(phone)) {
+      return toast.error("That is not a phone number we could ring");
+    }
     if (!phone.trim() && !email.trim()) {
       return toast.error("A phone number or an email address is needed", {
         description: "Without one of them there is no way to reach this guest.",
@@ -111,7 +115,7 @@ export function CustomerDialog({
                   id="guest-phone"
                   type="tel"
                   value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
+                  onChange={(event) => setPhone(cleanPhone(event.target.value))}
                   placeholder="+91 98450 12345"
                 />
               </div>
