@@ -74,7 +74,9 @@ export interface MockData {
   /** Refused by the database while a booking still holds the room. */
   deleteRoom: (roomId: ID) => void;
   setFoodOrderStatus: (orderId: ID, status: FoodOrderStatus) => void;
-  createFoodOrder: (order: FoodOrder) => void;
+  /** Resolves with the reason it was refused, so the page does not claim
+   *  success for an order the kitchen never received. */
+  createFoodOrder: (order: FoodOrder) => Promise<{ error: string | null }>;
   createRequest: (request: GuestRequest) => void;
   updateRequest: (id: ID, patch: Partial<GuestRequest>) => void;
   createFeedback: (entry: Feedback) => void;
@@ -249,9 +251,10 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
           }
           return patchById(prev, orderId, { status });
         }),
-      createFoodOrder: (order) => {
+      createFoodOrder: async (order) => {
         setFoodOrders((prev) => [order, ...prev]);
         logActivity(order.bookingId, "food", "Kitchen order placed", order.reference);
+        return { error: null };
       },
       createRequest: (request) => {
         setRequests((prev) => [request, ...prev]);

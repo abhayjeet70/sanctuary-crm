@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { CalendarClock, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,7 @@ import { EmptyState, ErrorState, Eyebrow, StatusBadge } from "@/components/commo
 import { useGuestStay } from "@/hooks/useGuest";
 import { useMenuForVilla, useMockData } from "@/hooks/useData";
 import { foodOrderStatus, titleCase } from "@/lib/status";
-import { formatDateTime, money } from "@/lib/format";
+import { formatDate, formatDateTime, money } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
 import { cn } from "@/lib/utils";
 import type { FoodOrder, MenuCategory } from "@/types";
@@ -46,7 +46,7 @@ function DietDot({ isVeg }: { isVeg: boolean }) {
 }
 
 export default function GuestFoodPage() {
-  const { view, customer, orders } = useGuestStay();
+  const { view, customer, orders, today } = useGuestStay();
   // A villa may run its own card, so the menu follows the stay.
   const menu = useMenuForVilla(view?.booking.villaId);
   const { createFoodOrder } = useMockData();
@@ -74,10 +74,24 @@ export default function GuestFoodPage() {
 
   if (!view) return <ErrorState className="m-5" title="No stay found" />;
 
+  // The kitchen cooks for people who are in the house. Arrival day through
+  // departure day, inclusive — breakfast before you leave is a real order.
+  // The same rule is in place_food_order, which is what actually enforces it.
+  const { checkIn, checkOut, status } = view.booking;
+  const confirmed = status === "confirmed" || status === "checked_in" || status === "in_house";
+  const open = confirmed && today >= checkIn && today <= checkOut;
+  const closedBecause = open
+    ? null
+    : today < checkIn
+      ? `The kitchen opens when you arrive on ${formatDate(checkIn)}.`
+      : today > checkOut
+        ? `Your stay ended on ${formatDate(checkOut)}. Do get in touch if you need anything.`
+        : "The kitchen opens once your booking is confirmed.";
+
   const setQty = (id: string, quantity: number) =>
     setCart((prev) => ({ ...prev, [id]: Math.max(0, quantity) }));
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (lines.length === 0) return;
     setPlacing(true);
     const order: FoodOrder = {
@@ -92,16 +106,18 @@ export default function GuestFoodPage() {
       notes: notes.trim() || undefined,
       placedAt: new Date().toISOString(),
     };
-    window.setTimeout(() => {
-      createFoodOrder(order);
-      setCart({});
-      setNotes("");
-      setCartOpen(false);
-      setPlacing(false);
-      toast.success("Order sent to the kitchen", {
-        description: "We will call you to confirm before we start cooking.",
-      });
-    }, 600);
+    // Wait for the kitchen to actually take it. The old code toasted success
+    // on a timer, so an order the server refused still read as sent.
+    const { error } = await createFoodOrder(order);
+    setPlacing(false);
+    if (error) return;
+
+    setCart({});
+    setNotes("");
+    setCartOpen(false);
+    toast.success("Order sent to the kitchen", {
+      description: "We will call you to confirm before we start cooking.",
+    });
   };
 
   return (
@@ -124,7 +140,7 @@ export default function GuestFoodPage() {
                 "fixed inset-x-5 bottom-24 z-20 shadow-deep lg:static lg:inset-auto lg:shadow-none",
                 itemCount === 0 && "hidden lg:inline-flex",
               )}
-              disabled={itemCount === 0}
+              disabled={itemCount === 0 || !open}
             >
               <ShoppingBag aria-hidden />
               {itemCount === 0
@@ -198,7 +214,7 @@ export default function GuestFoodPage() {
                 <p className="text-xs text-stone-600">
                   Added to your room bill. We will call to confirm before cooking.
                 </p>
-                <Button onClick={placeOrder} disabled={placing}>
+                <Button onClick={() => void placeOrder()} disabled={placing}>
                   {placing ? "Sending…" : "Place order"}
                 </Button>
               </SheetFooter>
@@ -206,6 +222,19 @@ export default function GuestFoodPage() {
           </SheetContent>
         </Sheet>
       </header>
+
+      {closedBecause && (
+        <p
+          role="status"
+          className="flex items-start gap-3 rounded-2xl bg-status-pending-bg p-4 text-sm text-ink"
+        >
+          <CalendarClock className="mt-0.5 size-4 shrink-0 text-gold-700" aria-hidden />
+          <span>
+            <span className="block font-medium">The kitchen is closed for you just now</span>
+            <span className="mt-0.5 block text-stone-600">{closedBecause}</span>
+          </span>
+        </p>
+      )}
 
       {/* ------------------------------------------------------- your orders */}
       {orders.length > 0 && (
@@ -317,7 +346,7 @@ export default function GuestFoodPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={!item.available}
+                      disabled={!item.available || !open}
                       onClick={() => setQty(item.id, 1)}
                     >
                       <Plus aria-hidden />

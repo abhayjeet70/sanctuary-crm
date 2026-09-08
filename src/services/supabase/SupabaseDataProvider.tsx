@@ -408,19 +408,22 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
-      createFoodOrder: (order) => {
-        void (async () => {
-          const { error } = await supabase.rpc("place_food_order", {
-            p_booking_id: order.bookingId,
-            p_lines: order.lines.map((line) => ({
-              menu_item_id: line.menuItemId,
-              quantity: line.quantity,
-            })),
-            p_notes: order.notes ?? null,
-          });
-          if (report(error, "Could not place the order")) return;
-          await refetch();
-        })();
+      createFoodOrder: async (order) => {
+        const { error } = await supabase.rpc("place_food_order", {
+          p_booking_id: order.bookingId,
+          p_lines: order.lines.map((line) => ({
+            menu_item_id: line.menuItemId,
+            quantity: line.quantity,
+          })),
+          p_notes: order.notes ?? null,
+        });
+        // The kitchen's own words — "the kitchen opens when you arrive on
+        // 18 Sep" is more use than anything this layer could invent.
+        if (report(error, "Could not place the order")) {
+          return { error: error?.message ?? "Could not place the order" };
+        }
+        await refetch();
+        return { error: null };
       },
 
       createRequest: (request) => {
