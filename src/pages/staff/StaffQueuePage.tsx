@@ -38,13 +38,18 @@ export default function StaffQueuePage() {
 
   const isKitchen = session?.team === "kitchen";
 
-  const open = requests.filter(
+  // RLS already scopes what arrives here to this team, but the page must not
+  // depend on that: a policy is the boundary, not the filter. "Jobs for you"
+  // has to mean it whatever the server sends.
+  const mine = requests.filter((r) => !session?.team || r.request.assignedTo === session.team);
+
+  const open = mine.filter(
     (r) => r.request.status !== "completed" && r.request.status !== "rejected",
   );
-  const done = requests.filter((r) => r.request.status === "completed");
-  const liveOrders = orders.filter(
-    (o) => o.order.status !== "billed" && o.order.status !== "cancelled",
-  );
+  const done = mine.filter((r) => r.request.status === "completed");
+  const liveOrders = isKitchen
+    ? orders.filter((o) => o.order.status !== "billed" && o.order.status !== "cancelled")
+    : [];
 
   const leave = () => {
     void signOut();
