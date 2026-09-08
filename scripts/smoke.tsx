@@ -40,6 +40,7 @@ const ROUTES = [
   "/admin/requests",
   "/admin/feedback",
   "/admin/invoices",
+  "/admin/employees",
   "/admin/settings",
   "/guest",
   "/guest/dashboard",

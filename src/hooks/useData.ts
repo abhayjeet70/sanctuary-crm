@@ -263,3 +263,13 @@ export function useTodayOverview() {
 
 /** The taxes the property charges, in the order they print. */
 export const useTaxes = () => useMockData().taxes;
+
+/* ---------------------------------------------------------------- people */
+
+export const useEmployees = () => useMockData().employees;
+
+/** The salary for one employee. Empty unless the owner is signed in. */
+export function useEmployeePay(employeeId: ID | undefined) {
+  const { employeePay } = useMockData();
+  return employeePay.find((p) => p.employeeId === employeeId);
+}

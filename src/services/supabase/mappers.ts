@@ -17,6 +17,8 @@ import type {
   MenuItem,
   Payment,
   PropertySettings,
+  Employee,
+  EmployeePay,
   Tax,
   Room,
   Villa,
@@ -340,6 +342,40 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   hsnCode: "hsn_code",
   invoiceDeclaration: "invoice_declaration",
   signatoryName: "signatory_name",
+};
+
+export const toEmployee = (row: unknown): Employee => {
+  const x = r(row);
+  return {
+    id: x.id,
+    employeeCode: x.employee_code,
+    fullName: x.full_name,
+    designation: x.designation ?? "",
+    team: x.team ?? undefined,
+    phone: x.phone ?? "",
+    email: x.email ?? "",
+    dateOfJoining: x.date_of_joining ?? undefined,
+    employmentType: x.employment_type,
+    status: x.status,
+    address: x.address ?? "",
+    emergencyName: x.emergency_name ?? "",
+    emergencyPhone: x.emergency_phone ?? "",
+    idDocument: x.id_document ?? "",
+    notes: x.notes ?? "",
+    photoUrl: x.photo_url ?? undefined,
+    profileId: x.profile_id ?? undefined,
+    createdAt: x.created_at,
+  };
+};
+
+export const toEmployeePay = (row: unknown): EmployeePay => {
+  const x = r(row);
+  return {
+    employeeId: x.employee_id,
+    monthlySalary: x.monthly_salary ?? 0,
+    effectiveFrom: x.effective_from,
+    note: x.note ?? "",
+  };
 };
 
 export const toTax = (row: unknown): Tax => {

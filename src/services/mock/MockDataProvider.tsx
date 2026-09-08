@@ -30,6 +30,8 @@ import type {
   PropertySettings,
   Room,
   Customer,
+  Employee,
+  EmployeePay,
   Tax,
   Villa,
   VillaMode,
@@ -54,6 +56,9 @@ export interface MockData {
   menuItems: MenuItem[];
   settings: PropertySettings | null;
   taxes: Tax[];
+  employees: Employee[];
+  /** Owner-only; empty for everyone else because RLS returns nothing. */
+  employeePay: EmployeePay[];
   foodOrders: FoodOrder[];
   requests: GuestRequest[];
   feedback: Feedback[];
@@ -93,7 +98,14 @@ export interface MockData {
   updateSettings: (patch: Partial<PropertySettings>) => void;
   /** Add or edit a tax. Omit `id` to add. */
   saveTax: (tax: Partial<Tax> & { id?: ID }) => void;
+  /** Add or edit an employee. Omit `id` to add. */
+  saveEmployee: (employee: Partial<Employee> & { id?: ID }) => void;
+  deleteEmployee: (id: ID) => void;
+  savePay: (employeeId: ID, monthlySalary: number, note?: string) => void;
   deleteTax: (id: ID) => void;
+  /** Re-read everything. For changes made outside these mutators — an Edge
+   *  Function creating a login, say. */
+  refresh: () => Promise<void>;
   saveMenuItem: (item: Partial<MenuItem> & { id?: ID }) => void;
   deleteMenuItem: (id: ID) => void;
 }
@@ -212,6 +224,8 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       // The offline harness has no configuration; the invoice falls back to a
       // single "Tax" line, which is what taxBreakdown does with an empty list.
       taxes: [],
+      employees: [],
+      employeePay: [],
       foodOrders,
       requests,
       feedback,
@@ -284,6 +298,10 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       deleteRoom: () => {},
       createInvoice: () => {},
       setInvoiceStatus: () => {},
+      refresh: async () => {},
+      saveEmployee: () => {},
+      deleteEmployee: () => {},
+      savePay: () => {},
       saveTax: () => {},
       deleteTax: () => {},
       updateSettings: () => {},

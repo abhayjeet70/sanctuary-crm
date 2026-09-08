@@ -13,6 +13,8 @@ import {
   toInvoice,
   toMenuItem,
   toNotification,
+  toEmployee,
+  toEmployeePay,
   toPayment,
   toTax,
   toVilla,
@@ -28,6 +30,8 @@ import type {
   Invoice,
   MenuItem,
   Payment,
+  Employee,
+  EmployeePay,
   PropertySettings,
   Tax,
   Villa,
@@ -63,6 +67,8 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [taxes, setTaxes] = useState<Tax[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeePay, setEmployeePay] = useState<EmployeePay[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>([]);
   const [requests, setRequests] = useState<ReturnType<typeof toGuestRequest>[]>([]);
@@ -75,7 +81,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const refetch = useCallback(async () => {
     if (!session) return;
 
-    const [v, ra, c, b, p, i, tx, m, f, q, fb, a, n, ps] = await Promise.all([
+    const [v, ra, c, b, p, i, tx, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
       supabase.from("villas").select(SELECTS.villas).order("name"),
       supabase.from("room_availability").select("*"),
       supabase.from("customers").select("*").order("name"),
@@ -83,6 +89,8 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
       supabase.from("taxes").select("*").order("sort_order"),
+      supabase.from("employees").select("*").order("employee_code"),
+      supabase.from("employee_pay").select("*"),
       supabase.from("menu_items").select("*").order("sort_order").order("name"),
       supabase.from("food_orders").select(SELECTS.foodOrders).order("placed_at", { ascending: false }),
       supabase.from("guest_requests").select("*").order("created_at", { ascending: false }),
@@ -94,7 +102,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     // A guest legitimately gets empty arrays for admin-only tables — that is RLS
     // working, not a failure, so only real errors are surfaced.
-    const firstError = [v, ra, c, b, p, i, tx, m, f, q, fb, a, n, ps].find((res) => res.error)?.error;
+    const firstError = [v, ra, c, b, p, i, tx, em, ep, m, f, q, fb, a, n, ps].find(
+      (res) => res.error,
+    )?.error;
     if (firstError && firstError.code !== "PGRST116") {
       console.error("Supabase read failed", firstError);
     }
@@ -105,6 +115,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     setPayments((p.data ?? []).map(toPayment));
     setInvoices((i.data ?? []).map(toInvoice));
     setTaxes((tx.data ?? []).map(toTax));
+    setEmployees((em.data ?? []).map(toEmployee));
+    // Empty for anyone but the owner — that is RLS, not a failure.
+    setEmployeePay((ep.data ?? []).map(toEmployeePay));
     setMenuItems((m.data ?? []).map(toMenuItem));
     setFoodOrders((f.data ?? []).map(toFoodOrder));
     setRequests((q.data ?? []).map(toGuestRequest));
@@ -180,6 +193,8 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       payments,
       invoices,
       taxes,
+      employees,
+      employeePay,
       menuItems,
       foodOrders,
       requests,
@@ -526,6 +541,55 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      refresh: refetch,
+
+      saveEmployee: (employee) => {
+        void (async () => {
+          const columns: Record<string, unknown> = {
+            full_name: employee.fullName,
+            designation: employee.designation ?? "",
+            team: employee.team ?? null,
+            phone: employee.phone ?? "",
+            email: (employee.email ?? "").trim().toLowerCase(),
+            date_of_joining: employee.dateOfJoining || null,
+            employment_type: employee.employmentType ?? "full_time",
+            status: employee.status ?? "active",
+            address: employee.address ?? "",
+            emergency_name: employee.emergencyName ?? "",
+            emergency_phone: employee.emergencyPhone ?? "",
+            id_document: employee.idDocument ?? "",
+            notes: employee.notes ?? "",
+          };
+          // The code is allocated by the database on insert; never overwrite it.
+          const { error } = employee.id
+            ? await supabase.from("employees").update(columns).eq("id", employee.id)
+            : await supabase.from("employees").insert({ ...columns, employee_code: "" });
+          if (report(error, "Could not save the employee")) return;
+          await refetch();
+        })();
+      },
+
+      deleteEmployee: (id) => {
+        void (async () => {
+          const { error } = await supabase.from("employees").delete().eq("id", id);
+          if (report(error, "Could not remove the employee")) return;
+          await refetch();
+        })();
+      },
+
+      savePay: (employeeId, monthlySalary, note) => {
+        void (async () => {
+          const { error } = await supabase.from("employee_pay").upsert({
+            employee_id: employeeId,
+            monthly_salary: monthlySalary,
+            note: note ?? "",
+            updated_at: new Date().toISOString(),
+          });
+          if (report(error, "Could not save the salary")) return;
+          await refetch();
+        })();
+      },
+
       saveTax: (tax) => {
         void (async () => {
           const columns = {
@@ -599,7 +663,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       },
     };
   }, [
-    villas, customers, bookings, payments, invoices, taxes, menuItems,
+    villas, customers, bookings, payments, invoices, taxes, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
   ]);
 

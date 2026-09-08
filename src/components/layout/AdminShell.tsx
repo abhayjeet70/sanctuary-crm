@@ -11,6 +11,7 @@ import {
   Receipt,
   Settings,
   Users,
+  Users2,
   Wallet,
   Menu as MenuIcon,
   ChevronRight,
@@ -41,6 +42,7 @@ const NAV = [
   { to: "/admin/requests", label: "Requests", icon: ClipboardList },
   { to: "/admin/feedback", label: "Feedback", icon: MessageSquareQuote },
   { to: "/admin/invoices", label: "Invoices", icon: Receipt },
+  { to: "/admin/employees", label: "Employees", icon: Users2 },
   // Configuration belongs to the owner. RLS refuses a manager's write either
   // way; hiding the page keeps the UI from offering something that will fail.
   { to: "/admin/settings", label: "Settings", icon: Settings, ownerOnly: true },

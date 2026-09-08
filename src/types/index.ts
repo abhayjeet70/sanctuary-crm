@@ -362,6 +362,44 @@ export interface PropertySettings {
   signatoryName: string;
 }
 
+/* ---------------------------------------------------------------- people */
+
+export type EmploymentType = "full_time" | "part_time" | "contract" | "seasonal";
+export type EmployeeStatus = "active" | "on_leave" | "left";
+
+/** Someone the property employs — with or without a login. */
+export interface Employee {
+  id: ID;
+  employeeCode: string;
+  fullName: string;
+  /** The job title as the property prints it: "Sous chef", "Front desk". */
+  designation: string;
+  /** Decides which queue they see once they have a login. */
+  team?: Team;
+  phone: string;
+  email: string;
+  dateOfJoining?: ISODate;
+  employmentType: EmploymentType;
+  status: EmployeeStatus;
+  address: string;
+  emergencyName: string;
+  emergencyPhone: string;
+  idDocument: string;
+  notes: string;
+  photoUrl?: string;
+  /** Their login, when they have one. */
+  profileId?: ID;
+  createdAt: ISODateTime;
+}
+
+/** Kept apart from Employee so RLS can keep it to the owner. */
+export interface EmployeePay {
+  employeeId: ID;
+  monthlySalary: number;
+  effectiveFrom: ISODate;
+  note: string;
+}
+
 /** A named tax the property charges. See services/domain.ts for the maths. */
 export interface Tax {
   id: ID;
