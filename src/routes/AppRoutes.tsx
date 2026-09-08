@@ -57,6 +57,19 @@ function RequireRole({ role, children }: { role: Role | Role[]; children: ReactN
   return <>{children}</>;
 }
 
+/**
+ * Owner-only pages inside the operations shell.
+ *
+ * A manager reaching one by typing the URL goes to the dashboard rather than
+ * an error: they are signed in and allowed here, just not on this page.
+ */
+function RequireOwner({ children }: { children: ReactNode }) {
+  const { session, loading } = useSession();
+  if (loading) return <AuthPending />;
+  if (session?.role !== "admin") return <Navigate to="/admin/dashboard" replace />;
+  return <>{children}</>;
+}
+
 /** Shown only for the moment it takes to read the stored session, or to
  *  exchange the token in a sign-in link. */
 function AuthPending() {
@@ -118,8 +131,22 @@ export function AppRoutes() {
         <Route path="requests" element={<RequestsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
-        <Route path="employees" element={<EmployeesPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+        <Route
+          path="employees"
+          element={
+            <RequireOwner>
+              <EmployeesPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <RequireOwner>
+              <SettingsPage />
+            </RequireOwner>
+          }
+        />
       </Route>
       <Route
         path="/guest"

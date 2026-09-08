@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowRight, Check, CheckCheck, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, CheckCheck, Lock, X } from "lucide-react";
+import { useSession } from "@/services/session";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Eyebrow, PageHeader, StatusBadge } from "@/components/common";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
@@ -23,6 +24,8 @@ const METHOD_LABEL = {
 export default function PaymentQueuePage() {
   const queue = usePaymentVerificationQueue();
   const { approvePayment, rejectPayment } = useMockData();
+  const { session } = useSession();
+  const isOwner = session?.role === "admin";
   // The queue shrinks as decisions are made, so the cursor is clamped where it
   // is read rather than corrected in an effect — no cascading render.
   const [index, setIndex] = useState(0);
@@ -235,14 +238,27 @@ export default function PaymentQueuePage() {
             )}
 
             <footer className="flex flex-wrap items-center gap-3 border-t border-gold/15 bg-sand-200/50 p-6">
-              <Button onClick={approve}>
-                <Check aria-hidden />
-                Approve {money(payment.amount)}
-              </Button>
-              <Button variant="destructive" onClick={() => setRejecting(true)}>
-                <X aria-hidden />
-                Reject
-              </Button>
+              {/* Accepting money is kept apart from taking the booking. The
+                  RPC refuses anyone but the owner; this only avoids offering
+                  a button that would fail. */}
+              {isOwner ? (
+                <>
+                  <Button onClick={approve}>
+                    <Check aria-hidden />
+                    Approve {money(payment.amount)}
+                  </Button>
+                  <Button variant="destructive" onClick={() => setRejecting(true)}>
+                    <X aria-hidden />
+                    Reject
+                  </Button>
+                </>
+              ) : (
+                <p className="flex items-center gap-2 text-sm text-stone-600">
+                  <Lock className="size-4 shrink-0" aria-hidden />
+                  The owner accepts or refuses payments. You can open the receipt and
+                  check it against the booking.
+                </p>
+              )}
               {queue.length > 1 && (
                 <Button
                   variant="ghost"

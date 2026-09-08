@@ -48,6 +48,7 @@ import {
 import { bookingSource, bookingStatus, paymentStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateTime, money, nightsBetween } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useSession } from "@/services/session";
 import type { BookingStatus, PaymentRejectionReason } from "@/types";
 
 /** Which lifecycle moves are offered, given where the booking currently is. */
@@ -79,6 +80,7 @@ export default function BookingDetailPage() {
   const invoice = useBookingInvoice(id);
   const activity = useActivity(id);
   const { updateBooking, approvePayment, rejectPayment, logActivity } = useMockData();
+  const isOwner = useSession().session?.role === "admin";
 
   const [note, setNote] = useState("");
   const [confirming, setConfirming] = useState<"cancel" | "no_show" | null>(null);
@@ -346,7 +348,7 @@ export default function BookingDetailPage() {
                         alt={`Receipt for ${money(payment.amount)} from ${customer?.name}`}
                         className="aspect-[3/4]"
                       />
-                      {payment.status === "uploaded" && (
+                      {payment.status === "uploaded" && isOwner && (
                         <div className="flex flex-wrap gap-2">
                           <Button
                             size="sm"

@@ -180,6 +180,9 @@ for (const role of ["admin", "staff", "guest"] as const) {
     );
 
   const cases: [string, string][] = [
+    // Employee management and the payment decision are the owner's alone.
+    ["/admin/employees", "Add employee"],
+    ["/admin/payments", "Approve"],
     ["/admin/invoices", "Total billed"],
     ["/admin/invoices", "Still outstanding"],
     ["/admin/customers", "Lifetime spend"],
