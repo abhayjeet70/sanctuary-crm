@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Eyebrow, PageHeader, StatCard, StatusBadge } from "@/components/common";
+import { useShowsFinancials } from "@/services/session";
 import { useFoodOrderViews, useRequestViews, useTodayOverview } from "@/hooks/useData";
 import { bookingStatus, foodOrderStatus, requestPriority } from "@/lib/status";
 import { formatDate, formatTime, money, moneyShort, initials } from "@/lib/format";
@@ -27,6 +28,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function DashboardPage() {
+  const showsFinancials = useShowsFinancials();
   const overview = useTodayOverview();
   const orders = useFoodOrderViews();
   const requests = useRequestViews();
@@ -132,26 +134,28 @@ export default function DashboardPage() {
 
         {/* --------------------------------------------------------- money */}
         <div className="space-y-6">
-          <section className="rounded-xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
-            <Eyebrow className="text-gold-400">Outstanding balance</Eyebrow>
-            <p className="text-gold-gradient mt-3 font-display text-4xl tabular-nums">
-              {money(overview.outstandingBalance)}
-            </p>
-            <p className="mt-2 text-sm text-sand/60">
-              Across every booking still holding inventory.
-            </p>
-            <Button
-              asChild
-              variant="secondary"
-              size="sm"
-              className="mt-5 bg-gold/15 text-gold-200 ring-1 ring-gold/35 hover:bg-gold/25 hover:text-white"
-            >
-              <Link to="/admin/bookings">
-                Open bookings
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-          </section>
+          {showsFinancials && (
+            <section className="rounded-xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
+              <Eyebrow className="text-gold-400">Outstanding balance</Eyebrow>
+              <p className="text-gold-gradient mt-3 font-display text-4xl tabular-nums">
+                {money(overview.outstandingBalance)}
+              </p>
+              <p className="mt-2 text-sm text-sand/60">
+                Across every booking still holding inventory.
+              </p>
+              <Button
+                asChild
+                variant="secondary"
+                size="sm"
+                className="mt-5 bg-gold/15 text-gold-200 ring-1 ring-gold/35 hover:bg-gold/25 hover:text-white"
+              >
+                <Link to="/admin/bookings">
+                  Open bookings
+                  <ArrowRight aria-hidden />
+                </Link>
+              </Button>
+            </section>
+          )}
 
           {/* ---------------------------------------------------- occupancy */}
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">

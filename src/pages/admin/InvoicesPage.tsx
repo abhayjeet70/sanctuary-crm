@@ -13,6 +13,7 @@ import {
 import { EmptyState, PageHeader, StatCard, StatusBadge } from "@/components/common";
 import { SendInvoice } from "@/components/booking/SendInvoice";
 import { NewInvoiceDialog } from "@/components/admin/NewInvoiceDialog";
+import { useShowsFinancials } from "@/services/session";
 import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
 import {
   Dialog,
@@ -23,10 +24,12 @@ import {
 import { useBookingViews, useInvoices } from "@/hooks/useData";
 import { titleCase } from "@/lib/status";
 import { formatDate, money } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export default function InvoicesPage() {
   const invoices = useInvoices();
   const views = useBookingViews();
+  const showsFinancials = useShowsFinancials();
   const [creating, setCreating] = useState(false);
   const [viewing, setViewing] = useState<string | null>(null);
 
@@ -57,14 +60,20 @@ export default function InvoicesPage() {
 
       {creating && <NewInvoiceDialog onClose={() => setCreating(false)} />}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* The book's position is the owner's figure. A manager raises and sends
+          invoices without needing the total of them. */}
+      <div className={cn("grid gap-4", showsFinancials ? "sm:grid-cols-3" : "sm:grid-cols-1")}>
         <StatCard label="Invoices" value={rows.length} icon={<Receipt className="size-4" />} />
-        <StatCard label="Total billed" value={money(billed)} tone="accent" />
-        <StatCard
-          label="Still outstanding"
-          value={money(outstanding)}
-          tone={outstanding > 0 ? "warn" : "default"}
-        />
+        {showsFinancials && (
+          <>
+            <StatCard label="Total billed" value={money(billed)} tone="accent" />
+            <StatCard
+              label="Still outstanding"
+              value={money(outstanding)}
+              tone={outstanding > 0 ? "warn" : "default"}
+            />
+          </>
+        )}
       </div>
 
       {rows.length === 0 ? (

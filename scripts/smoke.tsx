@@ -150,5 +150,56 @@ for (const role of ["admin", "staff", "guest"] as const) {
   }
 }
 
+/* Combined financial figures are the owner's. A manager works the same
+ * screens all day and should not be shown the business's position on them.
+ * Rendered both ways, because a check that only proves absence would still
+ * pass if the figure had been deleted for everyone. */
+{
+  const render = (role: "admin" | "manager", route: string) =>
+    renderToString(
+      <SessionContext.Provider
+        value={{
+          session: { role, name: role === "admin" ? "Anjali Rao" : "Anand (Manager)" },
+          loading: false,
+          signIn: async () => ({ error: null }),
+          signUp: async () => ({ error: null, needsConfirmation: true }),
+          signOut: async () => {},
+          resetPassword: async () => ({ error: null }),
+          updatePassword: async () => ({ error: null }),
+        }}
+      >
+        <MockDataProvider>
+          <TooltipProvider>
+            <MemoryRouter initialEntries={[route]}>
+              <AppRoutes />
+            </MemoryRouter>
+          </TooltipProvider>
+        </MockDataProvider>
+      </SessionContext.Provider>,
+    );
+
+  const cases: [string, string][] = [
+    ["/admin/invoices", "Total billed"],
+    ["/admin/invoices", "Still outstanding"],
+    ["/admin/customers", "Lifetime spend"],
+    ["/admin/dashboard", "Outstanding balance"],
+    ["/admin/customers/c-pooja", "Lifetime spend"],
+  ];
+
+  for (const [route, figure] of cases) {
+    const owner = render("admin", route);
+    const manager = render("manager", route);
+    if (!owner.includes(figure)) {
+      failed++;
+      console.error(`  FAIL owner cannot see "${figure}" on ${route}`);
+    } else if (manager.includes(figure)) {
+      failed++;
+      console.error(`  FAIL manager is shown "${figure}" on ${route}`);
+    } else {
+      console.log(`  ok   "${figure}" is the owner's alone on ${route}`);
+    }
+  }
+}
+
 console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes render");
 process.exit(failed ? 1 : 0);

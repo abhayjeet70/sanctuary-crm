@@ -20,8 +20,10 @@ import {
 } from "@/hooks/useData";
 import { CustomerDialog } from "@/components/admin/CustomerDialog";
 import { GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
+import { useShowsFinancials } from "@/services/session";
 import { bookingStatus, paymentStatus, requestStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateRange, initials, money } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -30,6 +32,7 @@ export default function CustomerDetailPage() {
   const requests = useRequestViews();
   const feedback = useFeedbackViews();
   const { invoices, activity } = useMockData();
+  const showsFinancials = useShowsFinancials();
   const [editing, setEditing] = useState(false);
 
   if (!stats) {
@@ -136,9 +139,16 @@ export default function CustomerDetailPage() {
       )}
 
       {/* ----------------------------------------------------------- figures */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div
+        className={cn(
+          "grid gap-4 sm:grid-cols-2",
+          showsFinancials ? "xl:grid-cols-4" : "xl:grid-cols-3",
+        )}
+      >
         <StatCard label="Bookings" value={bookingCount} hint="Including cancellations" />
-        <StatCard label="Lifetime spend" value={money(spend)} tone="accent" />
+        {showsFinancials && (
+          <StatCard label="Lifetime spend" value={money(spend)} tone="accent" />
+        )}
         <StatCard
           label="Last stay"
           value={lastStay ? formatDate(lastStay.checkOut).split(",")[1]?.trim() ?? "—" : "—"}

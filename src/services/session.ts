@@ -32,3 +32,17 @@ export function useSession() {
   if (!ctx) throw new Error("useSession must be used inside a session provider");
   return ctx;
 }
+
+/**
+ * Whether to show combined financial figures — total billed, outstanding
+ * across the book, lifetime spend per guest.
+ *
+ * The owner's numbers, not the manager's. Worth being clear that this is a
+ * display decision and not a boundary: a manager reads individual bookings
+ * because verifying a payment requires it, so nothing stops them adding the
+ * figures up. It keeps the business's position off screens the manager works
+ * on all day; it does not withhold it from someone determined to total it.
+ */
+export function useShowsFinancials() {
+  return useSession().session?.role === "admin";
+}

@@ -14,11 +14,14 @@ import {
 } from "@/components/ui/table";
 import { EmptyState, PageHeader } from "@/components/common";
 import { CustomerDialog } from "@/components/admin/CustomerDialog";
+import { useShowsFinancials } from "@/services/session";
 import { useBookingViews, useCustomers } from "@/hooks/useData";
 import { formatDate, initials, money } from "@/lib/format";
+import { cn } from "@/lib/utils";
 export default function CustomersListPage() {
   const customers = useCustomers();
   const views = useBookingViews();
+  const showsFinancials = useShowsFinancials();
   const [search, setSearch] = useState("");
   // ?add=1 is how the dashboard's "Add customer" quick action lands here.
   const [params, setParams] = useSearchParams();
@@ -53,8 +56,15 @@ export default function CustomersListPage() {
               .includes(needle)
           : true,
       )
-      .sort((a, b) => b.spend - a.spend);
-  }, [customers, views, search]);
+      // Ranking guests by spend is a sales report in itself, so for anyone
+      // without the financials it orders by who stayed most recently.
+      .sort((a, b) =>
+        showsFinancials
+          ? b.spend - a.spend
+          : (b.lastStay ?? "").localeCompare(a.lastStay ?? "") ||
+            a.customer.name.localeCompare(b.customer.name),
+      );
+  }, [customers, views, search, showsFinancials]);
 
   return (
     <div className="space-y-6">
@@ -106,7 +116,9 @@ export default function CustomersListPage() {
                   <TableHead>Contact</TableHead>
                   <TableHead className="text-center">Bookings</TableHead>
                   <TableHead>Last stay</TableHead>
-                  <TableHead className="text-right">Lifetime spend</TableHead>
+                  {showsFinancials && (
+                    <TableHead className="text-right">Lifetime spend</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -134,7 +146,9 @@ export default function CustomersListPage() {
                       <TableCell className="text-stone-600">
                         {lastStay ? formatDate(lastStay) : "Not yet stayed"}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{money(spend)}</TableCell>
+                      {showsFinancials && (
+                        <TableCell className="text-right tabular-nums">{money(spend)}</TableCell>
+                      )}
                     </TableRow>
                   );
                 })}
@@ -159,15 +173,22 @@ export default function CustomersListPage() {
                     </div>
                   </div>
                   <hr className="rule-gold my-3" />
-                  <dl className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <dl
+                    className={cn(
+                      "grid gap-2 text-center text-xs",
+                      showsFinancials ? "grid-cols-3" : "grid-cols-2",
+                    )}
+                  >
                     <div>
                       <dt className="label-caps">Stays</dt>
                       <dd className="mt-0.5 text-ink tabular-nums">{bookingCount}</dd>
                     </div>
-                    <div>
-                      <dt className="label-caps">Spend</dt>
-                      <dd className="mt-0.5 text-ink tabular-nums">{money(spend)}</dd>
-                    </div>
+                    {showsFinancials && (
+                      <div>
+                        <dt className="label-caps">Spend</dt>
+                        <dd className="mt-0.5 text-ink tabular-nums">{money(spend)}</dd>
+                      </div>
+                    )}
                     <div>
                       <dt className="label-caps">Last</dt>
                       <dd className="mt-0.5 text-ink">
