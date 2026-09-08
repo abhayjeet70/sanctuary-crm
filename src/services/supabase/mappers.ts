@@ -17,6 +17,7 @@ import type {
   MenuItem,
   Payment,
   PropertySettings,
+  Tax,
   Room,
   Villa,
 } from "@/types";
@@ -72,6 +73,7 @@ export const toCustomer = (row: unknown): Customer => {
     phone: x.phone,
     email: x.email,
     city: x.city,
+    state: x.state || undefined,
     guestType: x.guest_type,
     preferences: x.preferences ?? [],
     notes: x.notes ?? undefined,
@@ -205,6 +207,10 @@ export const toGuestRequest = (row: unknown): GuestRequest => {
     priority: x.priority,
     status: x.status,
     assignedTo: x.assigned_to ?? undefined,
+    assignedUser: x.assigned_user ?? undefined,
+    acknowledgedAt: x.acknowledged_at ?? undefined,
+    resolvedAt: x.resolved_at ?? undefined,
+    resolutionNote: x.resolution_note ?? undefined,
     createdAt: x.created_at,
   };
 };
@@ -299,6 +305,10 @@ export const toSettings = (row: unknown): PropertySettings => {
     invoiceFooter: x.invoice_footer,
     invoiceTerms: x.invoice_terms,
     showGstinOnInvoice: x.show_gstin_on_invoice,
+    stateCode: x.state_code ?? "29",
+    hsnCode: x.hsn_code ?? "996311",
+    invoiceDeclaration: x.invoice_declaration ?? "",
+    signatoryName: x.signatory_name ?? "",
   };
 };
 
@@ -326,6 +336,22 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   invoiceFooter: "invoice_footer",
   invoiceTerms: "invoice_terms",
   showGstinOnInvoice: "show_gstin_on_invoice",
+  stateCode: "state_code",
+  hsnCode: "hsn_code",
+  invoiceDeclaration: "invoice_declaration",
+  signatoryName: "signatory_name",
+};
+
+export const toTax = (row: unknown): Tax => {
+  const x = r(row);
+  return {
+    id: x.id,
+    name: x.name,
+    rate: Number(x.rate),
+    kind: x.kind,
+    active: x.active,
+    sortOrder: x.sort_order ?? 0,
+  };
 };
 
 export type { Row };

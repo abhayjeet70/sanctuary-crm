@@ -41,15 +41,20 @@ const NAV = [
   { to: "/admin/requests", label: "Requests", icon: ClipboardList },
   { to: "/admin/feedback", label: "Feedback", icon: MessageSquareQuote },
   { to: "/admin/invoices", label: "Invoices", icon: Receipt },
-  { to: "/admin/settings", label: "Settings", icon: Settings },
+  // Configuration belongs to the owner. RLS refuses a manager's write either
+  // way; hiding the page keeps the UI from offering something that will fail.
+  { to: "/admin/settings", label: "Settings", icon: Settings, ownerOnly: true },
 ] as const;
 
 function NavItems({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
   const queue = usePaymentVerificationQueue();
+  const { session } = useSession();
+  const isOwner = session?.role === "admin";
 
   return (
     <nav aria-label="Admin sections" className="flex flex-col gap-0.5">
-      {NAV.map(({ to, label, icon: Icon, ...rest }) => {
+      {NAV.filter((item) => isOwner || !("ownerOnly" in item && item.ownerOnly)).map(
+        ({ to, label, icon: Icon, ...rest }) => {
         const count = "badge" in rest && rest.badge === "payments" ? queue.length : 0;
         const link = (
           <NavLink
@@ -92,7 +97,8 @@ function NavItems({ onNavigate, collapsed }: { onNavigate?: () => void; collapse
         ) : (
           link
         );
-      })}
+        },
+      )}
     </nav>
   );
 }

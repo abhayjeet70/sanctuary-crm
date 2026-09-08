@@ -55,6 +55,8 @@ export interface Customer {
   phone: string;
   email: string;
   city: string;
+  /** Decides CGST + SGST against IGST on the invoice. */
+  state?: string;
   guestType: GuestType;
   preferences: string[];
   notes?: string;
@@ -264,6 +266,12 @@ export interface GuestRequest {
   priority: RequestPriority;
   status: RequestStatus;
   assignedTo?: Team;
+  /** The person on the hook, where assignedTo is only the team. */
+  assignedUser?: ID;
+  acknowledgedAt?: ISODateTime;
+  resolvedAt?: ISODateTime;
+  /** What was actually done — sent to the guest when it is closed. */
+  resolutionNote?: string;
   createdAt: ISODateTime;
 }
 
@@ -304,7 +312,9 @@ export interface ActivityEvent {
 
 /* -------------------------------------------------------------------- misc */
 
-export type Role = "admin" | "staff" | "guest";
+/** `manager` runs the property; `admin` is the owner and also holds the
+ *  configuration. RLS enforces the difference — see is_owner(). */
+export type Role = "admin" | "manager" | "staff" | "guest";
 
 export interface MockSession {
   role: Role;
@@ -343,6 +353,24 @@ export interface PropertySettings {
   invoiceFooter: string;
   invoiceTerms: string;
   showGstinOnInvoice: boolean;
+
+  /** GST state code of the place of supply. 29 is Karnataka. */
+  stateCode: string;
+  /** SAC for the service billed. 996311 is lodging. */
+  hsnCode: string;
+  invoiceDeclaration: string;
+  signatoryName: string;
+}
+
+/** A named tax the property charges. See services/domain.ts for the maths. */
+export interface Tax {
+  id: ID;
+  name: string;
+  /** A fraction: 0.18 is 18%. */
+  rate: number;
+  kind: "gst" | "levy";
+  active: boolean;
+  sortOrder: number;
 }
 
 export interface AppNotification {

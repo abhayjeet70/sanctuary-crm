@@ -30,6 +30,7 @@ import type {
   PropertySettings,
   Room,
   Customer,
+  Tax,
   Villa,
   VillaMode,
 } from "@/types";
@@ -52,6 +53,7 @@ export interface MockData {
   invoices: Invoice[];
   menuItems: MenuItem[];
   settings: PropertySettings | null;
+  taxes: Tax[];
   foodOrders: FoodOrder[];
   requests: GuestRequest[];
   feedback: Feedback[];
@@ -89,6 +91,9 @@ export interface MockData {
   /** Issue a draft invoice (or void one). Only issued invoices reach the guest. */
   setInvoiceStatus: (id: ID, status: Invoice["status"]) => void;
   updateSettings: (patch: Partial<PropertySettings>) => void;
+  /** Add or edit a tax. Omit `id` to add. */
+  saveTax: (tax: Partial<Tax> & { id?: ID }) => void;
+  deleteTax: (id: ID) => void;
   saveMenuItem: (item: Partial<MenuItem> & { id?: ID }) => void;
   deleteMenuItem: (id: ID) => void;
 }
@@ -204,6 +209,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       invoices: invoiceSeed,
       menuItems: menuSeed,
       settings: null,
+      // The offline harness has no configuration; the invoice falls back to a
+      // single "Tax" line, which is what taxBreakdown does with an empty list.
+      taxes: [],
       foodOrders,
       requests,
       feedback,
@@ -276,6 +284,8 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       deleteRoom: () => {},
       createInvoice: () => {},
       setInvoiceStatus: () => {},
+      saveTax: () => {},
+      deleteTax: () => {},
       updateSettings: () => {},
       saveMenuItem: () => {},
       deleteMenuItem: () => {},

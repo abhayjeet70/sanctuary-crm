@@ -10,6 +10,10 @@ import {
   findConflicts,
   firstUnannounced,
   settledPaymentStatus,
+  amountInWords,
+  configuredTaxRate,
+  taxBreakdown,
+  type TaxComponent,
 } from "./domain";
 
 const booking = (over: Partial<Booking>): Booking => ({
@@ -106,5 +110,49 @@ assert.equal(isPhone("(080) 4123 4567"), true);
 assert.equal(isPhone("dsdsds"), false);
 assert.equal(isPhone("98860"), false);      // too few digits to dial
 assert.equal(isPhone("+91 98860 7159x"), false);
+
+/* --- tax breakdown ------------------------------------------------------ */
+const gst = (rate = 0.18): TaxComponent =>
+  ({ id: "t1", name: "GST", rate, kind: "gst", active: true, sortOrder: 0 });
+const cess: TaxComponent =
+  { id: "t2", name: "Luxury cess", rate: 0.02, kind: "levy", active: true, sortOrder: 1 };
+
+const sums = (lines: { amount: number }[]) => lines.reduce((n, l) => n + l.amount, 0);
+
+// Within Karnataka an 18% GST prints as CGST 9 + SGST 9.
+const intra = taxBreakdown(40320, 0.18, [gst()], false);
+assert.deepEqual(intra.map((l) => l.label), ["CGST @ 9%", "SGST @ 9%"]);
+assert.equal(sums(intra), 40320, "the parts must total the tax charged");
+
+// Across a state border the same money is one IGST line.
+const inter = taxBreakdown(40320, 0.18, [gst()], true);
+assert.deepEqual(inter.map((l) => l.label), ["IGST @ 18%"]);
+assert.equal(sums(inter), 40320);
+
+// An odd number cannot halve evenly; the drift must not vanish.
+const odd = taxBreakdown(101, 0.18, [gst()], false);
+assert.equal(sums(odd), 101);
+
+// A levy prints under its own name and still totals correctly.
+const withCess = taxBreakdown(2000, 0.20, [gst(), cess], false);
+assert.equal(sums(withCess), 2000);
+assert.ok(withCess.some((l) => l.label.startsWith("Luxury cess")));
+
+// A booking taken at 18% while the rates now total 20% still adds up.
+const stale = taxBreakdown(40320, 0.18, [gst(), cess], false);
+assert.equal(sums(stale), 40320, "an old booking's parts must total what it was charged");
+
+// Nothing configured is not a crash.
+assert.deepEqual(taxBreakdown(500, 0.05, [], false), [{ label: "Tax", rate: 0.05, amount: 500 }]);
+assert.deepEqual(taxBreakdown(0, 0, [gst()], false), []);
+
+assert.equal(configuredTaxRate([gst(), cess]), 0.2);
+assert.equal(configuredTaxRate([gst(), { ...cess, active: false }]), 0.18);
+
+/* --- rupees in words ---------------------------------------------------- */
+assert.equal(amountInWords(264320), "Rupees Two Lakh Sixty Four Thousand Three Hundred Twenty Only");
+assert.equal(amountInWords(0), "Rupees Zero Only");
+assert.equal(amountInWords(1), "Rupees One Only");
+assert.equal(amountInWords(10000000), "Rupees One Crore Only");
 
 console.log("domain.ts — all checks passed");

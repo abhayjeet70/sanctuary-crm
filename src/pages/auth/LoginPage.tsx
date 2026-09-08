@@ -26,7 +26,9 @@ const DEMO_PASSWORD = ((import.meta.env ?? {}) as Record<string, string | undefi
 const DEMO = [
   { label: "Owner & reception", email: "admin@gmail.com" },
   { label: "Guest — Pooja Bothra", email: "user@gmail.com" },
+  { label: "Manager — operations", email: "manager@gmail.com" },
   { label: "Housekeeping — staff queue", email: "housekeeping@gmail.com" },
+  { label: "Kitchen — order board", email: "kitchen@gmail.com" },
 ];
 
 function useParallax() {
@@ -56,7 +58,11 @@ export default function LoginPage() {
   useEffect(() => {
     if (!session) return;
     navigate(
-      session.role === "admin" ? "/admin" : session.role === "staff" ? "/staff" : "/guest",
+      session.role === "admin" || session.role === "manager"
+        ? "/admin"
+        : session.role === "staff"
+          ? "/staff"
+          : "/guest",
       { replace: true },
     );
   }, [session, navigate]);

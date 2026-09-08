@@ -260,3 +260,6 @@ export function useTodayOverview() {
     };
   }, [views, villas, foodOrders, requests, payments, today]);
 }
+
+/** The taxes the property charges, in the order they print. */
+export const useTaxes = () => useMockData().taxes;

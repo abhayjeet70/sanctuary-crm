@@ -126,3 +126,135 @@ export function firstUnannounced<T extends { id: string; read: boolean }>(
   if (seen === null) return undefined;
   return notifications.find((n) => !seen.has(n.id) && !n.read);
 }
+
+/* --------------------------------------------------------------------- tax */
+
+export interface TaxComponent {
+  id: string;
+  name: string;
+  /** A fraction: 0.18 is 18%. */
+  rate: number;
+  /** `gst` splits into CGST + SGST within the state, IGST across it. */
+  kind: "gst" | "levy";
+  active: boolean;
+  sortOrder: number;
+}
+
+export interface TaxLine {
+  label: string;
+  /** A fraction, for display beside the label. */
+  rate: number;
+  amount: number;
+}
+
+/**
+ * The tax actually charged, split into the components an Indian invoice has
+ * to name.
+ *
+ * The booking's own rate is the source of truth — it is what the guest was
+ * quoted and what every total already derives from. The configured taxes only
+ * say what the parts are called. So the parts are apportioned out of the tax
+ * charged rather than recomputed, and the last line absorbs the rounding:
+ * a printed breakdown that does not add up to the total on the same page is
+ * worse than no breakdown at all.
+ *
+ * `interState` decides CGST + SGST against IGST. Within the supplier's own
+ * state the levy is split in half between centre and state; across a state
+ * border it is one integrated line.
+ */
+export function taxBreakdown(
+  taxCharged: number,
+  bookingRate: number,
+  taxes: TaxComponent[],
+  interState: boolean,
+): TaxLine[] {
+  const active = taxes
+    .filter((t) => t.active && t.rate > 0)
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+
+  const configured = active.reduce((sum, t) => sum + t.rate, 0);
+
+  // Nothing configured, or a booking taken at zero tax: one honest line.
+  if (active.length === 0 || configured <= 0 || taxCharged <= 0) {
+    return taxCharged > 0 ? [{ label: "Tax", rate: bookingRate, amount: taxCharged }] : [];
+  }
+
+  // Only scale when the booking disagrees with the current configuration —
+  // a booking taken at 18% while the rates now total 20% still shows parts
+  // that sum to what it was charged.
+  const scale = Math.abs(configured - bookingRate) < 1e-6 ? 1 : bookingRate / configured;
+
+  const lines: TaxLine[] = [];
+  const shares: number[] = [];
+
+  for (const tax of active) {
+    const amount = Math.round((taxCharged * tax.rate) / configured);
+    const rate = tax.rate * scale;
+    if (tax.kind === "gst" && !interState) {
+      const half = Math.round(amount / 2);
+      lines.push({ label: `CGST @ ${pct(rate / 2)}`, rate: rate / 2, amount: half });
+      lines.push({ label: `SGST @ ${pct(rate / 2)}`, rate: rate / 2, amount: amount - half });
+      shares.push(half, amount - half);
+    } else {
+      const label = tax.kind === "gst" ? `IGST @ ${pct(rate)}` : `${tax.name} @ ${pct(rate)}`;
+      lines.push({ label, rate, amount });
+      shares.push(amount);
+    }
+  }
+
+  // Rounding drift lands on the last line, so the parts always total the tax.
+  const drift = taxCharged - shares.reduce((sum, n) => sum + n, 0);
+  if (drift !== 0 && lines.length > 0) lines[lines.length - 1].amount += drift;
+
+  return lines;
+}
+
+/** 0.09 -> "9%", 0.025 -> "2.5%". */
+export const pct = (rate: number) => `${Number((rate * 100).toFixed(2))}%`;
+
+/**
+ * The default rate a new booking is offered: whatever is switched on.
+ *
+ * Rounded to four places because the column is numeric(6,4) and because
+ * 0.18 + 0.02 is 0.19999999999999998 in binary floating point — which is not
+ * a legal GST rate and would be refused by the check constraint.
+ */
+export const configuredTaxRate = (taxes: TaxComponent[]) =>
+  Number(taxes.filter((t) => t.active).reduce((sum, t) => sum + t.rate, 0).toFixed(4));
+
+/**
+ * Rupees in words, the Indian way — an invoice is expected to carry it.
+ * Lakh and crore, not million.
+ */
+export function amountInWords(amount: number): string {
+  const ones = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+    "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen",
+    "Eighteen", "Nineteen",
+  ];
+  const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+  const twoDigits = (n: number): string =>
+    n < 20 ? ones[n] : `${tens[Math.floor(n / 10)]}${n % 10 ? ` ${ones[n % 10]}` : ""}`;
+
+  const threeDigits = (n: number): string =>
+    n < 100
+      ? twoDigits(n)
+      : `${ones[Math.floor(n / 100)]} Hundred${n % 100 ? ` ${twoDigits(n % 100)}` : ""}`;
+
+  const whole = Math.floor(Math.abs(amount));
+  if (whole === 0) return "Rupees Zero Only";
+
+  const parts: string[] = [];
+  const crore = Math.floor(whole / 10000000);
+  const lakh = Math.floor((whole % 10000000) / 100000);
+  const thousand = Math.floor((whole % 100000) / 1000);
+  const rest = whole % 1000;
+
+  if (crore) parts.push(`${threeDigits(crore)} Crore`);
+  if (lakh) parts.push(`${threeDigits(lakh)} Lakh`);
+  if (thousand) parts.push(`${threeDigits(thousand)} Thousand`);
+  if (rest) parts.push(threeDigits(rest));
+
+  return `Rupees ${parts.join(" ")} Only`;
+}

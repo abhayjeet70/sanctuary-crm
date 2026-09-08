@@ -4,17 +4,19 @@ import { toast } from "sonner";
 import { ChefHat, ClipboardList, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Eyebrow, Logo, StatCard, StatusBadge } from "@/components/common";
+import { ResolveRequestDialog } from "@/components/admin/ResolveRequestDialog";
 import { useFoodOrderViews, useMockData, useRequestViews } from "@/hooks/useData";
 import { FOOD_PIPELINE, foodOrderStatus, requestPriority, requestStatus, titleCase } from "@/lib/status";
 import { formatTime, money } from "@/lib/format";
 import { useSession } from "@/services/session";
 import { cn } from "@/lib/utils";
-import type { RequestStatus } from "@/types";
+import type { GuestRequest, RequestStatus } from "@/types";
 
 const ADVANCE: Partial<Record<RequestStatus, { to: RequestStatus; label: string }>> = {
   pending: { to: "in_progress", label: "Start" },
   assigned: { to: "in_progress", label: "Start" },
-  in_progress: { to: "completed", label: "Mark done" },
+  // Finishing goes through the resolve dialog instead, so the guest is told
+  // what was done rather than just that something was.
 };
 
 /**
@@ -32,6 +34,7 @@ export default function StaffQueuePage() {
   const orders = useFoodOrderViews();
   const { updateRequest, setFoodOrderStatus } = useMockData();
   const [busy, setBusy] = useState<string | null>(null);
+  const [finishing, setFinishing] = useState<GuestRequest | null>(null);
 
   const isKitchen = session?.team === "kitchen";
 
@@ -139,12 +142,28 @@ export default function StaffQueuePage() {
                         {step.label}
                       </Button>
                     )}
+                    {request.status === "in_progress" && (
+                      <Button
+                        className="mt-4 w-full sm:w-auto"
+                        onClick={() => setFinishing(request)}
+                      >
+                        Mark done
+                      </Button>
+                    )}
                   </li>
                 );
               })}
             </ul>
           )}
         </section>
+
+        {finishing && (
+          <ResolveRequestDialog
+            request={finishing}
+            outcome="completed"
+            onClose={() => setFinishing(null)}
+          />
+        )}
 
         {/* ------------------------------------------------- kitchen only */}
         {isKitchen && liveOrders.length > 0 && (

@@ -12,11 +12,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState, PageHeader, StatCard, StatusBadge } from "@/components/common";
+import { ResolveRequestDialog } from "@/components/admin/ResolveRequestDialog";
 import { useMockData, useRequestViews } from "@/hooks/useData";
 import { requestPriority, requestStatus, titleCase } from "@/lib/status";
-import { formatDateTime, initials } from "@/lib/format";
+import { formatDateTime, initials, relativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { RequestStatus, Team } from "@/types";
+import type { GuestRequest, RequestStatus, Team } from "@/types";
 
 const ALL = "all";
 const TEAMS: Team[] = ["housekeeping", "kitchen", "maintenance", "manager"];
@@ -26,7 +27,8 @@ const COLUMNS: RequestStatus[] = ["pending", "assigned", "in_progress", "complet
 const ADVANCE: Partial<Record<RequestStatus, { to: RequestStatus; label: string }>> = {
   pending: { to: "assigned", label: "Assign" },
   assigned: { to: "in_progress", label: "Start work" },
-  in_progress: { to: "completed", label: "Mark done" },
+  // in_progress deliberately absent: finishing goes through the resolve
+  // dialog, so the guest is told what was actually done.
 };
 
 export default function RequestsPage() {
@@ -34,13 +36,26 @@ export default function RequestsPage() {
   const { updateRequest } = useMockData();
   const [status, setStatus] = useState(ALL);
   const [priority, setPriority] = useState(ALL);
+  const [resolving, setResolving] = useState<
+    { request: GuestRequest; outcome: "completed" | "rejected" } | null
+  >(null);
 
   const filtered = useMemo(
     () =>
       requests
         .filter((r) => (status === ALL ? true : r.request.status === status))
         .filter((r) => (priority === ALL ? true : r.request.priority === priority))
-        .sort((a, b) => b.request.createdAt.localeCompare(a.request.createdAt)),
+        // Open first, then urgency, then oldest — the order to work them in.
+        .sort((a, b) => {
+          const openOf = (r: typeof a) =>
+            r.request.status === "completed" || r.request.status === "rejected" ? 1 : 0;
+          const rank: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
+          return (
+            openOf(a) - openOf(b) ||
+            (rank[a.request.priority] ?? 9) - (rank[b.request.priority] ?? 9) ||
+            a.request.createdAt.localeCompare(b.request.createdAt)
+          );
+        }),
     [requests, status, priority],
   );
 
@@ -165,6 +180,22 @@ export default function RequestsPage() {
                       </Link>{" "}
                       · {formatDateTime(request.createdAt)}
                     </p>
+
+                    {request.status !== "completed" && request.status !== "rejected" ? (
+                      <p className="mt-1 text-xs text-stone-600">
+                        Still open · raised {relativeTime(request.createdAt)}
+                      </p>
+                    ) : (
+                      request.resolutionNote && (
+                        <p className="mt-2 rounded-lg bg-status-confirmed-bg p-2.5 text-xs leading-relaxed text-ink">
+                          <span className="label-caps block text-gold-700">
+                            {request.status === "rejected" ? "Declined" : "Resolved"}
+                            {request.resolvedAt && ` · ${relativeTime(request.resolvedAt)}`}
+                          </span>
+                          <span className="mt-1 block">{request.resolutionNote}</span>
+                        </p>
+                      )
+                    )}
                   </div>
 
                   <div className="flex flex-col items-stretch gap-2 sm:w-48">
@@ -207,17 +238,23 @@ export default function RequestsPage() {
                           {step.label}
                         </Button>
                       )}
+                      {request.status === "in_progress" && (
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setResolving({ request, outcome: "completed" })}
+                        >
+                          Mark done
+                        </Button>
+                      )}
                       {request.status !== "completed" && request.status !== "rejected" && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="text-status-cancelled hover:bg-status-cancelled-bg"
-                          onClick={() => {
-                            updateRequest(request.id, { status: "rejected" });
-                            toast.error(`${request.reference} rejected`);
-                          }}
+                          onClick={() => setResolving({ request, outcome: "rejected" })}
                         >
-                          Reject
+                          Decline
                         </Button>
                       )}
                     </div>
@@ -227,6 +264,14 @@ export default function RequestsPage() {
             );
           })}
         </ul>
+      )}
+
+      {resolving && (
+        <ResolveRequestDialog
+          request={resolving.request}
+          outcome={resolving.outcome}
+          onClose={() => setResolving(null)}
+        />
       )}
 
       {/* A count per column, so the spread is visible without a kanban */}

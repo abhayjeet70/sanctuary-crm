@@ -14,6 +14,7 @@ import {
   toMenuItem,
   toNotification,
   toPayment,
+  toTax,
   toVilla,
 } from "./mappers";
 import { useSession } from "@/services/session";
@@ -28,6 +29,7 @@ import type {
   MenuItem,
   Payment,
   PropertySettings,
+  Tax,
   Villa,
 } from "@/types";
 
@@ -60,6 +62,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [taxes, setTaxes] = useState<Tax[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>([]);
   const [requests, setRequests] = useState<ReturnType<typeof toGuestRequest>[]>([]);
@@ -72,13 +75,14 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const refetch = useCallback(async () => {
     if (!session) return;
 
-    const [v, ra, c, b, p, i, m, f, q, fb, a, n, ps] = await Promise.all([
+    const [v, ra, c, b, p, i, tx, m, f, q, fb, a, n, ps] = await Promise.all([
       supabase.from("villas").select(SELECTS.villas).order("name"),
       supabase.from("room_availability").select("*"),
       supabase.from("customers").select("*").order("name"),
       supabase.from("bookings").select(SELECTS.bookings).order("check_in", { ascending: false }),
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
+      supabase.from("taxes").select("*").order("sort_order"),
       supabase.from("menu_items").select("*").order("sort_order").order("name"),
       supabase.from("food_orders").select(SELECTS.foodOrders).order("placed_at", { ascending: false }),
       supabase.from("guest_requests").select("*").order("created_at", { ascending: false }),
@@ -90,7 +94,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     // A guest legitimately gets empty arrays for admin-only tables — that is RLS
     // working, not a failure, so only real errors are surfaced.
-    const firstError = [v, ra, c, b, p, i, m, f, q, fb, a, n, ps].find((res) => res.error)?.error;
+    const firstError = [v, ra, c, b, p, i, tx, m, f, q, fb, a, n, ps].find((res) => res.error)?.error;
     if (firstError && firstError.code !== "PGRST116") {
       console.error("Supabase read failed", firstError);
     }
@@ -100,6 +104,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     setBookings((b.data ?? []).map(toBooking));
     setPayments((p.data ?? []).map(toPayment));
     setInvoices((i.data ?? []).map(toInvoice));
+    setTaxes((tx.data ?? []).map(toTax));
     setMenuItems((m.data ?? []).map(toMenuItem));
     setFoodOrders((f.data ?? []).map(toFoodOrder));
     setRequests((q.data ?? []).map(toGuestRequest));
@@ -174,6 +179,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       bookings,
       payments,
       invoices,
+      taxes,
       menuItems,
       foodOrders,
       requests,
@@ -450,6 +456,10 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           if (patch.status !== undefined) columns.status = patch.status;
           if (patch.assignedTo !== undefined) columns.assigned_to = patch.assignedTo;
           if (patch.priority !== undefined) columns.priority = patch.priority;
+          if (patch.assignedUser !== undefined) columns.assigned_user = patch.assignedUser ?? null;
+          if (patch.resolutionNote !== undefined) {
+            columns.resolution_note = patch.resolutionNote || null;
+          }
           const { error } = await supabase.from("guest_requests").update(columns).eq("id", id);
           if (report(error, "Could not update the request")) return;
           await refetch();
@@ -516,6 +526,31 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      saveTax: (tax) => {
+        void (async () => {
+          const columns = {
+            name: tax.name,
+            rate: tax.rate ?? 0,
+            kind: tax.kind ?? "gst",
+            active: tax.active ?? true,
+            sort_order: tax.sortOrder ?? 0,
+          };
+          const { error } = tax.id
+            ? await supabase.from("taxes").update(columns).eq("id", tax.id)
+            : await supabase.from("taxes").insert(columns);
+          if (report(error, "Could not save the tax")) return;
+          await refetch();
+        })();
+      },
+
+      deleteTax: (id) => {
+        void (async () => {
+          const { error } = await supabase.from("taxes").delete().eq("id", id);
+          if (report(error, "Could not remove the tax")) return;
+          await refetch();
+        })();
+      },
+
       updateSettings: (patch) => {
         void (async () => {
           const columns: Record<string, unknown> = {};
@@ -564,7 +599,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       },
     };
   }, [
-    villas, customers, bookings, payments, invoices, menuItems,
+    villas, customers, bookings, payments, invoices, taxes, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
   ]);
 

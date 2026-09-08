@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eyebrow, LoadingState, PageHeader } from "@/components/common";
 import { MenuManager } from "./MenuManager";
+import { TaxManager } from "./TaxManager";
 import { ChangePassword } from "./ChangePassword";
 import { useMockData, useSettings, useVillas } from "@/hooks/useData";
 import { useSession } from "@/services/session";
@@ -79,6 +80,7 @@ export default function SettingsPage() {
         <TabsList className="max-w-full overflow-x-auto">
           <TabsTrigger value="payment">Payment</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
+          <TabsTrigger value="taxes">Taxes</TabsTrigger>
           <TabsTrigger value="property">Property</TabsTrigger>
           <TabsTrigger value="menu">Menu</TabsTrigger>
           <TabsTrigger value="villas">Villas</TabsTrigger>
@@ -178,6 +180,40 @@ export default function SettingsPage() {
                 onChange={(v) => set("invoicePrefix", v)}
                 placeholder="HOS"
               />
+              <Field
+                id="state-code"
+                label="GST state code"
+                value={draft.stateCode}
+                onChange={(v) => set("stateCode", v)}
+                placeholder="29"
+              />
+              <Field
+                id="hsn-code"
+                label="SAC / HSN"
+                value={draft.hsnCode}
+                onChange={(v) => set("hsnCode", v)}
+                placeholder="996311"
+              />
+              <Field
+                id="signatory"
+                label="Authorised signatory"
+                value={draft.signatoryName}
+                onChange={(v) => set("signatoryName", v)}
+                placeholder="Anjali Rao"
+              />
+            </div>
+
+            <div className="mt-4 space-y-1.5">
+              <Label htmlFor="invoice-declaration">Declaration</Label>
+              <Textarea
+                id="invoice-declaration"
+                rows={2}
+                value={draft.invoiceDeclaration}
+                onChange={(e) => set("invoiceDeclaration", e.target.value)}
+              />
+              <p className="text-xs text-stone-600">
+                Printed above the signature, as a tax invoice is expected to carry.
+              </p>
             </div>
 
             <label className="mt-4 flex items-center gap-2 text-sm text-ink">
@@ -217,6 +253,11 @@ export default function SettingsPage() {
               </p>
             )}
           </Section>
+        </TabsContent>
+
+        {/* --------------------------------------------------------- taxes */}
+        <TabsContent value="taxes" className="pt-5">
+          <TaxManager />
         </TabsContent>
 
         {/* ------------------------------------------------------ property */}

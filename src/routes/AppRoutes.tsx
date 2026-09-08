@@ -42,7 +42,7 @@ import type { Role } from "@/types";
  * `RequireRole` checks a real claim. The route table itself does not change —
  * React Router stays exactly as it is, no framework migration.
  */
-function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
+function RequireRole({ role, children }: { role: Role | Role[]; children: ReactNode }) {
   const { session, loading } = useSession();
   const location = useLocation();
 
@@ -51,7 +51,8 @@ function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
   // async moment threw the URL — and the sign-in with it — away.
   if (loading) return <AuthPending />;
   if (!session) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  if (session.role !== role) return <Navigate to={homeFor(session.role)} replace />;
+  const allowed = Array.isArray(role) ? role : [role];
+  if (!allowed.includes(session.role)) return <Navigate to={homeFor(session.role)} replace />;
   return <>{children}</>;
 }
 
@@ -69,7 +70,10 @@ function AuthPending() {
 
 /** Where each role belongs. One definition, used by the guard and the root. */
 function homeFor(role: Role) {
-  return role === "admin" ? "/admin" : role === "staff" ? "/staff" : "/guest";
+  // A manager works the same operations shell as the owner; what differs is
+  // what RLS lets them write, not which pages exist.
+  if (role === "admin" || role === "manager") return "/admin";
+  return role === "staff" ? "/staff" : "/guest";
 }
 
 function RootRedirect() {
@@ -92,7 +96,7 @@ export function AppRoutes() {
       <Route
         path="/admin"
         element={
-          <RequireRole role="admin">
+          <RequireRole role={["admin", "manager"]}>
             <AdminShell />
           </RequireRole>
         }
