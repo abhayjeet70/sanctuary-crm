@@ -11,7 +11,8 @@
     "test": "tsx src/services/domain.test.ts",
     "smoke": "tsx --tsconfig tsconfig.smoke.json scripts/smoke.tsx",
     "configure-email": "node scripts/configure-email.mjs",
-    "confirm-user": "node scripts/confirm-user.mjs"
+    "confirm-user": "node scripts/confirm-user.mjs",
+    "viz": "tsx --tsconfig tsconfig.smoke.json scripts/vizcheck.tsx"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

@@ -333,6 +333,8 @@ export function occupancyRate(nightsSold: number, villas: number, days: number) 
 export interface RevenueRow {
   checkIn: string;
   checkOut: string;
+  /** When the booking was taken — lead time is measured from it. */
+  createdAt: string;
   status: string;
   source: string;
   villaId: string;
@@ -482,3 +484,96 @@ export const daysBetween = (from: string, to: string) =>
       (new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) / 86_400_000,
     ) + 1,
   );
+
+/* ------------------------------------------------- efficiency and pace */
+
+/**
+ * How far ahead people book, in buckets.
+ *
+ * Lead time is what tells you whether demand is being planned or picked up
+ * late, and it is the number a property prices against: a book full of
+ * same-week arrivals cannot be sold at a shoulder rate three months out.
+ */
+export function leadTimeBuckets(rows: { checkIn: string; createdAt: string; status: string }[]) {
+  const buckets = [
+    { key: "same-week", label: "Within 7 days", stays: 0 },
+    { key: "2-4w", label: "1 to 4 weeks", stays: 0 },
+    { key: "1-3m", label: "1 to 3 months", stays: 0 },
+    { key: "3m+", label: "More than 3 months", stays: 0 },
+  ];
+
+  for (const row of rows) {
+    if (!isEarned(row.status)) continue;
+    const days = Math.round(
+      (new Date(`${row.checkIn}T00:00:00`).getTime() -
+        new Date(row.createdAt).getTime()) / 86_400_000,
+    );
+    if (days <= 7) buckets[0].stays += 1;
+    else if (days <= 28) buckets[1].stays += 1;
+    else if (days <= 90) buckets[2].stays += 1;
+    else buckets[3].stays += 1;
+  }
+  return buckets;
+}
+
+export interface EfficiencyRatios {
+  /** Total revenue per available night — RevPAR's whole-property cousin. */
+  trevpar: number;
+  /** Share of stays that ordered from the kitchen at all. */
+  fbCaptureRate: number;
+  /** Food revenue per occupied night. */
+  fbPerNight: number;
+  /** Discounts as a share of what would otherwise have been billed. */
+  discountRate: number;
+  /** Collected over billed. */
+  collectionRate: number;
+  /** Days sales outstanding: how long the average rupee waits. */
+  dso: number;
+  /** Payroll over revenue, when the salaries are known. */
+  payrollRatio: number | null;
+  /** Labour cost per occupied night, when the salaries are known. */
+  labourCpor: number | null;
+}
+
+/**
+ * The ratios a professional pack carries, restricted to the ones this data
+ * can actually answer.
+ *
+ * Deliberately absent: GOP, GOPPAR and anything below the gross-operating
+ * line. Those need departmental and undistributed operating expenses — food
+ * cost, utilities, laundry, commissions — which this system does not hold. A
+ * GOP computed from revenue and payroll alone would be a made-up number
+ * wearing an industry name, and worse than no number at all.
+ */
+export function efficiencyRatios(
+  rows: RevenueRow[],
+  availableNights: number,
+  monthlyPayroll: number | null,
+  months: number,
+): EfficiencyRatios {
+  const earned = rows.filter((r) => isEarned(r.status));
+  const roomNights = earned.reduce((n, r) => n + r.nights, 0);
+  const gross = earned.reduce((n, r) => n + r.total, 0);
+  const collected = earned.reduce((n, r) => n + r.paid, 0);
+  const food = earned.reduce((n, r) => n + r.food, 0);
+  const discount = earned.reduce((n, r) => n + r.discount, 0);
+  const beforeDiscount = earned.reduce(
+    (n, r) => n + r.roomCharge + r.surcharges + r.food + r.addOns,
+    0,
+  );
+  const withFood = earned.filter((r) => r.food > 0).length;
+  const outstanding = gross - collected;
+  const payroll = monthlyPayroll === null ? null : monthlyPayroll * Math.max(months, 0);
+
+  return {
+    trevpar: availableNights > 0 ? Math.round(gross / availableNights) : 0,
+    fbCaptureRate: earned.length > 0 ? withFood / earned.length : 0,
+    fbPerNight: roomNights > 0 ? Math.round(food / roomNights) : 0,
+    discountRate: beforeDiscount > 0 ? discount / beforeDiscount : 0,
+    collectionRate: gross > 0 ? collected / gross : 0,
+    // Revenue per day across the window, then how many days of it are owed.
+    dso: gross > 0 && months > 0 ? Math.round(outstanding / (gross / (months * 30))) : 0,
+    payrollRatio: payroll !== null && gross > 0 ? payroll / gross : null,
+    labourCpor: payroll !== null && roomNights > 0 ? Math.round(payroll / roomNights) : null,
+  };
+}

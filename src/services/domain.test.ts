@@ -21,6 +21,8 @@ import {
   groupRevenue,
   hotelKpis,
   revenueBreakdown,
+  efficiencyRatios,
+  leadTimeBuckets,
   type RevenueRow,
   type TaxComponent,
 } from "./domain";
@@ -192,6 +194,7 @@ assert.equal(occupancyRate(10, 0, 30), 0, "no villas is not a division by zero")
 const stay = (over: Partial<RevenueRow> = {}): RevenueRow => ({
   checkIn: "2026-09-01",
   checkOut: "2026-09-03",
+  createdAt: "2026-08-01T10:00:00Z",
   status: "completed",
   source: "website",
   villaId: "v1",
@@ -276,5 +279,43 @@ assert.equal(
   toCsv([["Month", "Gross"], ["Sep 26", 60180]]),
   "Month,Gross\r\nSep 26,60180",
 );
+
+/* --- efficiency ratios --------------------------------------------------- */
+const effRows = [
+  stay({ total: 10000, paid: 10000, food: 2000, discount: 1000, roomCharge: 8000, nights: 2 }),
+  stay({ total: 10000, paid: 0, food: 0, discount: 0, roomCharge: 10000, nights: 2 }),
+  stay({ status: "cancelled", total: 500000, paid: 0, roomCharge: 500000 }),
+];
+const eff = efficiencyRatios(effRows, 90, 50000, 1);
+assert.equal(eff.trevpar, Math.round(20000 / 90), "TRevPAR is gross over available nights");
+assert.equal(eff.fbCaptureRate, 0.5, "one of two earned stays ordered food");
+assert.equal(eff.fbPerNight, Math.round(2000 / 4));
+assert.equal(eff.collectionRate, 0.5);
+assert.equal(eff.payrollRatio, 50000 / 20000);
+assert.equal(eff.labourCpor, Math.round(50000 / 4));
+// Discount is measured against what would have been billed before it.
+// 8000+2000 on the first stay and 10000 on the second, before the discount.
+assert.ok(Math.abs(eff.discountRate - 1000 / 20000) < 1e-9);
+
+// No salaries on file must read as "not known", never as zero cost.
+const noPay = efficiencyRatios(effRows, 90, null, 1);
+assert.equal(noPay.payrollRatio, null);
+assert.equal(noPay.labourCpor, null);
+
+// An empty period must not divide by zero.
+const nothing = efficiencyRatios([], 0, null, 0);
+assert.equal(nothing.trevpar, 0);
+assert.equal(nothing.dso, 0);
+assert.equal(nothing.fbCaptureRate, 0);
+
+/* --- booking lead time --------------------------------------------------- */
+const lead = leadTimeBuckets([
+  { checkIn: "2026-09-10", createdAt: "2026-09-08T10:00:00Z", status: "confirmed" },
+  { checkIn: "2026-09-30", createdAt: "2026-09-10T10:00:00Z", status: "confirmed" },
+  { checkIn: "2026-12-01", createdAt: "2026-09-10T10:00:00Z", status: "completed" },
+  { checkIn: "2027-06-01", createdAt: "2026-09-10T10:00:00Z", status: "confirmed" },
+  { checkIn: "2026-09-11", createdAt: "2026-09-10T10:00:00Z", status: "cancelled" },
+]);
+assert.deepEqual(lead.map((b) => b.stays), [1, 1, 1, 1], "a cancelled stay is not demand");
 
 console.log("domain.ts — all checks passed");

@@ -20,7 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState, Eyebrow, PageHeader, StatCard } from "@/components/common";
+import { FinanceAnalysis } from "./reports/FinanceAnalysis";
+import { OperatingStatement } from "./reports/OperatingStatement";
 import {
   useBookingViews,
   useCustomers,
@@ -44,6 +47,10 @@ import {
 import { downloadCsv } from "@/lib/csv";
 import { money } from "@/lib/format";
 import { titleCase } from "@/lib/status";
+
+/** One active style, matching Settings, so the strips do not drift apart. */
+const TAB =
+  "data-[state=active]:bg-ink data-[state=active]:text-sand data-[state=active]:shadow-soft rounded-lg px-3 py-1.5 text-stone-600 hover:text-ink";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const monthLabel = (m: string) => `${MONTHS[Number(m.split("-")[1]) - 1]} ${m.slice(2, 4)}`;
@@ -89,7 +96,7 @@ export default function ReportsPage() {
   const villas = useVillas();
   const customers = useCustomers();
   const taxes = useTaxes();
-  const { payments, foodOrders, settings, today } = useMockData();
+  const { payments, foodOrders, settings, employeePay, today } = useMockData();
 
   const ranges = presets(today);
   const [from, setFrom] = useState(ranges[2].from);
@@ -102,6 +109,7 @@ export default function ReportsPage() {
         .map((v) => ({
           checkIn: v.booking.checkIn,
           checkOut: v.booking.checkOut,
+          createdAt: v.booking.createdAt,
           status: v.booking.status,
           source: v.booking.source,
           villaId: v.booking.villaId,
@@ -130,6 +138,19 @@ export default function ReportsPage() {
   const byGuest = groupRevenue(rows, "customerId").slice(0, 5);
   const peak = [...figures].sort((a, b) => b.revenue - a.revenue)[0];
   const taxLines = taxBreakdown(revenue.tax, 0.18, taxes, false);
+
+  // Null rather than 0 when nothing is recorded: "no salaries on file" and
+  // "this property has no wage bill" are very different claims.
+  const monthlyPayroll =
+    employeePay.length > 0 ? employeePay.reduce((n, p) => n + p.monthlySalary, 0) : null;
+  const months = Math.max(1, Math.round(days / 30));
+
+  const label = (dimension: string, key: string) =>
+    dimension === "villaId"
+      ? villaName(key)
+      : dimension === "month"
+        ? monthLabel(key)
+        : titleCase(key);
 
   const villaName = (id: string) => villas.find((v) => v.id === id)?.name ?? "—";
   const guestName = (id: string) => customers.find((c) => c.id === id)?.name ?? "—";
@@ -276,6 +297,35 @@ export default function ReportsPage() {
           description="Widen the dates, or pick one of the ranges above."
         />
       ) : (
+        <Tabs defaultValue="overview" className="gap-5">
+          <TabsList className="h-auto flex-wrap justify-start gap-1 p-1.5 print:hidden">
+            <TabsTrigger value="overview" className={TAB}>Overview</TabsTrigger>
+            <TabsTrigger value="analysis" className={TAB}>Analysis</TabsTrigger>
+            <TabsTrigger value="statements" className={TAB}>Statements</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="analysis" className="print:hidden">
+            <FinanceAnalysis rows={rows} names={label} />
+          </TabsContent>
+
+          <TabsContent value="statements">
+            <div data-print-flow>
+              <OperatingStatement
+                rows={rows}
+                villas={villas.length}
+                days={days}
+                months={months}
+                monthlyPayroll={monthlyPayroll}
+                taxes={taxes}
+                legalName={settings?.legalName ?? "Homes of Sanctuary"}
+                from={from}
+                to={to}
+                today={today}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="overview">
         <div data-print-flow className="space-y-6">
           {/* Only shown on paper, where the screen's date picker is gone. */}
           <div className="hidden print:block">
@@ -532,6 +582,8 @@ export default function ReportsPage() {
             above 100%. ADR counts accommodation only; dinner is not a room rate.
           </p>
         </div>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

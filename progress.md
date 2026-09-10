@@ -1,6 +1,6 @@
 # Homes of Sanctuary CRM — Progress
 
-Living status of the build. Updated 1 September 2026.
+Living status of the build. Updated 10 September 2026.
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind v4 · shadcn/ui · React Router 7 · Supabase (Postgres + Auth + Storage + Edge Functions)
 
@@ -10,18 +10,28 @@ Direct `db.*` host does not resolve (IPv6-only). Use the pooler:
 
 ```bash
 npm run dev     # http://localhost:5173
-npm run test    # domain rules (money, conflicts) — node assert, no framework
-npm run smoke   # renders all 31 routes × 2 roles offline; catches blank pages
+npm run test    # domain rules (money, tax, KPIs, CSV) — node assert, no framework
+npm run smoke   # renders every route × 3 roles offline; catches blank pages
+npm run viz     # renders the charts and statements; catches NaN in a report
 npm run build   # tsc -b && vite build
+
+# SQL checks — each wrapped in a transaction that rolls back, so they are
+# safe against the live database.
+psql "$SUPABASE_DB_URL" -f supabase/tests/<file>.sql
 ```
 
-**Sign in** - all three with password `demo123`:
+**Sign in** - all with password `demo123`:
 
 | Account | Role | Lands on |
 |---|---|---|
-| `admin@gmail.com` | admin | `/admin` - the whole CRM |
-| `housekeeping@gmail.com` | staff | `/staff` - that team's queue only |
+| `admin@gmail.com` | owner | `/admin` - everything, including Finances and Employees |
+| `manager@gmail.com` | manager | `/admin` - operations, no settings/roster/payment decisions |
+| `housekeeping@gmail.com` | staff | `/staff` - that department's queue only |
+| `kitchen@gmail.com` | staff | `/staff` - the order board |
 | `user@gmail.com` | guest | `/guest` - Pooja Bothra's stay |
+
+The demo panel on the login page only appears when `VITE_DEMO_PASSWORD` is set,
+so the shared password is not in a deployed bundle.
 
 ---
 
@@ -421,3 +431,103 @@ page, with page margins and no rows split across a break.
 ### R6 - Invoice footer
 Replaced with the property address. The invoice is real now; describing it as a
 mock on a document a guest receives was simply wrong.
+
+---
+
+## 9. Rounds four to nine — 2 to 10 September
+
+Nine sessions of reported bugs and new work. **43 migrations, 6 edge functions,
+6 SQL check files, 36 routes.**
+
+### Reported and fixed
+
+| | Symptom | Cause |
+|---|---|---|
+| **Bookings raised no invoice** | A second stay for an existing guest had none | Numbers only ever came from the Invoices screen. A trigger now raises one with every billable booking — draft until confirmed, issued the moment it is. 16 existing bookings backfilled |
+| **Nothing reached the guest** | No notification for anything | `notifications` only spoke to staff. `target_user_id` scopes a message to one account; booking, payment and invoice events now tell the person waiting |
+| **Kitchen took orders any time** | A stay ended in July could order in September | Arrival day to departure day, on a confirmed stay, enforced inside `place_food_order` |
+| **Kitchen saw housekeeping's jobs** | Wrong queue | Mine: I added a broad `is_staff()` read policy beside the correctly-scoped one. Policies are OR'd |
+| **Guest could not raise a request** | `new row violates row-level security policy` | Mine: a BEFORE INSERT trigger set `assigned_to` before `WITH CHECK` ran, and the policy requires it null |
+| **Tabs laid out sideways** | Every tab strip | `data-horizontal:` compiles to `[data-horizontal]`; Radix sets `data-orientation` |
+| **No tab ever highlighted** | Settings, bookings, villas, guests | Same class of bug two lines below: `data-active:` versus `data-state="active"` |
+| **Phone fields took letters** | `dsdsds` saved as a number | `type="tel"` is a keyboard hint, not a constraint |
+| **Sign-in links opened the login page** | Magic links did nothing | The route guard redirected during the async moment before the session loaded, discarding the URL |
+
+### Built
+
+- **Invoice** — a proper Indian tax invoice: CGST + SGST within the state, IGST
+  across it, decided by place of supply. GSTIN, PAN, SAC, total in words,
+  declaration and signature block.
+- **Taxes** — Settings tab. Name, rate, and whether it splits like GST. The sum
+  is what a new booking is offered; existing bookings keep the rate they were
+  quoted.
+- **Departments** — replaced the four-value `team` enum with rows the owner
+  defines: name, description, job titles, and permissions. Requests route
+  themselves by category.
+- **Employees** — the roster, with logins the owner can issue. Passwords are
+  generated server-side and shown once. Pay is a separate table so RLS can keep
+  it to the owner; a salary *column* would be readable by any manager who can
+  read the roster.
+- **Manager and kitchen roles** — `is_admin()` became "management" (one
+  definition governing 27 policies) with the owner-only tables moved to a new
+  `is_owner()`.
+- **Finances & reports** — Overview, Analysis and Statements. Hotel KPIs,
+  "Bookings by / Revenue by" dimension pickers, a donut, date ranges with an
+  Indian-financial-year preset, CSV and PDF export.
+- **Account settings**, **guest portal notifications**, **request resolution
+  notes**, **villa room management**.
+
+### What the manager cannot do
+
+Enforced in the database, checked by attempting each one as them:
+
+- approve or reject a payment
+- read the employee roster or anyone's pay
+- change settings, villas, rooms or who has an account
+- see combined financial figures — total billed, outstanding across the book,
+  lifetime spend per guest
+
+### Finance section — what is measured, and what is deliberately absent
+
+Laid out the way the lodging industry lays it out, and stopping where the data
+stops.
+
+**Present:** occupancy, ADR, RevPAR, TRevPAR, ALOS, cancellation rate, F&B
+capture rate and spend per night, discount rate, collection rate, DSO, aged
+receivables, and — when salaries are recorded — payroll to revenue and the
+labour component of CPOR.
+
+**Absent on purpose:** GOP, GOPPAR, EBITDA and everything below the gross
+operating line. Those need departmental and undistributed operating expenses —
+food cost, utilities, laundry, commissions — which this system does not hold. A
+GOP computed from revenue and payroll alone would be an invented number wearing
+an industry name. The statement says so on its face.
+
+### Chart colours
+
+The brand palette was tried first and **failed the categorical checks**: ink,
+sand, stone, clay and gold read as grey (below the chroma floor), separate at
+ΔE 1.5 against a floor of 8 under protanopia, and 7.4 against a floor of 15 for
+full colour vision. A reader with protanopia would have seen one series.
+
+The validated slots are used for categorical identity only; surfaces, type,
+rules and the ink/gold bars stay brand. Three slots pass all-pairs (ΔE 9.2 CVD,
+24.0 normal) which is what caps the donut at three segments; five pass adjacent
+(9.1 / 19.6). Three sit under 3:1 on white, so every chart direct-labels its
+values — identity never rests on colour.
+
+### Standing gaps
+
+1. **Transactional email** — needs SMTP or a Resend key. Custom SMTP was tried
+   with Gmail and rejected the credentials; it is currently off, so signup
+   confirmation and password resets run on Supabase's built-in sender (2/hour,
+   project members only). Guest access by **invite link and WhatsApp needs none
+   of this** and works today.
+2. **Vercel** — needs the deployed domain added to Supabase's redirect
+   allow-list, or reset links point at `localhost:5173`.
+3. **Demo accounts** — delete the five before real guest data.
+4. **Expenses** — no cost data anywhere, hence no true P&L. The largest single
+   thing standing between this and a complete finance module.
+5. **Point-in-time recovery** — not enabled.
+6. **Credential rotation** — the database password and personal access token
+   have been pasted in chat and should be rotated.
