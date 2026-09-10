@@ -285,5 +285,44 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
   }
 }
 
+/* The welcome reel sits OVER the sign-in page, never instead of it. If it
+ * ever became a route of its own, a browser that refuses sessionStorage would
+ * strand someone on a video with no way to sign in. */
+{
+  const html = renderToString(
+    <SessionContext.Provider
+      value={{ session: null, loading: false, signIn: async () => ({ error: null }), signOut: () => {} } as never}
+    >
+      <TooltipProvider>
+        <MockDataProvider>
+          <MemoryRouter initialEntries={["/login"]}>
+            <AppRoutes />
+          </MemoryRouter>
+        </MockDataProvider>
+      </TooltipProvider>
+    </SessionContext.Provider>,
+  );
+
+  const checks: [string, boolean][] = [
+    ["the welcome reel greets the visitor", html.includes("Welcome") && html.includes("You are expected")],
+    ["it names the property", html.includes("at Homes of Sanctuary.")],
+    ["it carries the film", html.includes("/villas/welcome.mp4")],
+    // A poster and a still, so a slow connection is never a black rectangle.
+    ["it degrades to a still", html.includes('poster="/villas/nandi-hills.png"')],
+    // The one that matters: the door is behind the veil, already rendered.
+    ["the sign-in form is mounted beneath it", /type="password"/.test(html)],
+    ["the reel is hidden from assistive tech", html.includes('aria-hidden="true"')],
+  ];
+
+  for (const [what, passed] of checks) {
+    if (passed) {
+      console.log("  ok   " + what);
+    } else {
+      failed++;
+      console.error("  FAIL " + what);
+    }
+  }
+}
+
 const exitCode = failed ? 1 : 0;
 process.exit(exitCode);

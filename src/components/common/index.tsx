@@ -60,7 +60,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl bg-white p-5 shadow-soft ring-1 ring-gold/12 transition-all hover:shadow-lift hover:ring-gold/30",
+        "rounded-xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06] transition-all hover:shadow-lift hover:ring-gold/30",
         tone === "accent" && "bg-ink text-sand ring-gold/25",
         tone === "warn" && "bg-status-pending-bg ring-status-pending/25",
         className,
@@ -117,7 +117,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-xl bg-white px-6 py-14 text-center ring-1 ring-gold/15",
+        "flex flex-col items-center justify-center gap-3 rounded-xl bg-white px-6 py-14 text-center ring-1 ring-ink/[0.07]",
         className,
       )}
     >
@@ -190,7 +190,7 @@ export function DevBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-clay/12 px-2.5 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-clay uppercase",
+        "inline-flex items-center gap-1.5 rounded-full bg-clay/12 px-2.5 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-clay-600 uppercase",
         className,
       )}
       title="Real Supabase auth and database, seeded with demo content. No payment gateway, email or WhatsApp yet."

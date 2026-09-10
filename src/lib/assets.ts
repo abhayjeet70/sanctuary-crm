@@ -8,6 +8,11 @@ export const logo = {
   onDark: "/logo1.png",
 };
 
+/** Motion. The welcome reel plays once per session before sign-in. */
+export const video = {
+  welcome: "/villas/welcome.mp4",
+};
+
 export const photo = {
   hills: "/villas/nandi-hills.png",
   maaya: "/villas/villa-maya.png",

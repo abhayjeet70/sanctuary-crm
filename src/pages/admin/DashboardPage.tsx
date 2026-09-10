@@ -96,7 +96,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 xl:grid-cols-3">
         {/* ------------------------------------------------------- activity */}
         <section aria-labelledby="today-feed" className="xl:col-span-2">
-          <div className="rounded-xl bg-white shadow-soft ring-1 ring-gold/12">
+          <div className="rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
             <div className="flex items-center justify-between gap-3 px-6 pt-5 pb-3">
               <h2 id="today-feed" className="text-xl text-ink">
                 Today's movements
@@ -158,7 +158,7 @@ export default function DashboardPage() {
           )}
 
           {/* ---------------------------------------------------- occupancy */}
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <Eyebrow className="text-gold-700">Villa occupancy</Eyebrow>
             <ul className="mt-4 space-y-3">
               {[...overview.occupiedVillas, ...overview.availableVillas].map((villa) => {
@@ -174,7 +174,7 @@ export default function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         to={`/admin/villas/${villa.id}`}
-                        className="block truncate text-sm font-medium text-ink hover:text-clay"
+                        className="block truncate text-sm font-medium text-ink hover:text-clay-600"
                       >
                         {villa.name}
                       </Link>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
 
       {/* -------------------------------------------------- kitchen + requests */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl bg-white shadow-soft ring-1 ring-gold/12">
+        <section className="rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
           <div className="flex items-center justify-between gap-3 px-6 pt-5 pb-3">
             <h2 className="text-xl text-ink">Active kitchen orders</h2>
             <Button asChild variant="link" size="sm">
@@ -241,7 +241,7 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="rounded-xl bg-white shadow-soft ring-1 ring-gold/12">
+        <section className="rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
           <div className="flex items-center justify-between gap-3 px-6 pt-5 pb-3">
             <h2 className="text-xl text-ink">Open guest requests</h2>
             <Button asChild variant="link" size="sm">

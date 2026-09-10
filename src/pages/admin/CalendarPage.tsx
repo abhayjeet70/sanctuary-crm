@@ -148,7 +148,7 @@ function MonthView({
   navigate: ReturnType<typeof useNavigate>;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-gold/12">
+    <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
       <div className="grid grid-cols-7 border-b border-gold/20">
         {WEEKDAYS.map((day) => (
           <div key={day} className="label-caps px-2 py-2.5 text-center">
@@ -274,7 +274,7 @@ function TimelineView({
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-gold/12">
+    <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
       <div className="min-w-[52rem]">
         {/* Day ruler */}
         <div

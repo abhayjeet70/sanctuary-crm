@@ -137,7 +137,7 @@ export default function StaffQueuePage() {
                     key={request.id}
                     className={cn(
                       "rounded-2xl bg-white p-5 shadow-soft ring-1",
-                      request.priority === "urgent" ? "ring-status-cancelled/40" : "ring-gold/12",
+                      request.priority === "urgent" ? "ring-status-cancelled/40" : "ring-ink/[0.06]",
                     )}
                   >
                     <div className="flex flex-wrap items-center gap-2">
@@ -198,7 +198,7 @@ export default function StaffQueuePage() {
                 const state = foodOrderStatus.get(order.status);
                 const next = FOOD_PIPELINE[FOOD_PIPELINE.indexOf(order.status) + 1];
                 return (
-                  <li key={order.id} className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/12">
+                  <li key={order.id} className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="font-mono text-xs text-gold-700">{order.reference}</span>
                       <StatusBadge label={state.label} tone={state.tone} />

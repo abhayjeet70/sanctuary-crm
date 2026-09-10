@@ -95,7 +95,7 @@ export default function GuestAmenitiesPage() {
           ].map(([label, time, hint]) => (
             <div
               key={label}
-              className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/12"
+              className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]"
             >
               <p className="flex items-center gap-2">
                 <Clock className="size-4 text-gold-700" aria-hidden />
@@ -114,7 +114,7 @@ export default function GuestAmenitiesPage() {
             {villa.amenities.map((amenity) => (
               <li
                 key={amenity}
-                className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-gold/12"
+                className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
               >
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gold/12 text-gold-700">
                   <Check className="size-4" aria-hidden />

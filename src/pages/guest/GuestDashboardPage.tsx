@@ -158,7 +158,7 @@ export default function GuestDashboardPage() {
 
       <div className="space-y-6 p-5 sm:p-8">
         {/* --------------------------------------------------- at a glance */}
-        <section className="flex flex-col sm:flex-row rounded-2xl bg-white p-2 shadow-soft ring-1 ring-gold/15 divide-y sm:divide-y-0 sm:divide-x divide-gold/15">
+        <section className="flex flex-col sm:flex-row rounded-2xl bg-white p-2 shadow-soft ring-1 ring-ink/[0.07] divide-y sm:divide-y-0 sm:divide-x divide-gold/15">
           <div className="flex-1 flex gap-4 p-4">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-sand text-stone-600">
               <Calendar className="size-4" aria-hidden />
@@ -231,7 +231,7 @@ export default function GuestDashboardPage() {
             {liveOrder && (
               <Link
                 to="/guest/food"
-                className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/15 transition-all hover:ring-gold/40"
+                className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07] transition-all hover:ring-gold/40"
               >
                 <Eyebrow className="text-gold-700">Your order</Eyebrow>
                 <p className="mt-2 font-display text-lg text-ink">
@@ -248,7 +248,7 @@ export default function GuestDashboardPage() {
             {openRequests.length > 0 && (
               <Link
                 to="/guest/requests"
-                className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/15 transition-all hover:ring-gold/40"
+                className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07] transition-all hover:ring-gold/40"
               >
                 <Eyebrow className="text-gold-700">
                   {openRequests.length} open{" "}
@@ -257,7 +257,7 @@ export default function GuestDashboardPage() {
                 <p className="mt-2 text-sm leading-relaxed text-ink">
                   {openRequests[0].description}
                 </p>
-                <p className="mt-3 text-sm text-clay">View all requests →</p>
+                <p className="mt-3 text-sm text-clay-600">View all requests →</p>
               </Link>
             )}
           </section>
@@ -317,7 +317,7 @@ export default function GuestDashboardPage() {
               <Eyebrow className="text-gold-700">Everything else</Eyebrow>
               <h2 className="mt-1 font-display text-3xl text-ink">Quick Access</h2>
             </div>
-            <Link to="/guest" className="text-sm font-medium text-ink hover:text-clay">
+            <Link to="/guest" className="text-sm font-medium text-ink hover:text-clay-600">
               View all <span aria-hidden>→</span>
             </Link>
           </div>
@@ -326,7 +326,7 @@ export default function GuestDashboardPage() {
               <li key={to}>
                 <Link
                   to={to}
-                  className="group flex items-center gap-4 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/15 transition-all hover:ring-gold/40"
+                  className="group flex items-center gap-4 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07] transition-all hover:ring-gold/40"
                 >
                   <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-sand text-ink">
                     <Icon className="size-5" aria-hidden />

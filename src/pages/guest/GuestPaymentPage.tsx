@@ -154,7 +154,7 @@ export default function GuestPaymentPage() {
       {totals.balance > 0 && (
         <>
           {/* ------------------------------------------------- instructions */}
-          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15">
+          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
             <Eyebrow className="text-gold-700">How to pay</Eyebrow>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl bg-sand-200/60 p-4">
@@ -210,7 +210,7 @@ export default function GuestPaymentPage() {
           <form
             onSubmit={(event) => void submit(event)}
             noValidate
-            className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15"
+            className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]"
           >
             <Eyebrow className="text-gold-700">Upload your receipt</Eyebrow>
             <p className="mt-2 text-sm text-stone-600">
@@ -320,7 +320,7 @@ export default function GuestPaymentPage() {
                 <div className="space-y-1.5">
                   <Label htmlFor="amount">
                     Amount transferred{" "}
-                    <span className="font-normal text-clay">required</span>
+                    <span className="font-normal text-clay-600">required</span>
                   </Label>
                   <Input
                     id="amount"
@@ -341,7 +341,7 @@ export default function GuestPaymentPage() {
                     <button
                       type="button"
                       onClick={() => setAmount(String(totals.balance))}
-                      className="text-xs text-clay underline underline-offset-4"
+                      className="text-xs text-clay-600 underline underline-offset-4"
                     >
                       Use the full balance, {money(totals.balance)}
                     </button>
@@ -351,7 +351,7 @@ export default function GuestPaymentPage() {
                   <Label htmlFor="reference">
                     Transaction / UTR number{" "}
                     {method === "bank_transfer" ? (
-                      <span className="font-normal text-clay">required</span>
+                      <span className="font-normal text-clay-600">required</span>
                     ) : (
                       <span className="font-normal text-stone-600">optional</span>
                     )}
@@ -406,7 +406,7 @@ export default function GuestPaymentPage() {
               return (
                 <li
                   key={payment.id}
-                  className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/12"
+                  className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

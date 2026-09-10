@@ -95,7 +95,7 @@ export function GuestAccessPanel({
   };
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <Eyebrow className="text-gold-700">Guest portal access</Eyebrow>
 
       {!result ? (

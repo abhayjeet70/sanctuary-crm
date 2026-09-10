@@ -85,7 +85,7 @@ export default function RequestsPage() {
       </div>
 
       {/* -------------------------------------------------------- filter bar */}
-      <div className="flex flex-wrap gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12">
+      <div className="flex flex-wrap gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]">
         <div className="w-44 space-y-1.5">
           <Label htmlFor="request-status">Status</Label>
           <Select value={status} onValueChange={setStatus}>
@@ -144,7 +144,7 @@ export default function RequestsPage() {
                   "rounded-xl bg-white p-5 shadow-soft ring-1 transition-all",
                   request.priority === "urgent" && request.status !== "completed"
                     ? "ring-status-cancelled/35"
-                    : "ring-gold/12",
+                    : "ring-ink/[0.06]",
                 )}
               >
                 <div className="flex flex-wrap items-start gap-4">
@@ -167,14 +167,14 @@ export default function RequestsPage() {
                     <p className="mt-2 text-xs text-stone-600">
                       <Link
                         to={`/admin/customers/${customer?.id}`}
-                        className="underline-offset-4 hover:text-clay hover:underline"
+                        className="underline-offset-4 hover:text-clay-600 hover:underline"
                       >
                         {customer?.name}
                       </Link>{" "}
                       · {villa?.name} ·{" "}
                       <Link
                         to={`/admin/bookings/${request.bookingId}`}
-                        className="underline-offset-4 hover:text-clay hover:underline"
+                        className="underline-offset-4 hover:text-clay-600 hover:underline"
                       >
                         booking
                       </Link>{" "}
@@ -284,7 +284,7 @@ export default function RequestsPage() {
               key={column}
               type="button"
               onClick={() => setStatus(column)}
-              className="rounded-xl bg-white p-4 text-left shadow-soft ring-1 ring-gold/12 transition-all hover:ring-gold/40"
+              className="rounded-xl bg-white p-4 text-left shadow-soft ring-1 ring-ink/[0.06] transition-all hover:ring-gold/40"
             >
               <StatusBadge label={meta.label} tone={meta.tone} />
               <p className="mt-2 font-display text-2xl text-ink tabular-nums">{count}</p>

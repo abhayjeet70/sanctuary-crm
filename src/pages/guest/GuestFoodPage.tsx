@@ -246,7 +246,7 @@ export default function GuestFoodPage() {
               return (
                 <li
                   key={order.id}
-                  className="rounded-2xl bg-white p-4 shadow-soft ring-1 ring-gold/12"
+                  className="rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -303,7 +303,7 @@ export default function GuestFoodPage() {
               key={item.id}
               className={cn(
                 "overflow-hidden rounded-2xl bg-white shadow-soft ring-1 transition-all",
-                quantity > 0 ? "ring-gold/50" : "ring-gold/12",
+                quantity > 0 ? "ring-gold/50" : "ring-ink/[0.06]",
                 !item.available && "opacity-60",
               )}
             >

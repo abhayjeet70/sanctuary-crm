@@ -82,7 +82,7 @@ export default function CustomersListPage() {
 
       {adding && <CustomerDialog customer={null} onClose={() => setAdding(false)} />}
 
-      <div className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12">
+      <div className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]">
         <div className="max-w-md space-y-1.5">
           <Label htmlFor="guest-search">Search</Label>
           <div className="relative">
@@ -108,7 +108,7 @@ export default function CustomersListPage() {
         />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-gold/12 md:block">
+          <div className="hidden overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -132,7 +132,7 @@ export default function CustomersListPage() {
                           </span>
                           <Link
                             to={`/admin/customers/${customer.id}`}
-                            className="font-medium text-ink underline-offset-4 group-hover:text-clay group-hover:underline"
+                            className="font-medium text-ink underline-offset-4 group-hover:text-clay-600 group-hover:underline"
                           >
                             {customer.name}
                           </Link>
@@ -161,7 +161,7 @@ export default function CustomersListPage() {
               <li key={customer.id}>
                 <Link
                   to={`/admin/customers/${customer.id}`}
-                  className="block rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12 transition-all hover:ring-gold/40"
+                  className="block rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] transition-all hover:ring-gold/40"
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gold/15 text-sm font-semibold text-gold-700">

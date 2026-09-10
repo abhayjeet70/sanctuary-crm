@@ -182,7 +182,7 @@ export function JobTitlesEditor({
             ))}
             {suggestions.length > 0 && <SelectSeparator />}
             <SelectItem value={CUSTOM}>
-              <span className="flex items-center gap-2 text-clay">
+              <span className="flex items-center gap-2 text-clay-600">
                 <Plus className="size-3.5" aria-hidden />
                 Something else…
               </span>

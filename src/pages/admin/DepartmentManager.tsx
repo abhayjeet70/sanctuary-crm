@@ -94,7 +94,7 @@ export function DepartmentManager() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <Eyebrow className="text-gold-700">Departments</Eyebrow>
         <h2 className="mt-2 text-xl text-ink">Teams and what they may do</h2>
         <p className="mt-1.5 text-sm text-stone-600">
@@ -114,7 +114,7 @@ export function DepartmentManager() {
         />
       ))}
 
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <h2 className="text-xl text-ink">Add a department</h2>
         <hr className="rule-gold my-4" />
         <form onSubmit={add} className="grid gap-4 sm:grid-cols-[1fr_1.4fr_auto] sm:items-end">
@@ -170,7 +170,7 @@ function DepartmentCard({
   return (
     <section
       className={cn(
-        "rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12",
+        "rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]",
         !department.active && "opacity-70",
       )}
     >

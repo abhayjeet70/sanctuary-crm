@@ -140,7 +140,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
                           />
                           <span className="truncate">{label}</span>
                           {count > 0 && (
-                            <span className="ml-auto min-w-[1.125rem] rounded-full bg-clay px-1 py-px text-center text-[0.625rem] leading-tight font-semibold text-sand tabular-nums">
+                            <span className="ml-auto min-w-[1.125rem] rounded-full bg-clay-600 px-1 py-px text-center text-[0.625rem] leading-tight font-semibold text-white tabular-nums">
                               {count}
                               <span className="sr-only"> awaiting verification</span>
                             </span>
@@ -227,7 +227,7 @@ function NotificationTray() {
             {unread > 0 && (
               <span
                 aria-hidden
-                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay px-1 text-[0.625rem] leading-none font-semibold text-white tabular-nums ring-2 ring-ink"
+                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay-600 px-1 text-[0.625rem] leading-none font-semibold text-white tabular-nums ring-2 ring-ink"
               >
                 {unread > 9 ? "9+" : unread}
               </span>
@@ -333,7 +333,7 @@ export function AdminShell() {
         <div className="space-y-2.5 px-1.5 pt-3">
           <hr className="rule-gold" />
           <div className="flex items-center gap-2">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-clay text-[0.625rem] font-semibold text-sand">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-clay-600 text-[0.625rem] font-semibold text-white">
               {initials(session?.name ?? "")}
             </span>
             <div className="min-w-0 flex-1">

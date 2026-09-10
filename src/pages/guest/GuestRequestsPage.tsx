@@ -90,7 +90,7 @@ export default function GuestRequestsPage() {
       <form
         onSubmit={(event) => void submit(event)}
         noValidate
-        className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15"
+        className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]"
       >
         <fieldset>
           <legend className="label-caps mb-3">What is this about?</legend>
@@ -167,7 +167,7 @@ export default function GuestRequestsPage() {
               return (
                 <li
                   key={request.id}
-                  className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/12"
+                  className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">

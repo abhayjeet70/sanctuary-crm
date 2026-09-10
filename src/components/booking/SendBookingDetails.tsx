@@ -78,7 +78,7 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
   };
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <Eyebrow className="text-gold-700">Send booking details</Eyebrow>
       <p className="mt-3 text-sm text-stone-600">
         Dates, totals and payment instructions for {customer?.name}.

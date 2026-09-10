@@ -92,7 +92,7 @@ export function ReceiptViewer({
     <a
       href={downloadUrl}
       download={suggestedName}
-      className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-clay underline-offset-4 transition-colors hover:bg-sand-200 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+      className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-clay-600 underline-offset-4 transition-colors hover:bg-sand-200 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
     >
       <Download className="size-3.5" aria-hidden />
       Download receipt
@@ -146,7 +146,7 @@ export function ReceiptViewer({
         <DialogTitle className="sr-only">{alt}</DialogTitle>
         {url && isPdf ? (
           <object data={url} type="application/pdf" className="h-[80vh] w-full rounded-lg">
-            <a href={url} target="_blank" rel="noreferrer" className="text-clay underline">
+            <a href={url} target="_blank" rel="noreferrer" className="text-clay-600 underline">
               Open the receipt in a new tab
             </a>
           </object>

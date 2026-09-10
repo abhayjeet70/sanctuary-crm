@@ -285,7 +285,7 @@ export default function SettingsPage() {
             </div>
           </Section>
 
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <Eyebrow className="text-gold-700">This build</Eyebrow>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-stone-600">
               Signed in as {session?.name} · {session?.role}. Authentication, the database
@@ -313,7 +313,7 @@ export default function SettingsPage() {
 
         {/* -------------------------------------------------------- villas */}
         <TabsContent value="villas" className="pt-5">
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <Eyebrow className="text-gold-700">Villas</Eyebrow>
             <p className="mt-2 text-sm text-stone-600">
               Rooms, capacity, rates, times, amenities and Wi-Fi live on each villa.
@@ -390,7 +390,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <h2 className="text-xl text-ink">{title}</h2>
       {note && <p className="mt-1.5 text-sm text-stone-600">{note}</p>}
       <hr className="rule-gold my-4" />
@@ -464,7 +464,7 @@ function DemoDataSection() {
   return (
     <div className="space-y-4">
       {/* Main card with toggle */}
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <div className="flex items-start justify-between gap-6">
           <div className="flex-1">
             <Eyebrow className="text-gold-700">Demo data</Eyebrow>
@@ -554,7 +554,7 @@ function DemoDataSection() {
       </section>
 
       {/* Context note */}
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <Eyebrow className="text-gold-700">How it works</Eyebrow>
         <ul className="mt-3 space-y-2 text-sm leading-relaxed text-stone-600">
           <li className="flex gap-2">

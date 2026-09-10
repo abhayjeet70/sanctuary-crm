@@ -50,7 +50,7 @@ export default function GuestBookingPage() {
       {/* --------------------------------------------------------- progress */}
       <section
         aria-label="Where your booking has got to"
-        className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15"
+        className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]"
       >
         <ol className="grid gap-4 sm:grid-cols-4">
           {GUEST_STEPS.map((step, index) => {
@@ -88,7 +88,7 @@ export default function GuestBookingPage() {
       </section>
 
       {/* ------------------------------------------------------------- stay */}
-      <section className="overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-gold/15">
+      <section className="overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
         <img src={villa?.image} alt={villa?.name} className="h-44 w-full object-cover" />
         <div className="p-6">
           <h2 className="font-display text-2xl text-ink">{villa?.name}</h2>
@@ -160,7 +160,7 @@ export default function GuestBookingPage() {
               return (
                 <li
                   key={other.id}
-                  className="flex flex-wrap items-center gap-4 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-gold/12"
+                  className="flex flex-wrap items-center gap-4 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
                 >
                   <img
                     src={otherVilla?.image}

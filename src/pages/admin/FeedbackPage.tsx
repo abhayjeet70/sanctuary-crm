@@ -97,7 +97,7 @@ export default function FeedbackPage() {
         />
       </div>
 
-      <div className="flex flex-wrap gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12">
+      <div className="flex flex-wrap gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]">
         <div className="w-48 space-y-1.5">
           <Label htmlFor="feedback-villa">Villa</Label>
           <Select value={villaId} onValueChange={setVillaId}>
@@ -141,7 +141,7 @@ export default function FeedbackPage() {
               key={entry.id}
               className={cn(
                 "rounded-xl bg-white p-6 shadow-soft ring-1",
-                entry.reviewed ? "ring-gold/12" : "ring-gold/40",
+                entry.reviewed ? "ring-ink/[0.06]" : "ring-gold/40",
               )}
             >
               <div className="flex flex-wrap items-start gap-4">
@@ -153,7 +153,7 @@ export default function FeedbackPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     <Link
                       to={`/admin/customers/${customer?.id}`}
-                      className="font-medium text-ink underline-offset-4 hover:text-clay hover:underline"
+                      className="font-medium text-ink underline-offset-4 hover:text-clay-600 hover:underline"
                     >
                       {customer?.name}
                     </Link>
@@ -169,7 +169,7 @@ export default function FeedbackPage() {
                     {booking && (
                       <Link
                         to={`/admin/bookings/${booking.id}`}
-                        className="underline-offset-4 hover:text-clay hover:underline"
+                        className="underline-offset-4 hover:text-clay-600 hover:underline"
                       >
                         {booking.reference}
                       </Link>

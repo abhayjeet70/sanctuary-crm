@@ -114,7 +114,7 @@ export function FinancialBreakdown({
         <dd
           className={cn(
             "font-medium tabular-nums",
-            totals.balance > 0 ? "text-clay" : "text-status-confirmed",
+            totals.balance > 0 ? "text-clay-600" : "text-status-confirmed",
           )}
         >
           {totals.balance > 0 ? money(totals.balance) : "Settled"}

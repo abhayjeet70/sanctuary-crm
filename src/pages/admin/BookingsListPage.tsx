@@ -129,7 +129,7 @@ export default function BookingsListPage() {
       {/* -------------------------------------------------------- filter bar */}
       <section
         aria-label="Filter bookings"
-        className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12"
+        className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
       >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
           <div className="flex-1 space-y-1.5">
@@ -260,7 +260,7 @@ export default function BookingsListPage() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-gold/12 lg:block">
+          <div className="hidden overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] lg:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -286,7 +286,7 @@ export default function BookingsListPage() {
                       <TableCell>
                         <Link
                           to={`/admin/bookings/${booking.id}`}
-                          className="font-medium text-ink underline-offset-4 group-hover:text-clay group-hover:underline"
+                          className="font-medium text-ink underline-offset-4 group-hover:text-clay-600 group-hover:underline"
                         >
                           {booking.reference}
                         </Link>
@@ -329,7 +329,7 @@ export default function BookingsListPage() {
                       <TableCell
                         className={cn(
                           "text-right tabular-nums",
-                          totals.balance > 0 ? "text-clay" : "text-stone-600",
+                          totals.balance > 0 ? "text-clay-600" : "text-stone-600",
                         )}
                       >
                         {totals.balance > 0 ? money(totals.balance) : "—"}
@@ -398,7 +398,7 @@ function BookingCard({ view }: { view: BookingView }) {
     <li>
       <Link
         to={`/admin/bookings/${booking.id}`}
-        className="group block overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-gold/12 transition-all hover:shadow-lift hover:ring-gold/35"
+        className="group block overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] transition-all hover:shadow-lift hover:ring-gold/35"
       >
         <div className="relative h-28 overflow-hidden">
           <img
@@ -447,7 +447,7 @@ function BookingCard({ view }: { view: BookingView }) {
           <hr className="rule-gold" />
           <div className="flex items-baseline justify-between text-sm">
             <span className="text-stone-600">{bookingSource[booking.source]}</span>
-            <span className={cn("tabular-nums", totals.balance > 0 ? "text-clay" : "text-stone-600")}>
+            <span className={cn("tabular-nums", totals.balance > 0 ? "text-clay-600" : "text-stone-600")}>
               {totals.balance > 0 ? `${money(totals.balance)} due` : "Settled"}
             </span>
           </div>

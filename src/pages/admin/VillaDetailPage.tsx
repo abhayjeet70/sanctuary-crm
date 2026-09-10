@@ -94,7 +94,7 @@ export default function VillaDetailPage() {
       </Button>
 
       {/* ------------------------------------------------------------ header */}
-      <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-gold/15">
+      <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
         <div className="relative h-48 sm:h-64">
           <img src={villa.image} alt={villa.name} className="size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent" />
@@ -158,7 +158,7 @@ export default function VillaDetailPage() {
       <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
         <div className="min-w-0 space-y-6">
           {/* -------------------------------------------------------- rooms */}
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <div className="flex items-baseline justify-between gap-3">
               <div>
                 <h2 className="text-xl text-ink">Rooms</h2>
@@ -230,7 +230,7 @@ export default function VillaDetailPage() {
           </section>
 
           {/* ------------------------------------------------------ details */}
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="text-xl text-ink">Villa details</h2>
               {draft && (
@@ -295,7 +295,7 @@ export default function VillaDetailPage() {
           </section>
 
           {/* ---------------------------------------------------- amenities */}
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <h2 className="text-xl text-ink">Amenities</h2>
             <p className="mt-1 text-sm text-stone-600">
               Shown to guests in the portal, on this villa only.
@@ -401,7 +401,7 @@ export default function VillaDetailPage() {
             </p>
           </section>
 
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <Eyebrow className="text-gold-700">Gallery</Eyebrow>
             <ul className="mt-3 grid grid-cols-3 gap-2">
               {villa.gallery.map((src, index) => (

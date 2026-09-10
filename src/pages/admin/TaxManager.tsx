@@ -66,7 +66,7 @@ export function TaxManager() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <Eyebrow className="text-gold-700">Taxes</Eyebrow>
         <h2 className="mt-2 text-xl text-ink">What the property charges</h2>
         <p className="mt-1.5 text-sm text-stone-600">
@@ -142,7 +142,7 @@ export function TaxManager() {
         )}
       </section>
 
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <h2 className="text-xl text-ink">Add a tax</h2>
         <hr className="rule-gold my-4" />
         <form onSubmit={add} className="grid gap-4 sm:grid-cols-[1fr_8rem_12rem_auto] sm:items-end">
@@ -191,7 +191,7 @@ export function TaxManager() {
       </section>
 
       {preview.length > 0 && (
-        <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+        <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
           <Eyebrow className="text-gold-700">On an invoice</Eyebrow>
           <p className="mt-2 text-sm text-stone-600">
             How a {money(100000)} stay for a guest from your own state would print.

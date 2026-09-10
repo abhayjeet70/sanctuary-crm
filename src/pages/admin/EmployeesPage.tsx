@@ -103,7 +103,7 @@ export default function EmployeesPage() {
         />
       </div>
 
-      <div className="grid gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12 sm:grid-cols-3">
+      <div className="grid gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="employee-search">Search</Label>
           <div className="relative">
@@ -209,7 +209,7 @@ function EmployeeRow({
     <li
       className={cn(
         "rounded-2xl bg-white p-5 shadow-soft ring-1 transition-all",
-        open ? "ring-gold/40" : "ring-gold/12",
+        open ? "ring-gold/40" : "ring-ink/[0.06]",
         employee.status === "left" && "opacity-70",
       )}
     >

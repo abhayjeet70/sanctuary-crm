@@ -137,7 +137,7 @@ export default function BookingDetailPage() {
           </Link>
         </Button>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-gold/15">
+        <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
           <div className="relative h-40 sm:h-48">
             <img src={villa?.image} alt="" aria-hidden className="size-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/45 to-transparent" />
@@ -217,13 +217,13 @@ export default function BookingDetailPage() {
 
           {/* ------------------------------------------------------- stay */}
           <TabsContent value="stay" className="space-y-6 pt-5">
-            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Guest</Eyebrow>
               <dl className="mt-4 grid gap-4 sm:grid-cols-3">
                 <Detail label="Name">
                   <Link
                     to={`/admin/customers/${customer?.id}`}
-                    className="text-ink underline-offset-4 hover:text-clay hover:underline"
+                    className="text-ink underline-offset-4 hover:text-clay-600 hover:underline"
                   >
                     {customer?.name}
                   </Link>
@@ -246,13 +246,13 @@ export default function BookingDetailPage() {
                 <Detail label="Check-in">
                   {formatDate(booking.checkIn)} from {times.arrival}
                   {times.arrivalArranged && (
-                    <span className="ml-1.5 text-xs text-clay">arranged</span>
+                    <span className="ml-1.5 text-xs text-clay-600">arranged</span>
                   )}
                 </Detail>
                 <Detail label="Check-out">
                   {formatDate(booking.checkOut)} by {times.departure}
                   {times.departureArranged && (
-                    <span className="ml-1.5 text-xs text-clay">arranged</span>
+                    <span className="ml-1.5 text-xs text-clay-600">arranged</span>
                   )}
                 </Detail>
                 <Detail label="Nights">{nights}</Detail>
@@ -271,7 +271,7 @@ export default function BookingDetailPage() {
               </section>
             )}
 
-            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Internal notes</Eyebrow>
               {booking.internalNotes ? (
                 <p className="mt-3 text-sm leading-relaxed whitespace-pre-line text-ink">
@@ -313,7 +313,7 @@ export default function BookingDetailPage() {
                 return (
                   <section
                     key={payment.id}
-                    className="rounded-xl bg-white p-5 shadow-soft ring-1 ring-gold/12"
+                    className="rounded-xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
@@ -408,7 +408,7 @@ export default function BookingDetailPage() {
 
           {/* --------------------------------------------------- timeline */}
           <TabsContent value="timeline" className="pt-5">
-            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <ActivityTimeline events={activity} />
             </section>
           </TabsContent>
@@ -430,7 +430,7 @@ export default function BookingDetailPage() {
 
           <GuestAccessPanel bookingId={booking.id} guestEmail={customer?.email} />
 
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <Eyebrow className="text-gold-700">Guest preferences</Eyebrow>
             {customer?.preferences.length ? (
               <ul className="mt-3 flex flex-wrap gap-1.5">

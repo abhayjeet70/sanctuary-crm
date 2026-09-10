@@ -267,7 +267,7 @@ export function CustomerDialog({
                   />
 
                   {idImagePath ? (
-                    <div className="flex items-center gap-3 rounded-lg bg-sand-200/60 p-2.5 ring-1 ring-gold/15">
+                    <div className="flex items-center gap-3 rounded-lg bg-sand-200/60 p-2.5 ring-1 ring-ink/[0.07]">
                       {idPreview && !idPreview.includes(".pdf") ? (
                         <img
                           src={idPreview}

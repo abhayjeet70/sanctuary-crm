@@ -147,7 +147,7 @@ export default function GuestBookPage() {
       </header>
 
       {/* --------------------------------------------------------- the dates */}
-      <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15">
+      <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
         <div className="grid gap-4 sm:grid-cols-4">
           <div className="space-y-1.5">
             <Label htmlFor="check-in">Check-in</Label>
@@ -230,7 +230,7 @@ export default function GuestBookPage() {
                     aria-pressed={picked}
                     className={cn(
                       "group w-full overflow-hidden rounded-2xl bg-white text-left shadow-soft ring-1 transition-all",
-                      picked ? "ring-2 ring-gold" : "ring-gold/12 hover:ring-gold/40",
+                      picked ? "ring-2 ring-gold" : "ring-ink/[0.06] hover:ring-gold/40",
                       !free && "cursor-not-allowed opacity-60",
                     )}
                   >
@@ -297,7 +297,7 @@ export default function GuestBookPage() {
 
       {/* ---------------------------------------------------- rooms + confirm */}
       {chosen && (
-        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15">
+        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
           <Eyebrow className="text-gold-700">Your stay at {chosen.villa_name}</Eyebrow>
 
           {isSplit && (

@@ -115,7 +115,7 @@ export default function KitchenPage() {
                       return (
                         <li
                           key={order.id}
-                          className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12"
+                          className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
                         >
                           <div className="flex items-baseline justify-between gap-2">
                             <span className="font-mono text-xs text-gold-700">
@@ -128,7 +128,7 @@ export default function KitchenPage() {
 
                           <Link
                             to={`/admin/bookings/${order.bookingId}`}
-                            className="mt-1.5 block font-medium text-ink underline-offset-4 hover:text-clay hover:underline"
+                            className="mt-1.5 block font-medium text-ink underline-offset-4 hover:text-clay-600 hover:underline"
                           >
                             {customer?.name}
                           </Link>

@@ -78,7 +78,7 @@ export default function GuestFeedbackPage() {
       <form
         onSubmit={(event) => void submit(event)}
         noValidate
-        className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15"
+        className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]"
       >
         <fieldset>
           <legend className="label-caps mb-3">Your rating</legend>
@@ -158,7 +158,7 @@ export default function GuestFeedbackPage() {
             {feedback.map((entry) => (
               <li
                 key={entry.id}
-                className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-gold/12"
+                className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-2">

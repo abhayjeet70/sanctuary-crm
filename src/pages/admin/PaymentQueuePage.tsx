@@ -103,7 +103,7 @@ export default function PaymentQueuePage() {
                       "w-full rounded-xl bg-white p-3 text-left shadow-soft transition-all",
                       active
                         ? "ring-2 ring-gold"
-                        : "ring-1 ring-gold/12 hover:ring-gold/40",
+                        : "ring-1 ring-ink/[0.06] hover:ring-gold/40",
                     )}
                   >
                     <div className="flex items-baseline justify-between gap-2">
@@ -129,7 +129,7 @@ export default function PaymentQueuePage() {
 
         {/* ------------------------------------------------------ the decision */}
         <div className="space-y-6">
-          <section className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-gold/15">
+          <section className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
             <header className="flex flex-wrap items-start justify-between gap-4 p-6 pb-4">
               <div className="min-w-0">
                 <Eyebrow className="text-gold-700">
@@ -178,7 +178,7 @@ export default function PaymentQueuePage() {
                       <span
                         className={cn(
                           "font-display text-2xl tabular-nums",
-                          mismatch ? "text-clay" : "text-ink",
+                          mismatch ? "text-clay-600" : "text-ink",
                         )}
                       >
                         {money(payment.amount)}

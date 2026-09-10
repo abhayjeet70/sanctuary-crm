@@ -196,9 +196,9 @@ export default function DesignSystemPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Ink", "#142731", "bg-ink", "Headings, navigation, primary buttons", "text-sand"],
-              ["Sand", "#F4EFE8", "bg-sand", "Application background, warm surfaces", "text-ink"],
+              ["Sand", "#FAF7F3", "bg-sand", "Application background, warm surfaces", "text-ink"],
               ["Stone", "#A69C8E", "bg-stone", "Borders, muted text, dividers", "text-ink"],
-              ["Clay", "#B5654A", "bg-clay", "CTAs, active states, links — used sparingly", "text-sand"],
+              ["Clay", "#B5654A", "bg-clay", "Fills and accents. As text it fails AA — use clay-600", "text-sand"],
               ["Gold", "#C9A961", "bg-gold", "Rules, rings, display figures — from the mark", "text-ink"],
               ["White", "#FFFFFF", "bg-white", "Cards that need to lift off the sand", "text-ink"],
             ].map(([name, hex, bg, use, fg]) => (
@@ -518,7 +518,7 @@ export default function DesignSystemPage() {
               ["Kitchen", foodOrderStatus.all],
               ["Requests", requestStatus.all],
             ].map(([title, items]) => (
-              <div key={title as string} className="rounded-xl bg-white p-5 shadow-soft ring-1 ring-gold/12">
+              <div key={title as string} className="rounded-xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]">
                 <p className="label-caps mb-4">{title as string}</p>
                 <div className="flex flex-wrap gap-2">
                   {(items as { label: string; tone: never; value: string }[]).map((item) => (
@@ -537,7 +537,7 @@ export default function DesignSystemPage() {
           description="Photography-led cards for villas and menu items; quiet figure cards for the admin dashboard."
         >
           <div className="grid gap-6 lg:grid-cols-3">
-            <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-gold/15 transition-shadow hover:shadow-lift">
+            <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07] transition-shadow hover:shadow-lift">
               <img
                 src={photo.maaya}
                 alt="The verandah at Villa Maaya"
@@ -598,7 +598,7 @@ export default function DesignSystemPage() {
           title="Tables"
           description="The admin's primary surface. Dense, quiet, and scannable — status and money align to the right."
         >
-          <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-gold/12">
+          <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
             <Table>
               <TableHeader>
                 <TableRow>

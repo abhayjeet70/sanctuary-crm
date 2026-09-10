@@ -84,7 +84,7 @@ export function StaffAccountPanel({ employee }: { employee: Employee }) {
   const hasLogin = Boolean(employee.profileId);
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <p className="label-caps text-gold-700">Portal login</p>
       <p className="mt-2 text-sm text-stone-600">
         {hasLogin

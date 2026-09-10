@@ -723,7 +723,7 @@ export default function NewBookingPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <h2 className="text-xl text-ink">{title}</h2>
       <hr className="rule-gold my-4" />
       {children}

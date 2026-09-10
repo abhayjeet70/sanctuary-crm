@@ -231,7 +231,7 @@ export default function ReportsPage() {
       />
 
       {/* ------------------------------------------------------ the period */}
-      <section className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12 print:hidden">
+      <section className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] print:hidden">
         <div className="flex flex-wrap items-end gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="from">From</Label>
@@ -379,7 +379,7 @@ export default function ReportsPage() {
 
           {/* -------------------------------------------------- where it came */}
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Where the money came from</Eyebrow>
               <hr className="rule-gold my-4" />
               <ul className="space-y-1.5 text-sm">
@@ -405,7 +405,7 @@ export default function ReportsPage() {
               </ul>
             </section>
 
-            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Outstanding, by age</Eyebrow>
               <p className="mt-2 text-sm text-stone-600">
                 Aged from check-out, which is when the bill falls due.
@@ -439,7 +439,7 @@ export default function ReportsPage() {
           </div>
 
           {/* ------------------------------------------------------ by month */}
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 className="text-xl text-ink">Month by month</h2>
               {peak && (
@@ -504,7 +504,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+            <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Best guests in this period</Eyebrow>
               <hr className="rule-gold my-4" />
               <Table>
@@ -521,7 +521,7 @@ export default function ReportsPage() {
                       <TableCell>
                         <Link
                           to={`/admin/customers/${r.key}`}
-                          className="text-ink underline-offset-4 hover:text-clay hover:underline"
+                          className="text-ink underline-offset-4 hover:text-clay-600 hover:underline"
                         >
                           {guestName(r.key)}
                         </Link>
@@ -611,7 +611,7 @@ function Breakdown({
 }) {
   const top = rows[0]?.gross ?? 0;
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <Eyebrow className="text-gold-700">{title}</Eyebrow>
       <hr className="rule-gold my-4" />
       <Table>

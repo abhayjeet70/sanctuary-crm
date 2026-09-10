@@ -106,7 +106,7 @@ export function WaitlistBoard() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]">
         <Eyebrow className="text-gold-700">Waiting for</Eyebrow>
         <Select value={villaFilter} onValueChange={setVillaFilter}>
           <SelectTrigger className="h-8 w-auto gap-1 text-xs" aria-label="Filter by villa">
@@ -153,7 +153,7 @@ export function WaitlistBoard() {
                   "rounded-xl bg-white p-4 shadow-soft ring-1 transition-shadow",
                   openings.length > 0 && entry.status === "waiting"
                     ? "ring-status-confirmed/35"
-                    : "ring-gold/12",
+                    : "ring-ink/[0.06]",
                 )}
               >
                 <div className="flex flex-wrap items-start gap-3">

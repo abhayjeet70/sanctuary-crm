@@ -100,7 +100,7 @@ function GuestNotificationTray() {
             {unread > 0 && (
               <span
                 aria-hidden
-                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay px-1 text-[0.625rem] leading-none font-semibold text-white tabular-nums ring-2 ring-ink"
+                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-clay-600 px-1 text-[0.625rem] leading-none font-semibold text-white tabular-nums ring-2 ring-ink"
               >
                 {unread > 9 ? "9+" : unread}
               </span>
@@ -245,7 +245,7 @@ export function GuestShell() {
                 className={({ isActive }) =>
                   cn(
                     "flex flex-col items-center gap-1 py-2.5 text-[0.6875rem] transition-colors",
-                    isActive ? "text-clay" : "text-stone-600 hover:text-ink",
+                    isActive ? "text-clay-600" : "text-stone-600 hover:text-ink",
                   )
                 }
               >

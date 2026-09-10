@@ -106,7 +106,7 @@ export function FinanceAnalysis({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+        <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
           <Eyebrow className="text-gold-700">What the money is made of</Eyebrow>
           <p className="mt-2 text-sm text-stone-600">
             Before tax and before discounts.
@@ -115,7 +115,7 @@ export function FinanceAnalysis({
           <Donut slices={composition} caption="Revenue composition" />
         </section>
 
-        <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+        <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
           <Eyebrow className="text-gold-700">How far ahead people book</Eyebrow>
           <p className="mt-2 text-sm text-stone-600">
             A book full of last-minute arrivals cannot be sold at a shoulder rate three
@@ -153,7 +153,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <div className="flex flex-wrap items-center gap-2">
         <Eyebrow className="text-gold-700">{title}</Eyebrow>
         <Select value={value} onValueChange={(v) => onChange(v as Dimension)}>

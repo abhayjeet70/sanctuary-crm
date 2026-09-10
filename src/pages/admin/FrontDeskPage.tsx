@@ -215,7 +215,7 @@ function MovementList({
   });
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <div className="flex items-center gap-3">
         <span className="text-gold-700" aria-hidden>{icon}</span>
         <div>
@@ -250,7 +250,7 @@ function MovementList({
                 <span
                   className={cn(
                     "flex w-16 shrink-0 flex-col items-center rounded-lg px-2 py-1.5",
-                    arranged ? "bg-clay/15 text-clay" : "bg-white text-ink",
+                    arranged ? "bg-clay/15 text-clay-600" : "bg-white text-ink",
                   )}
                 >
                   <span className="font-display text-base tabular-nums">{time}</span>
@@ -333,7 +333,7 @@ function RoomRack({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12">
+      <div className="flex flex-wrap items-center gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]">
         <Eyebrow className="text-gold-700">Today</Eyebrow>
         <Key tone="free" label="Free" />
         <Key tone="occupied" label="Occupied" />
@@ -348,7 +348,7 @@ function RoomRack({
         return (
           <section
             key={villa.id}
-            className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12"
+            className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
@@ -551,7 +551,7 @@ function OnShift() {
         return (
           <section
             key={department?.id ?? "unplaced"}
-            className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12"
+            className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]"
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <Eyebrow className="text-gold-700">

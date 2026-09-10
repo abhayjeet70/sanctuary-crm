@@ -98,7 +98,7 @@ export function MenuManager() {
   };
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+    <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <Eyebrow className="text-gold-700">Kitchen menu</Eyebrow>
@@ -144,7 +144,7 @@ export function MenuManager() {
               <li
                 key={item.id}
                 className={cn(
-                  "overflow-hidden rounded-xl bg-sand-200/40 ring-1 ring-gold/12",
+                  "overflow-hidden rounded-xl bg-sand-200/40 ring-1 ring-ink/[0.06]",
                   !item.available && "opacity-60",
                 )}
               >

@@ -44,7 +44,7 @@ export function InvoiceDocument({
 
   return (
     <article
-      className={cn("bg-white p-8 text-ink shadow-soft ring-1 ring-gold/15 sm:p-10", className)}
+      className={cn("bg-white p-8 text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-10", className)}
       aria-label={`Invoice for booking ${booking.reference}`}
       data-print-root
     >
@@ -216,7 +216,7 @@ export function InvoiceDocument({
             <td
               className={cn(
                 "text-right font-medium tabular-nums",
-                totals.balance > 0 ? "text-clay" : "text-status-confirmed",
+                totals.balance > 0 ? "text-clay-600" : "text-status-confirmed",
               )}
             >
               {totals.balance > 0 ? money(totals.balance) : "Settled"}

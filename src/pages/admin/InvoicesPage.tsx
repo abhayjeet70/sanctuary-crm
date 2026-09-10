@@ -79,7 +79,7 @@ export default function InvoicesPage() {
       {rows.length === 0 ? (
         <EmptyState icon={<Receipt className="size-5" />} title="No invoices raised yet" />
       ) : (
-        <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-gold/12">
+        <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
           <Table>
             <TableHeader>
               <TableRow>

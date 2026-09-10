@@ -69,7 +69,7 @@ export default function CustomerDetailPage() {
       </Button>
 
       {/* ------------------------------------------------------------ header */}
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/15">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
         <div className="flex flex-wrap items-start gap-5">
           <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-gold/15 font-display text-xl text-gold-700">
             {initials(customer.name)}
@@ -80,14 +80,14 @@ export default function CustomerDetailPage() {
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-stone-600">
               <a
                 href={`tel:${customer.phone.replace(/\s/g, "")}`}
-                className="flex items-center gap-1.5 hover:text-clay"
+                className="flex items-center gap-1.5 hover:text-clay-600"
               >
                 <Phone className="size-3.5" aria-hidden />
                 {customer.phone}
               </a>
               <a
                 href={`mailto:${customer.email}`}
-                className="flex items-center gap-1.5 hover:text-clay"
+                className="flex items-center gap-1.5 hover:text-clay-600"
               >
                 <Mail className="size-3.5" aria-hidden />
                 {customer.email}
@@ -188,7 +188,7 @@ export default function CustomerDetailPage() {
                     <li key={booking.id}>
                       <Link
                         to={`/admin/bookings/${booking.id}`}
-                        className="flex flex-wrap items-center gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12 transition-all hover:ring-gold/40"
+                        className="flex flex-wrap items-center gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] transition-all hover:ring-gold/40"
                       >
                         <img
                           src={villa?.image}
@@ -233,7 +233,7 @@ export default function CustomerDetailPage() {
               {ownInvoices.map((invoice) => (
                 <li
                   key={invoice.id}
-                  className="flex flex-wrap items-center gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12"
+                  className="flex flex-wrap items-center gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-ink">{invoice.number}</p>
@@ -264,7 +264,7 @@ export default function CustomerDetailPage() {
                 return (
                   <li
                     key={request.id}
-                    className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-gold/12"
+                    className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -291,7 +291,7 @@ export default function CustomerDetailPage() {
               {ownFeedback.map(({ entry, villa }) => (
                 <li
                   key={entry.id}
-                  className="rounded-xl bg-white p-5 shadow-soft ring-1 ring-gold/12"
+                  className="rounded-xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-display text-lg text-ink">{villa?.name}</p>
@@ -315,7 +315,7 @@ export default function CustomerDetailPage() {
         </TabsContent>
 
         <TabsContent value="timeline" className="pt-5">
-          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+          <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <ActivityTimeline events={ownActivity} />
           </section>
         </TabsContent>

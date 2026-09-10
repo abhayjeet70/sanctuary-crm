@@ -35,7 +35,7 @@ export default function VillasListPage() {
           return (
             <article
               key={villa.id}
-              className="group overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-gold/12 transition-all hover:shadow-lift hover:ring-gold/35"
+              className="group overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] transition-all hover:shadow-lift hover:ring-gold/35"
             >
               <Link to={`/admin/villas/${villa.id}`} className="block">
                 <div className="relative h-48 overflow-hidden">
@@ -126,7 +126,7 @@ export default function VillasListPage() {
 
                 <Link
                   to={`/admin/villas/${villa.id}`}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-clay underline-offset-4 hover:underline"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-clay-600 underline-offset-4 hover:underline"
                 >
                   Manage villa
                   <ArrowRight className="size-4" aria-hidden />

@@ -1,6 +1,6 @@
 # Homes of Sanctuary CRM — Progress
 
-Living status of the build. Updated 10 September 2026.
+Living status of the build. Updated 10 September 2026 (round twelve).
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind v4 · shadcn/ui · React Router 7 · Supabase (Postgres + Auth + Storage + Edge Functions)
 
@@ -695,3 +695,88 @@ unaffected by each other's choice.
 | `src/services/supabase/SupabaseDataProvider.tsx` | `demoDataVisible` state initialised from localStorage; `isDemoRef()` identifies seed references; filtered views derived before the value memo; `setDemoDataVisible` writes back to localStorage |
 | `src/hooks/useData.ts` | `useDemoData()` convenience hook |
 | `src/pages/admin/SettingsPage.tsx` | "Demo Data" tab added; `DemoDataSection` component — toggle switch, status pill, live count grid, "How it works" explainer |
+
+---
+
+## 12. Round twelve — brighter surfaces, and a welcome before the door
+
+Two requests: the product looked dull, and a welcome film should play before
+sign-in.
+
+### The dullness was measurable
+
+Before changing anything, the palette was measured rather than judged by eye.
+Body text at `stone-600` (`#7e756a`) scored **3.96 against the sand ground** —
+under the 4.5 AA needs. So the app was not merely *styled* washed out; the
+contrast numbers said it was washed out, and the two complaints were the same
+complaint.
+
+| Pairing | Before | After | Note |
+|---|---|---|---|
+| `stone-600` on the page ground | 3.96 ✗ | **5.59** ✓ | secondary text, used everywhere |
+| `gold-700` on the page ground | 4.26 ✗ | **4.56** ✓ | eyebrows and section labels |
+| clay **as text** | 3.99 ✗ | **5.34** ✓ | swept to `clay-600`, same hue |
+| white on the clay count badges | 4.26 ✗ | **5.71** ✓ | 10px semibold — never "large text" |
+
+What changed, in tokens:
+
+- `--color-sand` `#f4efe8` → `#faf7f3`, and `sand-200`/`sand-300` with it. The
+  ground was a heavy beige field; lifting it raises every pairing above at once.
+- `--color-stone-600` `#7e756a` → `#6b6259`.
+- `--card` / `--popover` `#fbf8f4` → **pure white**, so cards genuinely lift.
+
+### Restraint, which is what the reference sites actually do
+
+The research on luxury hospitality sites is unanimous and unglamorous: white
+space, restrained palette, editorial type, one high-contrast CTA. Not more
+ornament — less.
+
+- **88 cards** carried `ring-gold/12`. A brown-gold hairline on every surface,
+  over a warm ground, is precisely what read as muddy. Swept to
+  `ring-ink/[0.06]`: the card is white, the shadow lifts it, the edge is an
+  edge and nothing more.
+- The global default border (`* { border-color }`) was stone at 35% — a brown
+  line on every table rule and divider. Now ink at a tenth.
+- Gold is **kept** where it is brand and reads as brass: rules, eyebrows,
+  the active rail, and anything sitting on ink.
+
+The compiled stylesheet was checked for `.ring-ink\/\[0\.06\]{--tw-ring-color:#1427310f}`
+rather than assumed — an arbitrary-opacity class that silently matches nothing
+is the same class of bug as `data-active:` twice before.
+
+`DesignSystemPage` was corrected too. A living style guide printing `#F4EFE8`
+beside a swatch that is no longer that colour is worse than no style guide.
+
+### The welcome reel
+
+`src/pages/auth/WelcomeGate.tsx`, over `/login` — not a route of its own.
+
+That distinction is the whole design. The sign-in page beneath is already
+mounted and laid out, so the veil lifting reveals a finished room rather than
+starting a second load; and a browser that refuses `sessionStorage` strands
+nobody, because the door was always there. There is a smoke check asserting the
+password field is in the markup *underneath* the reel.
+
+- **It never blocks.** Mark and greeting paint immediately; the film fades in
+  behind them only once it is genuinely playing (`onPlaying`), over a poster
+  frame. A slow connection sees a composed still, never a black rectangle.
+  A browser that refuses autoplay likewise just keeps the still.
+- **It never insists.** Click, key, scroll, touch or wait ~5s. Once per
+  browser session.
+- **Reduced motion** gets the still, no autoplay, and an instant lift — but it
+  still lifts. A veil that respects `prefers-reduced-motion` by never leaving
+  is a locked door.
+- `aria-hidden`: it is decoration, and the form beneath is the real content.
+
+### Verification (round twelve)
+
+139 smoke checks green, six of them new and specific to the reel. `test`,
+`viz` and `build` all pass.
+
+### Standing gap added
+
+- **The welcome film is 7.4 MB.** It is `preload="auto"` and only ever fetched
+  once per session, and nothing waits on it — but on a hotel's own patchy
+  uplink most visitors will see the poster and never the film. It wants a pass
+  through ffmpeg: 1280px wide, H.264 CRF 28, no audio track, which should land
+  it near 1 MB. A WebM sibling in a `<source>` list would be better again.

@@ -59,7 +59,7 @@ export function OperatingStatement({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12 sm:p-8">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06] sm:p-8">
         <div className="text-center">
           <p className="font-display text-xl text-ink">{legalName}</p>
           <p className="label-caps mt-1 text-gold-700">Summary of operating revenue</p>
@@ -108,7 +108,7 @@ export function OperatingStatement({
       </section>
 
       {/* --------------------------------------------------------- statistics */}
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12 sm:p-8">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06] sm:p-8">
         <Eyebrow className="text-gold-700">Statistics</Eyebrow>
         <hr className="rule-gold my-4" />
 
@@ -180,7 +180,7 @@ export function OperatingStatement({
       </section>
 
       {/* ------------------------------------------------------- receivables */}
-      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12 sm:p-8">
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06] sm:p-8">
         <Eyebrow className="text-gold-700">Schedule of receivables</Eyebrow>
         <p className="mt-2 text-sm text-stone-600">
           Aged from check-out, which is when the bill falls due.
@@ -291,7 +291,7 @@ function Stat({
       <dd
         className={cn(
           "shrink-0 tabular-nums",
-          tone === "warn" ? "font-medium text-clay" : "text-ink",
+          tone === "warn" ? "font-medium text-clay-600" : "text-ink",
         )}
       >
         {value}

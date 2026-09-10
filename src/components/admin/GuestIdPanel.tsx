@@ -65,7 +65,7 @@ export function GuestIdPanel({ customer }: { customer: Customer }) {
           {customer.idImagePath &&
             (url ? (
               <Dialog>
-                <DialogTrigger className="ml-auto flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-clay transition-colors hover:bg-sand-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">
+                <DialogTrigger className="ml-auto flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-clay-600 transition-colors hover:bg-sand-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">
                   <Eye className="size-3.5" aria-hidden />
                   View the scan
                 </DialogTrigger>

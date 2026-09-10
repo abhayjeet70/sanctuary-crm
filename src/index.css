@@ -2,20 +2,24 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- Brand palette --- */
+  /* --- Brand palette ---
+     Grounds were lifted out of beige in round twelve. Measured, not judged
+     by eye: stone-600 body text scored 3.96 against the old sand ground,
+     which is under AA, and the whole app read washed out for the same
+     reason the numbers said it would. See progress.md section 11. --- */
   --color-ink: #142731;
   --color-ink-700: #1d3742;
   --color-ink-500: #2f5060;
   --color-ink-300: #5c7a87;
 
-  --color-sand: #f4efe8;
-  --color-sand-200: #ece5db;
-  --color-sand-300: #e0d7c9;
+  --color-sand: #faf7f3;
+  --color-sand-200: #f2ede6;
+  --color-sand-300: #e6ded2;
   --color-paper: #fbf8f4;
 
   --color-stone: #a69c8e;
-  --color-stone-300: #c4bcb0;
-  --color-stone-600: #7e756a;
+  --color-stone-300: #cec7bc;
+  --color-stone-600: #6b6259;
 
   --color-clay: #b5654a;
   --color-clay-600: #9c5239;
@@ -64,30 +68,30 @@
 :root {
   --radius: 0.875rem;
 
-  --background: #f4efe8;
+  --background: #faf7f3;
   --foreground: #142731;
 
-  --card: #fbf8f4;
+  --card: #ffffff;
   --card-foreground: #142731;
-  --popover: #fbf8f4;
+  --popover: #ffffff;
   --popover-foreground: #142731;
 
   --primary: #142731;
-  --primary-foreground: #f4efe8;
+  --primary-foreground: #faf7f3;
 
-  --secondary: #ece5db;
+  --secondary: #f2ede6;
   --secondary-foreground: #142731;
 
-  --muted: #ece5db;
-  --muted-foreground: #7e756a;
+  --muted: #f2ede6;
+  --muted-foreground: #6b6259;
 
-  --accent: #e0d7c9;
+  --accent: #e6ded2;
   --accent-foreground: #142731;
 
   --destructive: #a9756f;
   --destructive-foreground: #fbf8f4;
 
-  --border: #ddd4c7;
+  --border: #e7e0d5;
   --input: #d3c9ba;
   --ring: #b5654a;
 
@@ -96,7 +100,7 @@
   --sidebar-primary: #b5654a;
   --sidebar-primary-foreground: #fbf8f4;
   --sidebar-accent: #1d3742;
-  --sidebar-accent-foreground: #f4efe8;
+  --sidebar-accent-foreground: #faf7f3;
   --sidebar-border: #24404c;
   --sidebar-ring: #b5654a;
 
@@ -148,8 +152,12 @@
 }
 
 @layer base {
+  /* The default hairline everywhere borders are used without a colour —
+     table rules, dividers, inputs. Stone at 35% is a brown line, and a brown
+     line on a warm ground is what made the surfaces read muddy rather than
+     crisp. Ink at a tenth reads as an edge and nothing else. */
   * {
-    border-color: --alpha(var(--color-stone) / 35%);
+    border-color: --alpha(var(--color-ink) / 10%);
   }
   html {
     scroll-behavior: smooth;
@@ -310,6 +318,60 @@
 
 /* The notification card dropping in under the bell. There is no animation
    plugin in this project, and one keyframe does not justify adding one. */
+/* --- The welcome reel ------------------------------------------------- */
+
+@keyframes veil-out {
+  to {
+    opacity: 0;
+    transform: scale(1.06);
+    visibility: hidden;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hairline-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Leaving is 900ms because it is the only moment in the product where the
+   animation *is* the content — everywhere else motion gets out of the way. */
+.animate-veil-out {
+  animation: veil-out 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.animate-rise-in {
+  animation: rise-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-hairline {
+  transform-origin: center;
+  animation: hairline-draw 1100ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise-in,
+  .animate-hairline {
+    animation: none;
+  }
+  /* The veil must still leave, or the door never opens — only instantly. */
+  .animate-veil-out {
+    animation-duration: 1ms;
+  }
+}
+
 @keyframes flash-in {
   from { opacity: 0; transform: translateY(-0.25rem); }
   to { opacity: 1; transform: none; }
