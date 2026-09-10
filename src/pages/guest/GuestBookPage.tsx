@@ -147,7 +147,12 @@ export default function GuestBookPage() {
       </header>
 
       {/* --------------------------------------------------------- the dates */}
-      <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+      {/* The booking window stays put while the results scroll past it —
+          changing the dates is the single thing a guest does most on this
+          page, and scrolling back up to reach it is the friction every
+          booking site removes. `z-20` clears the result cards; the guest
+          header is not sticky, so nothing sits above it to offset. */}
+      <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07] lg:sticky lg:top-4 lg:z-20">
         <div className="grid gap-4 sm:grid-cols-4">
           <div className="space-y-1.5">
             <Label htmlFor="check-in">Check-in</Label>
@@ -234,7 +239,7 @@ export default function GuestBookPage() {
                       !free && "cursor-not-allowed opacity-60",
                     )}
                   >
-                    <span className="relative block h-36 overflow-hidden">
+                    <span className="relative block aspect-[3/2] overflow-hidden">
                       <img
                         src={villa?.image}
                         alt={row.villa_name}

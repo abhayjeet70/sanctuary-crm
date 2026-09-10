@@ -798,3 +798,40 @@ so the standard is the right answer there.
 ### Verification (round twelve)
 
 `tsc`, `smoke` (142 checks), `test`, `viz` and `build` all green.
+
+---
+
+## 13. Round thirteen — patterns from the reference sites
+
+Researched hospitality and booking UX, then applied only the findings that
+this product actually has a surface for. Sources are in the commit trail;
+the useful ones were Baymard's travel-accommodations topic list, an Agoda
+room-list teardown, and Designmodo's hotel UX write-up.
+
+**Nothing was copied from anyone.** These are conventions — a sticky booking
+panel, an editorial gallery grid, listing-card anatomy — not another
+property's identity, imagery or wording.
+
+### What the research actually changed
+
+| Finding | Where it landed |
+|---|---|
+| Remove redundant elements from listing cards | The villa card printed bedrooms and capacity in the photo overlay *and* in the spec row below. The overlay now carries the name alone. |
+| One image given weight beats a row of equal thumbnails | Guest gallery is now an editorial grid: first image spans 2x2, the rest range beside it. |
+| The booking window must stay reachable | The date panel on *Book a stay* is `lg:sticky`, so changing dates never means scrolling back up past the results. |
+| Chrome should frame a group, not each item | Amenities were twelve bordered tiles around twelve short phrases. Now one card holding a three-column list. |
+
+### Two things fixed alongside
+
+- Fixed-height images (`h-48`, `h-36`) became aspect ratios, so cards in a
+  three-up grid crop identically as the column narrows instead of drifting
+  apart.
+- The villa spec row was an icon and a bare number — "4" and "8" with no
+  accessible name. Both now carry an `sr-only` label.
+
+### Not done, deliberately
+
+Amenities are a flat `string[]`, so grouping them under headings would mean
+inventing categories and sorting by guesswork. A list that silently files
+"Plunge pool" under the wrong heading is worse than an ungrouped one. It wants
+a category on the amenity record first.

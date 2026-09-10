@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorState, Eyebrow } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
 import { stayTimes } from "@/services/domain";
+import { cn } from "@/lib/utils";
 
 export default function GuestAmenitiesPage() {
   const { view } = useGuestStay();
@@ -112,34 +113,44 @@ export default function GuestAmenitiesPage() {
         </section>
 
         {/* ------------------------------------------------------ amenities */}
-        <section>
-          <Eyebrow className="mb-3 text-gold-700">What is here</Eyebrow>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* One card holding a list, not a card per line. Twelve bordered tiles
+            is twelve pieces of chrome around twelve short phrases; the
+            hospitality convention is a quiet grouped list where the eye runs
+            down the names and the container does the framing. */}
+        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06] sm:p-8">
+          <Eyebrow className="text-gold-700">What is here</Eyebrow>
+          <hr className="rule-gold mt-3 mb-5" />
+          <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {villa.amenities.map((amenity) => (
-              <li
-                key={amenity}
-                className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
-              >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gold/12 text-gold-700">
-                  <Check className="size-4" aria-hidden />
-                </span>
-                <span className="text-sm text-ink">{amenity}</span>
+              <li key={amenity} className="flex items-baseline gap-2.5 text-sm text-ink">
+                <Check className="size-3.5 shrink-0 translate-y-0.5 text-gold-700" aria-hidden />
+                {amenity}
               </li>
             ))}
           </ul>
         </section>
 
         {/* -------------------------------------------------------- gallery */}
+        {/* The editorial grid every resort site uses: one image given the
+            weight of four, the rest ranged beside it. A row of equal
+            thumbnails says "here are some photographs"; this says "look at
+            this one". */}
         <section>
           <Eyebrow className="mb-3 text-gold-700">The house</Eyebrow>
-          <ul className="grid gap-3 sm:grid-cols-3">
+          <ul className="grid auto-rows-[11rem] grid-cols-2 gap-3 sm:grid-cols-4">
             {villa.gallery.map((src, index) => (
-              <li key={`${src}-${index}`} className="overflow-hidden rounded-2xl ring-1 ring-gold/20">
+              <li
+                key={`${src}-${index}`}
+                className={cn(
+                  "group overflow-hidden rounded-2xl ring-1 ring-ink/[0.06]",
+                  index === 0 && "col-span-2 row-span-2",
+                )}
+              >
                 <img
                   src={src}
                   alt={`${villa.name}, view ${index + 1}`}
                   loading="lazy"
-                  className="h-44 w-full object-cover transition-transform duration-700 hover:scale-105"
+                  className="size-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </li>
             ))}

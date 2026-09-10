@@ -38,19 +38,23 @@ export default function VillasListPage() {
               className="group overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] transition-all hover:shadow-lift hover:ring-gold/35"
             >
               <Link to={`/admin/villas/${villa.id}`} className="block">
-                <div className="relative h-48 overflow-hidden">
+                {/* A ratio rather than a fixed height, so the three cards keep
+                    the same proportion at every width instead of cropping
+                    differently as the column narrows. */}
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <img
                     src={villa.image}
                     alt={`${villa.name} seen from the approach`}
                     className="size-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/20 to-transparent" />
-                  <div className="absolute inset-x-4 bottom-3">
-                    <h2 className="display-caps text-2xl text-white">{villa.name}</h2>
-                    <p className="mt-1 text-xs text-sand/80">
-                      {villa.bedrooms} bedrooms · sleeps {villa.capacity}
-                    </p>
-                  </div>
+                  {/* The name alone. Bedrooms and capacity used to sit here
+                      *and* in the spec row below — the single most common
+                      listing-card fault, and the one that makes a card feel
+                      cluttered without adding anything. */}
+                  <h2 className="display-caps absolute inset-x-4 bottom-3 text-2xl text-white">
+                    {villa.name}
+                  </h2>
                   <div className="absolute top-3 right-3">
                     <StatusBadge
                       label={split ? "Split into rooms" : "Whole villa"}
@@ -61,15 +65,17 @@ export default function VillasListPage() {
               </Link>
 
               <div className="space-y-4 p-5">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-4 text-sm text-stone-600">
                     <span className="flex items-center gap-1.5">
                       <BedDouble className="size-4 text-gold-700" aria-hidden />
                       {villa.bedrooms}
+                      <span className="sr-only">bedrooms</span>
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Users className="size-4 text-gold-700" aria-hidden />
                       {villa.capacity}
+                      <span className="sr-only">guests</span>
                     </span>
                   </div>
                   <StatusBadge
