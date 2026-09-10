@@ -25,7 +25,7 @@ import type { PropertySettings } from "@/types";
  */
 /** One active style for all of them, so none drifts. */
 const TAB =
-  "data-active:bg-ink data-active:text-sand data-active:shadow-soft rounded-lg px-3 py-1.5 text-stone-600 hover:text-ink";
+  "data-[state=active]:bg-ink data-[state=active]:text-sand data-[state=active]:shadow-soft rounded-lg px-3 py-1.5 text-stone-600 hover:text-ink";
 
 export default function SettingsPage() {
   const villas = useVillas();

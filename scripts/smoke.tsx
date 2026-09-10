@@ -7,6 +7,7 @@
 import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { TooltipProvider } from "../src/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger } from "../src/components/ui/tabs";
 import { AppRoutes } from "../src/routes/AppRoutes";
 import { MockDataProvider } from "../src/services/mock/MockDataProvider";
 import { SessionContext } from "../src/services/session";
@@ -204,6 +205,35 @@ for (const role of ["admin", "staff", "guest"] as const) {
     } else {
       console.log(`  ok   "${figure}" is the owner's alone on ${route}`);
     }
+  }
+}
+
+/* Tab styling is written against an attribute Radix has to actually set.
+ * `data-active:` compiles to [data-active] and matches nothing — the same
+ * mistake as `data-horizontal:` in this file, twice over. */
+{
+  const html = renderToString(
+    <Tabs defaultValue="one">
+      <TabsList>
+        <TabsTrigger value="one">One</TabsTrigger>
+        <TabsTrigger value="two">Two</TabsTrigger>
+      </TabsList>
+    </Tabs>,
+  );
+
+  const active = html.slice(html.indexOf("<button"), html.indexOf("One</button>"));
+  const usesRealAttribute = /data-state="active"/.test(active);
+  const stylesTargetIt = /data-\[state=active\]:/.test(active);
+  const stalePattern = /(?:^|\s|:)data-active:/.test(html);
+
+  if (usesRealAttribute && stylesTargetIt && !stalePattern) {
+    console.log("  ok   the active tab's styles match the attribute Radix sets");
+  } else {
+    failed++;
+    console.error(
+      `  FAIL active tab styling: renders data-state=${usesRealAttribute}, ` +
+        `styled for it=${stylesTargetIt}, stale data-active:=${stalePattern}`,
+    );
   }
 }
 
