@@ -242,6 +242,24 @@
     border-radius: 0 !important;
   }
 
+  /* A multi-page document cannot use the absolute trick: an absolutely
+     positioned box taller than the sheet gets clipped to the first page in
+     Chrome rather than paginated. So a long report hides the shell outright
+     and prints in normal flow, where the browser breaks it properly. */
+  [data-print-flow],
+  [data-print-flow] * {
+    visibility: visible;
+  }
+  [data-print-flow] {
+    position: static;
+  }
+  body:has([data-print-flow]) [data-print-chrome] {
+    display: none !important;
+  }
+  body:has([data-print-flow]) main {
+    padding: 0 !important;
+  }
+
   html,
   body {
     background: #fff !important;

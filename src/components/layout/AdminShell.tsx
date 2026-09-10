@@ -265,7 +265,10 @@ export function AdminShell() {
   return (
     <div className="min-h-dvh bg-sand lg:grid lg:grid-cols-[15rem_1fr]">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-dvh flex-col bg-sidebar px-3 py-5 ring-1 ring-gold/15 lg:flex">
+      <aside
+        data-print-chrome
+        className="sticky top-0 hidden h-dvh flex-col bg-sidebar px-3 py-5 ring-1 ring-gold/15 lg:flex"
+      >
         <div className="px-2">
           <Logo variant="onDark" />
         </div>
@@ -297,7 +300,10 @@ export function AdminShell() {
 
       <div className="flex min-w-0 flex-col">
         {/* Mobile / tablet top bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-3 bg-sidebar px-4 py-3 lg:hidden">
+        <header
+          data-print-chrome
+          className="sticky top-0 z-30 flex items-center gap-3 bg-sidebar px-4 py-3 lg:hidden"
+        >
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button

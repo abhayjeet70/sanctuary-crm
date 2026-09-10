@@ -326,3 +326,159 @@ export function occupancyRate(nightsSold: number, villas: number, days: number) 
   const available = villas * days;
   return available > 0 ? nightsSold / available : 0;
 }
+
+/* ------------------------------------------------------- hotel arithmetic */
+
+/** One stay, reduced to what the reports need. */
+export interface RevenueRow {
+  checkIn: string;
+  checkOut: string;
+  status: string;
+  source: string;
+  villaId: string;
+  customerId: string;
+  nights: number;
+  roomCharge: number;
+  surcharges: number;
+  food: number;
+  addOns: number;
+  discount: number;
+  tax: number;
+  total: number;
+  paid: number;
+  balance: number;
+}
+
+/** A stay only counts as trade if it was not called off. */
+export const isEarned = (status: string) =>
+  status !== "cancelled" && status !== "rejected" && status !== "no_show" && status !== "inquiry";
+
+export interface RevenueBreakdown {
+  accommodation: number;
+  food: number;
+  addOns: number;
+  discount: number;
+  net: number;
+  tax: number;
+  gross: number;
+  collected: number;
+  outstanding: number;
+}
+
+/** Where the money came from, before and after tax. */
+export function revenueBreakdown(rows: RevenueRow[]): RevenueBreakdown {
+  const earned = rows.filter((r) => isEarned(r.status));
+  const accommodation = earned.reduce((n, r) => n + r.roomCharge + r.surcharges, 0);
+  const food = earned.reduce((n, r) => n + r.food, 0);
+  const addOns = earned.reduce((n, r) => n + r.addOns, 0);
+  const discount = earned.reduce((n, r) => n + r.discount, 0);
+  const tax = earned.reduce((n, r) => n + r.tax, 0);
+  const gross = earned.reduce((n, r) => n + r.total, 0);
+  const collected = earned.reduce((n, r) => n + r.paid, 0);
+
+  return {
+    accommodation,
+    food,
+    addOns,
+    discount,
+    net: accommodation + food + addOns - discount,
+    tax,
+    gross,
+    collected,
+    outstanding: gross - collected,
+  };
+}
+
+export interface HotelKpis {
+  roomNights: number;
+  availableNights: number;
+  occupancy: number;
+  /** Average daily rate: what a sold night fetched, accommodation only. */
+  adr: number;
+  /** Revenue per available night — the number that judges pricing and
+   *  occupancy together, and the one a hotelier quotes. */
+  revpar: number;
+  /** Average length of stay. */
+  alos: number;
+  stays: number;
+  cancelled: number;
+  cancellationRate: number;
+}
+
+/**
+ * The three numbers a hotelier actually asks for, plus the ones behind them.
+ *
+ * ADR counts accommodation only: including dinner would flatter the room rate
+ * and make the figure incomparable with anyone else's. RevPAR divides by
+ * *available* nights rather than sold ones, which is what makes it the honest
+ * measure — a full villa at a bad price and an empty villa at a good one both
+ * show up in it.
+ */
+export function hotelKpis(rows: RevenueRow[], villas: number, days: number): HotelKpis {
+  const earned = rows.filter((r) => isEarned(r.status));
+  const roomNights = earned.reduce((n, r) => n + r.nights, 0);
+  const accommodation = earned.reduce((n, r) => n + r.roomCharge + r.surcharges, 0);
+  const availableNights = Math.max(0, villas * days);
+  const cancelled = rows.filter((r) => r.status === "cancelled" || r.status === "no_show").length;
+
+  return {
+    roomNights,
+    availableNights,
+    occupancy: availableNights > 0 ? roomNights / availableNights : 0,
+    adr: roomNights > 0 ? Math.round(accommodation / roomNights) : 0,
+    revpar: availableNights > 0 ? Math.round(accommodation / availableNights) : 0,
+    alos: earned.length > 0 ? roomNights / earned.length : 0,
+    stays: earned.length,
+    cancelled,
+    cancellationRate: rows.length > 0 ? cancelled / rows.length : 0,
+  };
+}
+
+/**
+ * What is owed, by how long it has been owed.
+ *
+ * Aged from check-out, because that is when the bill falls due — ageing from
+ * the booking date would put a stay six months out into the oldest bucket.
+ */
+export function agedReceivables(
+  rows: { checkOut: string; balance: number; status: string }[],
+  today: string,
+) {
+  const buckets = { notYetDue: 0, upTo30: 0, upTo60: 0, over60: 0 };
+  const now = new Date(`${today}T00:00:00`).getTime();
+
+  for (const row of rows) {
+    if (!isEarned(row.status) || row.balance <= 0) continue;
+    const due = new Date(`${row.checkOut}T00:00:00`).getTime();
+    const days = Math.floor((now - due) / 86_400_000);
+
+    if (days < 0) buckets.notYetDue += row.balance;
+    else if (days <= 30) buckets.upTo30 += row.balance;
+    else if (days <= 60) buckets.upTo60 += row.balance;
+    else buckets.over60 += row.balance;
+  }
+  return buckets;
+}
+
+/** Totals grouped by any string key on the row, biggest first. */
+export function groupRevenue<K extends keyof RevenueRow>(rows: RevenueRow[], key: K) {
+  const totals = new Map<string, { key: string; gross: number; stays: number; nights: number }>();
+  for (const row of rows.filter((r) => isEarned(r.status))) {
+    const id = String(row[key]);
+    const entry = totals.get(id) ?? { key: id, gross: 0, stays: 0, nights: 0 };
+    entry.gross += row.total;
+    entry.stays += 1;
+    entry.nights += row.nights;
+    totals.set(id, entry);
+  }
+  return [...totals.values()].sort((a, b) => b.gross - a.gross);
+}
+
+/** Whole days between two ISO dates, inclusive of both ends. */
+export const daysBetween = (from: string, to: string) =>
+  Math.max(
+    0,
+    Math.round(
+      (new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) / 86_400_000,
+    ) + 1,
+  );

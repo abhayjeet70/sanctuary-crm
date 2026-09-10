@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import type { Booking } from "../types";
 import { cleanPhone, isPhone } from "../lib/format";
+import { csvField, toCsv } from "../lib/csv";
 import {
   addDays,
   bookingTotals,
@@ -15,6 +16,12 @@ import {
   taxBreakdown,
   monthlyFigures,
   occupancyRate,
+  agedReceivables,
+  daysBetween,
+  groupRevenue,
+  hotelKpis,
+  revenueBreakdown,
+  type RevenueRow,
   type TaxComponent,
 } from "./domain";
 
@@ -180,5 +187,94 @@ assert.deepEqual(monthlyFigures([]), []);
 assert.equal(occupancyRate(30, 3, 30), 30 / 90);
 assert.equal(occupancyRate(0, 3, 30), 0);
 assert.equal(occupancyRate(10, 0, 30), 0, "no villas is not a division by zero");
+
+/* --- hotel arithmetic --------------------------------------------------- */
+const stay = (over: Partial<RevenueRow> = {}): RevenueRow => ({
+  checkIn: "2026-09-01",
+  checkOut: "2026-09-03",
+  status: "completed",
+  source: "website",
+  villaId: "v1",
+  customerId: "c1",
+  nights: 2,
+  roomCharge: 20000,
+  surcharges: 0,
+  food: 1000,
+  addOns: 0,
+  discount: 0,
+  tax: 3780,
+  total: 24780,
+  paid: 24780,
+  balance: 0,
+  ...over,
+});
+
+const rows = [
+  stay(),
+  stay({ nights: 3, roomCharge: 30000, food: 0, tax: 5400, total: 35400, paid: 0, balance: 35400 }),
+  // Never earned: must not touch revenue, but must count against cancellations.
+  stay({ status: "cancelled", roomCharge: 99999, total: 999999, paid: 0 }),
+];
+
+const breakdown = revenueBreakdown(rows);
+assert.equal(breakdown.accommodation, 50000, "a cancelled stay is not revenue");
+assert.equal(breakdown.food, 1000);
+assert.equal(breakdown.gross, 60180);
+assert.equal(breakdown.collected, 24780);
+assert.equal(breakdown.outstanding, 35400);
+
+// 3 villas across 30 days = 90 available nights; 5 sold.
+const kpis = hotelKpis(rows, 3, 30);
+assert.equal(kpis.roomNights, 5);
+assert.equal(kpis.availableNights, 90);
+assert.equal(kpis.adr, 10000, "ADR is accommodation over nights sold, dinner excluded");
+assert.equal(kpis.revpar, Math.round(50000 / 90), "RevPAR divides by available, not sold");
+assert.equal(kpis.alos, 2.5);
+assert.equal(kpis.cancelled, 1);
+assert.ok(Math.abs(kpis.cancellationRate - 1 / 3) < 1e-9);
+
+// An empty book must not divide by zero anywhere.
+const empty = hotelKpis([], 0, 0);
+assert.equal(empty.adr, 0);
+assert.equal(empty.revpar, 0);
+assert.equal(empty.occupancy, 0);
+assert.equal(empty.cancellationRate, 0);
+
+/* --- aged receivables --------------------------------------------------- */
+const aged = agedReceivables(
+  [
+    { checkOut: "2026-09-20", balance: 1000, status: "confirmed" },  // not yet due
+    { checkOut: "2026-09-01", balance: 2000, status: "completed" },  // 9 days
+    { checkOut: "2026-07-25", balance: 4000, status: "completed" },  // 47 days
+    { checkOut: "2026-05-01", balance: 8000, status: "completed" },  // 132 days
+    { checkOut: "2026-05-01", balance: 9999, status: "cancelled" },  // never owed
+    { checkOut: "2026-05-01", balance: 0, status: "completed" },     // settled
+  ],
+  "2026-09-10",
+);
+assert.deepEqual(aged, { notYetDue: 1000, upTo30: 2000, upTo60: 4000, over60: 8000 });
+
+/* --- grouping and day counting ------------------------------------------ */
+const bySource = groupRevenue([stay(), stay({ source: "phone", total: 100 })], "source");
+assert.equal(bySource[0].key, "website", "biggest first");
+assert.equal(bySource[0].stays, 1);
+
+assert.equal(daysBetween("2026-09-01", "2026-09-01"), 1, "one day is one night of availability");
+assert.equal(daysBetween("2026-09-01", "2026-09-30"), 30);
+assert.equal(daysBetween("2026-09-30", "2026-09-01"), 0, "backwards is not negative");
+
+/* --- csv ---------------------------------------------------------------- */
+assert.equal(csvField("plain"), "plain");
+assert.equal(csvField(null), "");
+assert.equal(csvField("Bengaluru, Karnataka"), '"Bengaluru, Karnataka"', "a comma must be quoted");
+assert.equal(csvField('She said "yes"'), '"She said ""yes"""', "quotes are doubled");
+assert.equal(csvField("line one\nline two"), '"line one\nline two"');
+// Excel executes a leading =, so a note starting with one is a formula.
+assert.equal(csvField("=1+1"), "'=1+1");
+assert.equal(csvField("-5"), "'-5");
+assert.equal(
+  toCsv([["Month", "Gross"], ["Sep 26", 60180]]),
+  "Month,Gross\r\nSep 26,60180",
+);
 
 console.log("domain.ts — all checks passed");
