@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Building2, Palette, Save } from "lucide-react";
+import { Building2, Database, Eye, EyeOff, Palette, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { MenuManager } from "./MenuManager";
 import { TaxManager } from "./TaxManager";
 import { DepartmentManager } from "./DepartmentManager";
 import { AccountSettings } from "./AccountSettings";
-import { useMockData, useSettings, useVillas } from "@/hooks/useData";
+import { useDemoData, useMockData, useSettings, useVillas } from "@/hooks/useData";
 import { useSession } from "@/services/session";
 import { money } from "@/lib/format";
 import type { PropertySettings } from "@/types";
@@ -91,6 +91,10 @@ export default function SettingsPage() {
           <TabsTrigger value="menu" className={TAB}>Menu</TabsTrigger>
           <TabsTrigger value="villas" className={TAB}>Villas</TabsTrigger>
           <TabsTrigger value="account" className={TAB}>Account</TabsTrigger>
+          <TabsTrigger value="demo" className={TAB}>
+            <Database aria-hidden className="mr-1 inline size-3.5" />
+            Demo Data
+          </TabsTrigger>
         </TabsList>
 
         {/* ------------------------------------------------------- payment */}
@@ -346,6 +350,11 @@ export default function SettingsPage() {
         <TabsContent value="account" className="pt-5">
           <AccountSettings />
         </TabsContent>
+
+        {/* ------------------------------------------------------- demo data */}
+        <TabsContent value="demo" className="pt-5">
+          <DemoDataSection />
+        </TabsContent>
       </Tabs>
 
       {dirty && (
@@ -412,6 +421,173 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
       />
+    </div>
+  );
+}
+
+/** -------------------------------------------------------- demo data section */
+
+/**
+ * A simple toggle that shows or hides the seeded demo data across every screen.
+ *
+ * Nothing is deleted — the rows stay in Supabase. The choice is persisted in
+ * localStorage so it survives a page reload. Toggling back ON restores
+ * everything instantly.
+ */
+function DemoDataSection() {
+  const { demoDataVisible, setDemoDataVisible } = useDemoData();
+  const { bookings, customers, payments, invoices, foodOrders, requests, feedback, waitlist } =
+    useMockData();
+
+  // Counts of what is currently shown in each category.
+  const counts = [
+    { label: "Bookings",         n: bookings.length },
+    { label: "Customers",        n: customers.length },
+    { label: "Payments",         n: payments.length },
+    { label: "Invoices",         n: invoices.length },
+    { label: "Food orders",      n: foodOrders.length },
+    { label: "Requests",         n: requests.length },
+    { label: "Feedback entries", n: feedback.length },
+    { label: "Waitlist entries", n: waitlist.length },
+  ].filter((c) => c.n > 0);
+
+  const handleToggle = () => {
+    const next = !demoDataVisible;
+    setDemoDataVisible(next);
+    toast(next ? "Demo data shown" : "Demo data hidden", {
+      description: next
+        ? "Sample bookings, customers and activity are now visible across all screens."
+        : "Demo records are hidden everywhere. Toggle back on to restore them.",
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Main card with toggle */}
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1">
+            <Eyebrow className="text-gold-700">Demo data</Eyebrow>
+            <h2 className="mt-2 text-xl text-ink">Sample bookings &amp; guests</h2>
+            <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-stone-600">
+              The database includes sample stays, customers, payments and activity
+              so every screen has something to show out of the box. Toggle them off
+              while presenting to a client, or when the property is ready for real
+              bookings. Toggle them back on at any time — nothing is deleted.
+            </p>
+          </div>
+
+          {/* Toggle switch */}
+          <button
+            id="demo-data-toggle"
+            role="switch"
+            aria-checked={demoDataVisible}
+            onClick={handleToggle}
+            className={[
+              "relative mt-1 inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent",
+              "transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-clay/50",
+              demoDataVisible ? "bg-[var(--color-clay)]" : "bg-stone-300",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "pointer-events-none inline-block size-5 rounded-full bg-white shadow-sm",
+                "ring-0 transition-transform duration-300",
+                demoDataVisible ? "translate-x-5" : "translate-x-0",
+              ].join(" ")}
+            />
+          </button>
+        </div>
+
+        {/* Status pill */}
+        <div className="mt-5 flex items-center gap-2">
+          <span
+            className={[
+              "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
+              "transition-colors duration-300",
+              demoDataVisible
+                ? "bg-[var(--color-clay)]/10 text-[var(--color-clay)]"
+                : "bg-stone-100 text-stone-500",
+            ].join(" ")}
+          >
+            {demoDataVisible ? (
+              <><Eye className="size-3" aria-hidden /> Demo data ON</>
+            ) : (
+              <><EyeOff className="size-3" aria-hidden /> Demo data OFF</>
+            )}
+          </span>
+          <span className="text-xs text-stone-400">
+            {demoDataVisible
+              ? "Sample records are visible on all screens."
+              : "Sample records are hidden. Real bookings will appear normally."}
+          </span>
+        </div>
+
+        <hr className="rule-gold my-5" />
+
+        {/* Live count grid */}
+        {counts.length === 0 ? (
+          <p className="text-sm text-stone-500">No records currently visible.</p>
+        ) : (
+          <>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-stone-400">
+              Currently visible ({demoDataVisible ? "demo + real" : "real only"})
+            </p>
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {counts.map(({ label, n }) => (
+                <li
+                  key={label}
+                  className={[
+                    "flex flex-col rounded-lg border px-3 py-2 transition-colors duration-300",
+                    demoDataVisible
+                      ? "border-[var(--color-clay)]/20 bg-[var(--color-clay)]/5"
+                      : "border-stone-200 bg-stone-50",
+                  ].join(" ")}
+                >
+                  <span className="text-lg font-semibold tabular-nums text-ink">{n}</span>
+                  <span className="text-xs text-stone-500">{label}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+
+      {/* Context note */}
+      <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
+        <Eyebrow className="text-gold-700">How it works</Eyebrow>
+        <ul className="mt-3 space-y-2 text-sm leading-relaxed text-stone-600">
+          <li className="flex gap-2">
+            <span className="mt-0.5 text-[var(--color-clay)]">•</span>
+            <span>
+              <strong className="text-ink">Instant &amp; reversible.</strong>{" "}
+              The toggle hides rows in the app — nothing is deleted from the database.
+              Switching back on restores everything in under a second.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="mt-0.5 text-[var(--color-clay)]">•</span>
+            <span>
+              <strong className="text-ink">Persists across reloads.</strong>{" "}
+              Your choice is saved in the browser and remembered the next time you open the app.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="mt-0.5 text-[var(--color-clay)]">•</span>
+            <span>
+              <strong className="text-ink">Safe to leave off.</strong>{" "}
+              Real bookings, customers and payments you create always appear, regardless of this toggle.
+            </span>
+          </li>
+          <li className="flex gap-2">
+            <span className="mt-0.5 text-[var(--color-clay)]">•</span>
+            <span>
+              <strong className="text-ink">Per-browser setting.</strong>{" "}
+              Other staff members on different devices are not affected by your choice.
+            </span>
+          </li>
+        </ul>
+      </section>
     </div>
   );
 }

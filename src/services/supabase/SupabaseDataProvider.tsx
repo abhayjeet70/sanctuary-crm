@@ -85,6 +85,44 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<PropertySettings | null>(null);
   const [ready, setReady] = useState(false);
 
+  // ------------------------------------------------------------------
+  // Demo-data visibility toggle
+  //
+  // Demo bookings are identified by their reference number: the seed data
+  // runs from HOS-1001 to HOS-1020.  We use a threshold of 1025 so any
+  // test rows created during development are also hidden.
+  // New real bookings will be HOS-1026 and above (the sequence was seeded
+  // above the highest existing reference — see progress.md §I5).
+  //
+  // Nothing is ever deleted; toggling off just filters the arrays in memory.
+  // localStorage keeps the choice across reloads.
+  const DEMO_REF_THRESHOLD = 1025;
+  const STORAGE_KEY = "sanctuary-demo-data-visible";
+
+  const [demoDataVisible, _setDemoDataVisible] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored === null ? true : stored === "true";
+    } catch {
+      return true;
+    }
+  });
+
+  const setDemoDataVisible = useCallback((visible: boolean) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(visible));
+    } catch { /* storage unavailable */ }
+    _setDemoDataVisible(visible);
+  }, []);
+
+  /** Returns true when a booking reference belongs to the seed data set. */
+  const isDemoRef = (reference: string) => {
+    const m = reference.match(/^HOS-(\.+)$/) ?? reference.match(/^HOS-(\d+)$/);
+    if (!m) return false;
+    return parseInt(m[1], 10) <= DEMO_REF_THRESHOLD;
+  };
+
+
   const refetch = useCallback(async () => {
     if (!session) return;
 
@@ -212,25 +250,58 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     // "Today" is the real clock now, not the fixture date.
     const today = new Date().toISOString().slice(0, 10);
 
+    // ----------------------------------------------------------------
+    // When the demo-data toggle is OFF, derive filtered views so that
+    // seed rows are invisible everywhere without deleting anything.
+    // ----------------------------------------------------------------
+    const demoBookingIds = demoDataVisible
+      ? new Set<string>()   // empty set → filter keeps everything
+      : new Set(bookings.filter((b) => isDemoRef(b.reference)).map((b) => b.id));
+
+    // Customers who have ONLY demo bookings are also considered demo.
+    const demoCustomerIds = demoDataVisible
+      ? new Set<string>()
+      : new Set(
+          customers
+            .filter((c) =>
+              bookings
+                .filter((b) => b.customerId === c.id)
+                .every((b) => demoBookingIds.has(b.id)),
+            )
+            .map((c) => c.id),
+        );
+
+    const visibleBookings   = demoDataVisible ? bookings   : bookings.filter((b) => !demoBookingIds.has(b.id));
+    const visibleCustomers  = demoDataVisible ? customers  : customers.filter((c) => !demoCustomerIds.has(c.id));
+    const visiblePayments   = demoDataVisible ? payments   : payments.filter((p) => !demoBookingIds.has(p.bookingId));
+    const visibleInvoices   = demoDataVisible ? invoices   : invoices.filter((i) => !demoBookingIds.has(i.bookingId));
+    const visibleFoodOrders = demoDataVisible ? foodOrders : foodOrders.filter((o) => !demoBookingIds.has(o.bookingId));
+    const visibleRequests   = demoDataVisible ? requests   : requests.filter((r) => !demoBookingIds.has(r.bookingId));
+    const visibleFeedback   = demoDataVisible ? feedback   : feedback.filter((f) => !demoBookingIds.has(f.bookingId));
+    const visibleWaitlist   = demoDataVisible ? waitlist   : waitlist.filter((w) => !demoCustomerIds.has(w.customerId));
+
     return {
       today,
       villas,
-      customers,
-      bookings,
-      waitlist,
-      payments,
-      invoices,
+      customers:  visibleCustomers,
+      bookings:   visibleBookings,
+      waitlist:   visibleWaitlist,
+      payments:   visiblePayments,
+      invoices:   visibleInvoices,
       taxes,
       departments,
       employees,
       employeePay,
       menuItems,
-      foodOrders,
-      requests,
-      feedback,
+      foodOrders: visibleFoodOrders,
+      requests:   visibleRequests,
+      feedback:   visibleFeedback,
       activity,
       notifications,
       settings,
+
+      demoDataVisible,
+      setDemoDataVisible,
 
       updateBooking: (id, patch) => {
         void (async () => {
@@ -848,9 +919,11 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
     };
+
   }, [
     villas, customers, bookings, waitlist, payments, invoices, taxes, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
+    demoDataVisible, setDemoDataVisible,
   ]);
 
   if (!ready && session) {

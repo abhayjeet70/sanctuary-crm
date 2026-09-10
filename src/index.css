@@ -207,6 +207,34 @@
   );
 }
 
+/**
+ * A scrollbar that does not shout.
+ *
+ * The admin sidebar is the only scroll region in the app sitting on ink, and
+ * the platform default there is a light grey slab that reads as a rendering
+ * mistake rather than a control. Firefox gets `thin`; WebKit gets a 4px brass
+ * thumb on no track at all.
+ */
+@utility scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: --alpha(var(--color-gold) / 28%) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: --alpha(var(--color-gold) / 24%);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: --alpha(var(--color-gold) / 45%);
+  }
+}
+
 @utility label-caps {
   font-size: 0.6875rem;
   font-weight: 600;

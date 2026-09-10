@@ -129,6 +129,14 @@ export interface MockData {
   refresh: () => Promise<void>;
   saveMenuItem: (item: Partial<MenuItem> & { id?: ID }) => void;
   deleteMenuItem: (id: ID) => void;
+  /**
+   * Whether the seeded demo bookings/customers/etc. are currently visible.
+   * Toggling this off hides them across every screen without deleting anything;
+   * toggling it back on restores them instantly. Stored in localStorage so the
+   * choice survives a reload.
+   */
+  demoDataVisible: boolean;
+  setDemoDataVisible: (visible: boolean) => void;
 }
 
 export interface NewGuest {
@@ -350,6 +358,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       updateSettings: () => {},
       saveMenuItem: () => {},
       deleteMenuItem: () => {},
+      // The offline harness IS demo data — the toggle is always on here.
+      demoDataVisible: true,
+      setDemoDataVisible: () => {},
     }),
     [
       villas, bookings, waitlist, payments, foodOrders, requests, feedback, activity, notifications,

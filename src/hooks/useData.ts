@@ -22,6 +22,12 @@ export function useMockData(): MockData {
   return ctx;
 }
 
+/** Whether the seeded demo records are visible and the setter to toggle them. */
+export const useDemoData = () => {
+  const { demoDataVisible, setDemoDataVisible } = useMockData();
+  return { demoDataVisible, setDemoDataVisible };
+};
+
 /* ---------------------------------------------------------------- inventory */
 
 export const useVillas = () => useMockData().villas;

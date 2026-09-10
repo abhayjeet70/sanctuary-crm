@@ -23,88 +23,138 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Logo } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import { useMockData, useNotifications, usePaymentVerificationQueue } from "@/hooks/useData";
 import { useSession } from "@/services/session";
 import { firstUnannounced } from "@/services/domain";
-import type { AppNotification } from "@/types";
+import type { AppNotification, Role } from "@/types";
 import { initials } from "@/lib/format";
 
+/**
+ * The sections, in three groups.
+ *
+ * Fourteen identical rows in one column is a wall — nothing to aim at, and
+ * every item costs the same glance. Grouping by what the person is doing gives
+ * the eye three targets instead of fourteen, and it costs almost no height
+ * because the rows themselves get tighter in exchange.
+ */
 const NAV = [
-  { to: "/admin/dashboard", label: "Dashboard", icon: Home },
-  { to: "/admin/frontdesk", label: "Front desk", icon: ConciergeBell },
-  { to: "/admin/bookings", label: "Bookings", icon: BookOpen },
-  { to: "/admin/payments", label: "Payments", icon: Wallet, badge: "payments" },
-  { to: "/admin/calendar", label: "Calendar", icon: CalendarDays },
-  { to: "/admin/villas", label: "Villas", icon: Building2 },
-  { to: "/admin/customers", label: "Guests", icon: Users },
-  { to: "/admin/food", label: "Kitchen", icon: ChefHat },
-  { to: "/admin/requests", label: "Requests", icon: ClipboardList },
-  { to: "/admin/feedback", label: "Feedback", icon: MessageSquareQuote },
-  { to: "/admin/invoices", label: "Invoices", icon: Receipt },
-  { to: "/admin/reports", label: "Finances", icon: TrendingUp, ownerOnly: true },
-  { to: "/admin/employees", label: "Employees", icon: Users2, ownerOnly: true },
-  // Configuration belongs to the owner. RLS refuses a manager's write either
-  // way; hiding the page keeps the UI from offering something that will fail.
-  { to: "/admin/settings", label: "Settings", icon: Settings, ownerOnly: true },
+  {
+    label: "Today",
+    items: [
+      { to: "/admin/dashboard", label: "Dashboard", icon: Home },
+      { to: "/admin/frontdesk", label: "Front desk", icon: ConciergeBell },
+      { to: "/admin/bookings", label: "Bookings", icon: BookOpen },
+      { to: "/admin/payments", label: "Payments", icon: Wallet, badge: true },
+      { to: "/admin/calendar", label: "Calendar", icon: CalendarDays },
+    ],
+  },
+  {
+    label: "Property",
+    items: [
+      { to: "/admin/villas", label: "Villas", icon: Building2 },
+      { to: "/admin/customers", label: "Guests", icon: Users },
+      { to: "/admin/food", label: "Kitchen", icon: ChefHat },
+      { to: "/admin/requests", label: "Requests", icon: ClipboardList },
+      { to: "/admin/feedback", label: "Feedback", icon: MessageSquareQuote },
+    ],
+  },
+  {
+    label: "Business",
+    items: [
+      { to: "/admin/invoices", label: "Invoices", icon: Receipt },
+      { to: "/admin/reports", label: "Finances", icon: TrendingUp, ownerOnly: true },
+      { to: "/admin/employees", label: "Employees", icon: Users2, ownerOnly: true },
+      // Configuration belongs to the owner. RLS refuses a manager's write
+      // either way; hiding the page keeps the UI from offering something that
+      // will fail.
+      { to: "/admin/settings", label: "Settings", icon: Settings, ownerOnly: true },
+    ],
+  },
 ] as const;
 
-function NavItems({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
+/** How each role is described under their name. The footer used to say
+ *  "Owner" to everybody, including a manager, which is simply untrue. */
+const ROLE_LABEL: Record<Role, string> = {
+  admin: "Owner",
+  manager: "Manager",
+  staff: "Team",
+  guest: "Guest",
+};
+
+function NavItems({ onNavigate }: { onNavigate?: () => void }) {
   const queue = usePaymentVerificationQueue();
   const { session } = useSession();
   const isOwner = session?.role === "admin";
 
   return (
-    <nav aria-label="Admin sections" className="flex flex-col gap-0.5">
-      {NAV.filter((item) => isOwner || !("ownerOnly" in item && item.ownerOnly)).map(
-        ({ to, label, icon: Icon, ...rest }) => {
-        const count = "badge" in rest && rest.badge === "payments" ? queue.length : 0;
-        const link = (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                collapsed && "justify-center px-2",
-                isActive
-                  ? "bg-sidebar-accent text-white shadow-[inset_2px_0_0_0_var(--color-gold)]"
-                  : "text-sand/65 hover:bg-sidebar-accent/60 hover:text-white",
-              )
-            }
-          >
-            <Icon className="size-4 shrink-0" aria-hidden />
-            {!collapsed && <span className="truncate">{label}</span>}
-            {count > 0 && (
-              <span
-                className={cn(
-                  "ml-auto rounded-full bg-clay px-1.5 py-0.5 text-[0.6875rem] font-semibold text-sand",
-                  collapsed && "absolute top-1 right-1 ml-0",
-                )}
-              >
-                {count}
-                <span className="sr-only"> awaiting verification</span>
-              </span>
-            )}
-          </NavLink>
+    <nav aria-label="Admin sections" className="flex flex-col gap-4">
+      {NAV.map((group) => {
+        const items = group.items.filter(
+          (item) => isOwner || !("ownerOnly" in item && item.ownerOnly),
         );
+        if (items.length === 0) return null;
 
-        return collapsed ? (
-          <Tooltip key={to}>
-            <TooltipTrigger asChild>
-              <span className="relative">{link}</span>
-            </TooltipTrigger>
-            <TooltipContent side="right">{label}</TooltipContent>
-          </Tooltip>
-        ) : (
-          link
+        return (
+          <div key={group.label}>
+            <p className="px-2.5 pb-1 text-[0.5625rem] font-semibold tracking-[0.16em] text-sand/30 uppercase">
+              {group.label}
+            </p>
+            <ul className="flex flex-col gap-px">
+              {items.map(({ to, label, icon: Icon, ...rest }) => {
+                const count = "badge" in rest && rest.badge ? queue.length : 0;
+                return (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      onClick={onNavigate}
+                      className={({ isActive }) =>
+                        cn(
+                          "group relative flex items-center gap-2.5 rounded-lg py-1.5 pr-2 pl-3 text-[0.8125rem] transition-colors",
+                          isActive
+                            ? "bg-white/[0.07] text-sand"
+                            : "text-sand/55 hover:bg-white/[0.04] hover:text-sand/90",
+                        )
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          {/* A rail with its own rounded ends, inset from the
+                              edge. An inset box-shadow follows the corner
+                              curve and leaves a stray hook of brass showing
+                              past the rounding. */}
+                          {isActive && (
+                            <span
+                              aria-hidden
+                              className="absolute top-1/2 left-0.5 h-4 w-0.5 -translate-y-1/2 rounded-full bg-gold"
+                            />
+                          )}
+                          <Icon
+                            className={cn(
+                              "size-4 shrink-0 transition-colors",
+                              isActive ? "text-gold-400" : "text-current",
+                            )}
+                            aria-hidden
+                          />
+                          <span className="truncate">{label}</span>
+                          {count > 0 && (
+                            <span className="ml-auto min-w-[1.125rem] rounded-full bg-clay px-1 py-px text-center text-[0.625rem] leading-tight font-semibold text-sand tabular-nums">
+                              {count}
+                              <span className="sr-only"> awaiting verification</span>
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         );
-        },
-      )}
+      })}
     </nav>
   );
 }
@@ -265,32 +315,39 @@ export function AdminShell() {
   };
 
   return (
-    <div className="min-h-dvh bg-sand lg:grid lg:grid-cols-[15rem_1fr]">
-      {/* Desktop sidebar */}
+    <div className="min-h-dvh bg-sand lg:grid lg:grid-cols-[13.5rem_1fr]">
+      {/* Desktop sidebar. A hairline on the right edge only — a ring drew
+          brass down the offscreen side and along the top of the window. */}
       <aside
         data-print-chrome
-        className="sticky top-0 hidden h-dvh flex-col bg-sidebar px-3 py-5 ring-1 ring-gold/15 lg:flex"
+        className="sticky top-0 hidden h-dvh flex-col border-r border-gold/10 bg-sidebar px-2.5 py-4 lg:flex"
       >
-        <div className="px-2">
-          <Logo variant="onDark" />
+        <div className="px-1.5 pb-1">
+          <Logo variant="onDark" size="h-12" />
         </div>
-        <div className="mt-7 flex-1 overflow-y-auto">
+        {/* `min-h-0` is what lets this actually shrink inside the flex column;
+            without it the region grows and the whole page scrolls instead. */}
+        <div className="scrollbar-slim mt-5 min-h-0 flex-1 overflow-y-auto pr-0.5">
           <NavItems />
         </div>
-        <div className="space-y-3 px-2 pt-4">
+        <div className="space-y-2.5 px-1.5 pt-3">
           <hr className="rule-gold" />
           <div className="flex items-center gap-2">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-clay text-xs font-semibold text-sand">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-clay text-[0.625rem] font-semibold text-sand">
               {initials(session?.name ?? "")}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-sand">{session?.name}</p>
-              <p className="text-xs text-sand/50">Owner</p>
+              <p className="truncate text-[0.8125rem] leading-tight text-sand">
+                {session?.name}
+              </p>
+              <p className="text-[0.6875rem] text-sand/40">
+                {ROLE_LABEL[session?.role ?? "staff"]}
+              </p>
             </div>
             <Button
               variant="ghost"
               size="icon-sm"
-              className="text-sand/60 hover:bg-sand/12 hover:text-sand"
+              className="text-sand/50 hover:bg-white/8 hover:text-sand"
               onClick={leave}
               aria-label="Sign out"
             >
@@ -323,11 +380,12 @@ export function AdminShell() {
                   <Logo variant="onDark" />
                 </SheetTitle>
               </SheetHeader>
-              <div className="px-3">
+              <div className="scrollbar-slim overflow-y-auto px-3 pb-4">
                 <NavItems onNavigate={() => setMobileOpen(false)} />
+                <hr className="rule-gold my-3" />
                 <Button
                   variant="ghost"
-                  className="mt-4 w-full justify-start text-sand/70 hover:bg-sand/12 hover:text-sand"
+                  className="w-full justify-start text-[0.8125rem] text-sand/60 hover:bg-white/8 hover:text-sand"
                   onClick={leave}
                 >
                   <LogOut aria-hidden />
