@@ -105,7 +105,7 @@ export default function KitchenPage() {
                 </header>
 
                 {columnOrders.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-stone/30 px-3 py-8 text-center text-xs text-stone-600">
+                  <p className="rounded-lg border border-dashed border-ink/12 px-3 py-8 text-center text-xs text-stone-600">
                     Nothing here
                   </p>
                 ) : (
@@ -161,7 +161,7 @@ export default function KitchenPage() {
                             </p>
                           )}
 
-                          <div className="mt-3 flex items-baseline justify-between border-t border-stone/15 pt-3">
+                          <div className="mt-3 flex items-baseline justify-between border-t border-ink/8 pt-3">
                             <span className="label-caps">Total</span>
                             <span className="font-display text-lg tabular-nums text-ink">
                               {money(total)}

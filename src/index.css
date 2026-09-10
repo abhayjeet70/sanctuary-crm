@@ -318,60 +318,6 @@
 
 /* The notification card dropping in under the bell. There is no animation
    plugin in this project, and one keyframe does not justify adding one. */
-/* --- The welcome reel ------------------------------------------------- */
-
-@keyframes veil-out {
-  to {
-    opacity: 0;
-    transform: scale(1.06);
-    visibility: hidden;
-  }
-}
-
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 14px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes hairline-draw {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-/* Leaving is 900ms because it is the only moment in the product where the
-   animation *is* the content — everywhere else motion gets out of the way. */
-.animate-veil-out {
-  animation: veil-out 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-.animate-rise-in {
-  animation: rise-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-hairline {
-  transform-origin: center;
-  animation: hairline-draw 1100ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-rise-in,
-  .animate-hairline {
-    animation: none;
-  }
-  /* The veil must still leave, or the door never opens — only instantly. */
-  .animate-veil-out {
-    animation-duration: 1ms;
-  }
-}
-
 @keyframes flash-in {
   from { opacity: 0; transform: translateY(-0.25rem); }
   to { opacity: 1; transform: none; }

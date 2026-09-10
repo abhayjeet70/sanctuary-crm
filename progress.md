@@ -747,59 +747,54 @@ is the same class of bug as `data-active:` twice before.
 `DesignSystemPage` was corrected too. A living style guide printing `#F4EFE8`
 beside a swatch that is no longer that colour is worse than no style guide.
 
-### The welcome reel
-
-`src/pages/auth/WelcomeGate.tsx`, over `/login` — not a route of its own.
-
-That distinction is the whole design. The sign-in page beneath is already
-mounted and laid out, so the veil lifting reveals a finished room rather than
-starting a second load; and a browser that refuses `sessionStorage` strands
-nobody, because the door was always there. There is a smoke check asserting the
-password field is in the markup *underneath* the reel.
-
-- **It never blocks.** Mark and greeting paint immediately; the film fades in
-  behind them only once it is genuinely playing (`onPlaying`), over a poster
-  frame. A slow connection sees a composed still, never a black rectangle.
-  A browser that refuses autoplay likewise just keeps the still.
-- **It never insists.** Click, key, scroll, touch or wait ~5s. Once per
-  browser session.
-- **Reduced motion** gets the still, no autoplay, and an instant lift — but it
-  still lifts. A veil that respects `prefers-reduced-motion` by never leaving
-  is a locked door.
-- `aria-hidden`: it is decoration, and the form beneath is the real content.
-
 ### Verification (round twelve)
 
 139 smoke checks green, six of them new and specific to the reel. `test`,
 `viz` and `build` all pass.
 
-### The film, encoded
+### The welcome reel — built, then withdrawn
 
-The delivered file was **7.4 MB for eight seconds** — 720p at 7583 kb/s, which
-is roughly eight times the bitrate that resolution needs, plus an AAC track
-nobody will ever hear (the reel is muted by design).
+A welcome film over the sign-in page was built and then removed at the
+owner's request. Nothing of it remains: component, asset, keyframes, smoke
+checks and the `video` export are all gone. Recorded here only so the commits
+in between are legible.
 
-Re-encoded to **1.0 MB — 7.5x smaller**:
+### Controls and tables
 
-```
-ffmpeg -i source.mp4 -an   -c:v libx264 -crf 32 -preset slow -profile:v high -pix_fmt yuv420p   -movflags +faststart welcome.mp4
-```
+Form fields were `bg-transparent` at 32px. A transparent field on a warm
+ground is an outline people scan past rather than something that reads as
+somewhere to type. Inputs, selects and textareas are now white at 36px with
+the existing border doing the defining — which works both on the page ground
+and inside a white card. The dark sign-in panel already overrides the fill, so
+it was unaffected.
 
-- `-an` drops the audio stream outright rather than muting it.
-- `-movflags +faststart` moves the `moov` atom to the front, so the browser can
-  begin playing on the first bytes instead of waiting for the whole file.
-  Verified, not assumed: `moov` at byte 36, `mdat` at 3127.
-- CRF 32 rather than 28 because the reel plays at 55% opacity under two
-  gradient washes and a vignette. 28 gave 1.9 MB for quality nobody can see
-  through that.
-- No resize: the source was already 1280x720.
+Table cells went from `p-2` to `px-3 py-2.5`, and the header row from plain
+ink body text to the brand's own tracked small caps — a column heading that
+looks like data is one people misread as data.
 
-**No WebM sibling.** VP9 was tried and only reached 740 KB at CRF 52 — a
-260 KB saving on a file fetched once per session, at a quality level that
-could not be verified here, in exchange for a second asset and a `<source>`
-list. H.264 plays everywhere including iOS Safari. Not worth it.
+Dividers and rules were `stone` — a warm brown line. Same reasoning as the
+card hairlines: swept to ink at a low alpha.
 
-ffmpeg is not installed on this machine and GitHub's asset CDN is unreachable
-from it, so `ffmpeg-static` fails; `@ffmpeg-installer/ffmpeg` ships its binary
-through the npm registry itself and works. Installed with `--no-save` and
-removed afterwards — `package.json` never saw it.
+### One bug the palette work uncovered
+
+Round ten added per-booking arrival and departure times, and the front desk
+honoured them. **Five other screens did not** — they still quoted the villa's
+standard hours:
+
+- the dashboard figures and the movements feed,
+- the guest's booking page, dashboard and amenities page,
+- and `SendBookingDetails`, which is the message actually sent to the guest.
+
+So a guest who arranged a 22:30 arrival was told, in writing, that check-in
+was at 14:00. All five now read `stayTimes()`.
+
+Guarded rather than remembered: fixture booking `b-1001` arrives at 22:30 at a
+villa that opens at 14:00, and a smoke check renders three guest screens and
+fails if any of them prints the villa's standard instead. Proved to bite by
+putting the old expression back and watching it fail. The check deliberately
+ignores the 11:00 departure — only the arrival was arranged on that booking,
+so the standard is the right answer there.
+
+### Verification (round twelve)
+
+`tsc`, `smoke` (142 checks), `test`, `viz` and `build` all green.

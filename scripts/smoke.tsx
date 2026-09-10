@@ -285,41 +285,45 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
   }
 }
 
-/* The welcome reel sits OVER the sign-in page, never instead of it. If it
- * ever became a route of its own, a browser that refuses sessionStorage would
- * strand someone on a video with no way to sign in. */
+/* An arranged arrival time has to reach every screen that quotes one.
+ * Booking b-1001 arrives at 22:30; Villa Maaya opens at 14:00. Five screens
+ * quoted the villa's standard instead of the guest's own time — including the
+ * message we send the guest — so this is guarded rather than remembered. */
 {
-  const html = renderToString(
-    <SessionContext.Provider
-      value={{ session: null, loading: false, signIn: async () => ({ error: null }), signOut: () => {} } as never}
-    >
-      <TooltipProvider>
-        <MockDataProvider>
-          <MemoryRouter initialEntries={["/login"]}>
-            <AppRoutes />
-          </MemoryRouter>
-        </MockDataProvider>
-      </TooltipProvider>
-    </SessionContext.Provider>,
-  );
+  const asGuest = (route: string) =>
+    renderToString(
+      <SessionContext.Provider
+        value={{
+          session: { role: "guest", name: "Pooja Bothra", customerId: "c-pooja" },
+          loading: false,
+          signIn: async () => ({ error: null }),
+          signOut: () => {},
+        } as never}
+      >
+        <TooltipProvider>
+          <MockDataProvider>
+            <MemoryRouter initialEntries={[route]}>
+              <AppRoutes />
+            </MemoryRouter>
+          </MockDataProvider>
+        </TooltipProvider>
+      </SessionContext.Provider>,
+    );
 
-  const checks: [string, boolean][] = [
-    ["the welcome reel greets the visitor", html.includes("Welcome") && html.includes("You are expected")],
-    ["it names the property", html.includes("at Homes of Sanctuary.")],
-    ["it carries the film", html.includes("/villas/welcome.mp4")],
-    // A poster and a still, so a slow connection is never a black rectangle.
-    ["it degrades to a still", html.includes('poster="/villas/nandi-hills.png"')],
-    // The one that matters: the door is behind the veil, already rendered.
-    ["the sign-in form is mounted beneath it", /type="password"/.test(html)],
-    ["the reel is hidden from assistive tech", html.includes('aria-hidden="true"')],
-  ];
-
-  for (const [what, passed] of checks) {
-    if (passed) {
-      console.log("  ok   " + what);
+  for (const route of ["/guest/booking", "/guest/dashboard", "/guest/amenities"]) {
+    const html = asGuest(route);
+    const showsAgreed = html.includes("22:30");
+    // Only the arrival was arranged on b-1001, so 11:00 for the departure is
+    // correct and must not be flagged. 14:00 is the villa's standard arrival —
+    // that is the one that would mean the agreed time had been ignored.
+    const showsStandard = /from 14:00/.test(html);
+    if (showsAgreed && !showsStandard) {
+      console.log("  ok   " + route + " quotes the time the guest agreed");
     } else {
       failed++;
-      console.error("  FAIL " + what);
+      console.error(
+        "  FAIL " + route + " agreed=" + showsAgreed + " standard=" + showsStandard,
+      );
     }
   }
 }

@@ -172,6 +172,10 @@ export const bookings: Booking[] = [
     bookingMode: "whole",
     checkIn: "2026-09-12",
     checkOut: "2026-09-15",
+    // A late arrival, arranged. Villa Maaya opens at 14:00, so any screen
+    // showing 14:00 for this stay is showing the wrong thing — which is what
+    // the smoke check hangs off.
+    checkInTime: "22:30",
     adults: 8,
     children: 2,
     source: "website",

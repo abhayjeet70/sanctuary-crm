@@ -157,7 +157,7 @@ export function InvoiceDocument({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-stone/15">
+        <tbody className="divide-y divide-ink/8">
           <Line
             label={`${villa?.name} — ${booking.bookingMode === "whole" ? "whole villa" : roomNames.join(", ")}`}
             detail={`${money(booking.charges.nightlyRate)} × ${booking.charges.nights} nights`}
@@ -241,7 +241,7 @@ export function InvoiceDocument({
           <p className="text-sm font-medium">
             For {settings?.legalName || "Homes of Sanctuary"}
           </p>
-          <p className="mt-10 border-t border-stone/40 pt-1.5 text-xs text-stone-600">
+          <p className="mt-10 border-t border-ink/12 pt-1.5 text-xs text-stone-600">
             {settings?.signatoryName || "Authorised signatory"}
           </p>
         </div>

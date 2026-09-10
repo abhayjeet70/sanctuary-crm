@@ -81,7 +81,7 @@ export function TaxManager() {
             No taxes configured. Invoices will show a single untitled tax line.
           </p>
         ) : (
-          <ul className="divide-y divide-stone/15">
+          <ul className="divide-y divide-ink/8">
             {sorted.map((tax) => (
               <li key={tax.id} className="flex flex-wrap items-center gap-3 py-3">
                 <div className="min-w-0 flex-1">

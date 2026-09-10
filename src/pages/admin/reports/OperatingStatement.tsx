@@ -226,7 +226,7 @@ function Line({
   danger?: boolean;
 }) {
   return (
-    <tr className="border-b border-stone/10">
+    <tr className="border-b border-ink/8">
       <th
         scope="row"
         className={cn(
@@ -283,7 +283,7 @@ function Stat({
   tone?: "warn";
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-stone/10 pb-1.5">
+    <div className="flex items-baseline justify-between gap-3 border-b border-ink/8 pb-1.5">
       <dt className="text-sm text-stone-600">
         {label}
         {note && <span className="block text-xs text-stone">{note}</span>}

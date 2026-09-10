@@ -5,7 +5,6 @@ import { Eyebrow, Logo } from "@/components/common";
 import { collage, photo } from "@/lib/assets";
 import { useSession } from "@/services/session";
 import { AuthPanel } from "./AuthPanel";
-import { WelcomeGate } from "./WelcomeGate";
 import { cn } from "@/lib/utils";
 
 const HERO = photo.hills;
@@ -76,13 +75,7 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      {/* Over the page rather than before it: everything below is already
-          mounted and laid out, so the reel lifting away reveals a finished
-          room instead of starting a second load. */}
-      <WelcomeGate />
-
-      <main className="relative min-h-dvh overflow-hidden bg-ink text-sand">
+    <main className="relative min-h-dvh overflow-hidden bg-ink text-sand">
       <img
         src={HERO}
         alt=""
@@ -194,7 +187,6 @@ export default function LoginPage() {
           </Link>
         </footer>
       </div>
-      </main>
-    </>
+    </main>
   );
 }

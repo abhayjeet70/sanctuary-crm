@@ -68,7 +68,7 @@ export function FinancialBreakdown({
       <div
         className={cn(
           "mt-2 flex items-baseline justify-between gap-4 border-t pt-3",
-          dark ? "border-gold/25" : "border-stone/25",
+          dark ? "border-gold/25" : "border-ink/12",
         )}
       >
         <dt className={dark ? "text-sand/70" : "text-stone-600"}>Subtotal</dt>

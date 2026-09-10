@@ -18,6 +18,7 @@ import { bookingStatus, foodOrderStatus, requestPriority } from "@/lib/status";
 import { formatDate, formatTime, money, moneyShort, initials } from "@/lib/format";
 import type { BookingView } from "@/hooks/useData";
 import { cn } from "@/lib/utils";
+import { stayTimes } from "@/services/domain";
 
 const QUICK_ACTIONS = [
   { to: "/admin/bookings/new", label: "New booking", icon: Plus, primary: true },
@@ -63,7 +64,9 @@ export default function DashboardPage() {
           value={overview.arrivals.length}
           hint={
             overview.arrivals[0]
-              ? `${overview.arrivals[0].villa?.name} from ${overview.arrivals[0].villa?.checkInTime}`
+              ? `${overview.arrivals[0].villa?.name} from ${
+                  stayTimes(overview.arrivals[0].booking, overview.arrivals[0].villa).arrival
+                }`
               : "Nobody checking in"
           }
           icon={<LogIn className="size-4" />}
@@ -73,7 +76,9 @@ export default function DashboardPage() {
           value={overview.departures.length}
           hint={
             overview.departures[0]
-              ? `${overview.departures[0].villa?.name} by ${overview.departures[0].villa?.checkOutTime}`
+              ? `${overview.departures[0].villa?.name} by ${
+                  stayTimes(overview.departures[0].booking, overview.departures[0].villa).departure
+                }`
               : "Nobody checking out"
           }
           icon={<LogOut className="size-4" />}
@@ -117,7 +122,7 @@ export default function DashboardPage() {
                 description="No arrivals, departures or guests in house. A good day for maintenance."
               />
             ) : (
-              <ul className="divide-y divide-stone/15">
+              <ul className="divide-y divide-ink/8">
                 {overview.arrivals.map((view) => (
                   <MovementRow key={`in-${view.booking.id}`} view={view} kind="in" />
                 ))}
@@ -215,7 +220,7 @@ export default function DashboardPage() {
               description="No orders in progress right now."
             />
           ) : (
-            <ul className="divide-y divide-stone/15">
+            <ul className="divide-y divide-ink/8">
               {activeOrders.slice(0, 5).map(({ order, villa, customer, roomName, total }) => {
                 const status = foodOrderStatus.get(order.status);
                 return (
@@ -259,7 +264,7 @@ export default function DashboardPage() {
               description="Every guest request has been closed."
             />
           ) : (
-            <ul className="divide-y divide-stone/15">
+            <ul className="divide-y divide-ink/8">
               {openRequests.slice(0, 5).map(({ request, villa, customer }) => {
                 const priority = requestPriority.get(request.priority);
                 return (
@@ -291,9 +296,12 @@ function MovementRow({ view, kind }: { view: BookingView; kind: "in" | "out" | "
   const { booking, villa, customer, roomNames, totals } = view;
   const status = bookingStatus.get(booking.status);
 
+  // What was agreed, not the villa's standard hours — a guest who arranged a
+  // late arrival is exactly the row the desk must not misread.
+  const times = stayTimes(booking, villa);
   const meta = {
-    in: { label: "Check-in", tone: "confirmed" as const, time: villa?.checkInTime, Icon: LogIn },
-    out: { label: "Check-out", tone: "pending" as const, time: villa?.checkOutTime, Icon: LogOut },
+    in: { label: "Check-in", tone: "confirmed" as const, time: times.arrival, Icon: LogIn },
+    out: { label: "Check-out", tone: "pending" as const, time: times.departure, Icon: LogOut },
     stay: { label: "In house", tone: "inhouse" as const, time: null, Icon: BedDouble },
   }[kind];
 

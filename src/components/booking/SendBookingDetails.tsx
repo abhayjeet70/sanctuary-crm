@@ -6,6 +6,7 @@ import { Eyebrow } from "@/components/common";
 import { supabase } from "@/services/supabase/client";
 import { useSettings } from "@/hooks/useData";
 import { formatDate, money } from "@/lib/format";
+import { stayTimes } from "@/services/domain";
 import type { BookingView } from "@/hooks/useData";
 
 /**
@@ -23,12 +24,17 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // What was agreed, falling back to the villa's standard hours. Quoting the
+  // standard time to a guest who arranged a late arrival is the one place
+  // this mistake actually reaches the guest.
+  const times = stayTimes(booking, villa);
+
   const message =
     `Hello ${customer?.name ?? "there"}, here are your booking details.\n\n` +
     `Booking ${booking.reference}\n` +
     `${villa?.name}${booking.bookingMode === "whole" ? " (whole villa)" : ""}\n` +
     `${formatDate(booking.checkIn)} to ${formatDate(booking.checkOut)}\n` +
-    `Check-in from ${villa?.checkInTime}, check-out by ${villa?.checkOutTime}\n` +
+    `Check-in from ${times.arrival}, check-out by ${times.departure}\n` +
     `${booking.adults} adults${booking.children ? `, ${booking.children} children` : ""}\n\n` +
     `Total ${money(totals.total)}\n` +
     `Paid ${money(totals.paid)}\n` +

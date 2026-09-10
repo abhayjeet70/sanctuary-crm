@@ -171,7 +171,7 @@ export default function DesignSystemPage() {
       {/* Section nav */}
       <nav
         aria-label="Design system sections"
-        className="sticky top-0 z-20 border-b border-stone/25 bg-sand/92 backdrop-blur"
+        className="sticky top-0 z-20 border-b border-ink/12 bg-sand/92 backdrop-blur"
       >
         <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-6 py-3 sm:px-10">
           {SECTIONS.map(([id, label]) => (
@@ -373,7 +373,7 @@ export default function DesignSystemPage() {
           title="Buttons"
           description="Every variant in its default, hover, focus, disabled and loading state."
         >
-          <div className="divide-y divide-stone/20 rounded-xl bg-paper px-6 shadow-soft">
+          <div className="divide-y divide-ink/8 rounded-xl bg-paper px-6 shadow-soft">
             <Row label="Primary">
               <Button>Confirm booking</Button>
               <Button className="shadow-lift">Hover</Button>
@@ -835,7 +835,7 @@ export default function DesignSystemPage() {
         </Section>
       </main>
 
-      <footer className="border-t border-stone/25 px-6 py-10 text-sm text-stone-600 sm:px-10">
+      <footer className="border-t border-ink/12 px-6 py-10 text-sm text-stone-600 sm:px-10">
         <div className="mx-auto max-w-6xl">
           Homes of Sanctuary · internal design system · UI-only phase
         </div>

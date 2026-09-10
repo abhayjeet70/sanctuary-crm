@@ -272,7 +272,7 @@ function NotificationTray() {
           <SheetTitle>Notifications</SheetTitle>
         </SheetHeader>
         <div className="px-4">
-          <ul className="mt-4 divide-y divide-stone/20">
+          <ul className="mt-4 divide-y divide-ink/8">
             {notifications.map((item) => (
               <li key={item.id}>
                 <Link

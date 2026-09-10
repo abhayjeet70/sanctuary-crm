@@ -168,7 +168,7 @@ function MonthView({
             <div
               key={date}
               className={cn(
-                "group min-h-28 border-r border-b border-stone/12 p-1.5 last:border-r-0",
+                "group min-h-28 border-r border-b border-ink/8 p-1.5 last:border-r-0",
                 !inMonth && "bg-sand-200/40",
                 isToday && "bg-gold/8 ring-1 ring-gold/40 ring-inset",
               )}
@@ -300,7 +300,7 @@ function TimelineView({
           const wholeHolds = villaBookings.filter((v) => v.booking.roomIds.length === 0);
 
           return (
-            <div key={villa.id} className="border-b border-stone/12 last:border-b-0">
+            <div key={villa.id} className="border-b border-ink/8 last:border-b-0">
               {/* Villa row — whole-villa holds live here */}
               <Row
                 label={villa.name}
@@ -381,7 +381,7 @@ function Row({
         <div
           key={day}
           className={cn(
-            "h-full min-h-11 border-l border-stone/8",
+            "h-full min-h-11 border-l border-ink/8",
             day === today && "bg-gold/8",
           )}
         />

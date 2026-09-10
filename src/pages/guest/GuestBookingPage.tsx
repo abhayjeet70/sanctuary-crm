@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorState, Eyebrow, StatusBadge } from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
+import { stayTimes } from "@/services/domain";
 import { useGuestStay } from "@/hooks/useGuest";
 import { bookingStatus, bookingSource, paymentStatus } from "@/lib/status";
 import { formatDate, formatDateRange, nightsBetween } from "@/lib/format";
@@ -25,6 +26,8 @@ export default function GuestBookingPage() {
   const status = bookingStatus.get(booking.status);
   const pay = paymentStatus.get(booking.paymentStatus);
   const nights = nightsBetween(booking.checkIn, booking.checkOut);
+  // What was agreed for this stay, not the villa's standard hours.
+  const times = stayTimes(booking, villa);
 
   const reached = ["checked_out", "completed"].includes(booking.status)
     ? 4
@@ -102,8 +105,8 @@ export default function GuestBookingPage() {
 
           <dl className="grid gap-5 sm:grid-cols-3">
             {[
-              ["Check-in", `${formatDate(booking.checkIn)}, from ${villa?.checkInTime}`],
-              ["Check-out", `${formatDate(booking.checkOut)}, by ${villa?.checkOutTime}`],
+              ["Check-in", `${formatDate(booking.checkIn)}, from ${times.arrival}`],
+              ["Check-out", `${formatDate(booking.checkOut)}, by ${times.departure}`],
               ["Nights", String(nights)],
               ["Adults", String(booking.adults)],
               ["Children", String(booking.children)],

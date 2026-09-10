@@ -257,7 +257,7 @@ function EmployeeRow({
       </div>
 
       {open && (
-        <div className="mt-5 space-y-4 border-t border-stone/15 pt-5">
+        <div className="mt-5 space-y-4 border-t border-ink/8 pt-5">
           {(employee.address || employee.emergencyName || employee.notes) && (
             <dl className="grid gap-3 text-sm sm:grid-cols-3">
               {employee.address && (

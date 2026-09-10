@@ -162,7 +162,7 @@ export default function GuestFoodPage() {
                 />
               ) : (
                 <>
-                  <ul className="divide-y divide-stone/15">
+                  <ul className="divide-y divide-ink/8">
                     {lines.map((line) => (
                       <li key={line.menuItemId} className="flex items-center gap-3 py-3">
                         <div className="min-w-0 flex-1">

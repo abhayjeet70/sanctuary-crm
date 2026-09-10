@@ -4,13 +4,17 @@ import { Check, Clock, Copy, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorState, Eyebrow } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
+import { stayTimes } from "@/services/domain";
 
 export default function GuestAmenitiesPage() {
   const { view } = useGuestStay();
   const [copied, setCopied] = useState(false);
 
   if (!view?.villa) return <ErrorState className="m-5" title="No stay found" />;
-  const { villa } = view;
+  const { villa, booking } = view;
+  // This page is the guest's own stay, so it must agree with their booking
+  // page. Quoting the villa's standard hours here would contradict it.
+  const times = stayTimes(booking, villa);
 
   const copy = async () => {
     try {
@@ -90,8 +94,8 @@ export default function GuestAmenitiesPage() {
         {/* ---------------------------------------------------------- times */}
         <section className="grid gap-4 sm:grid-cols-2">
           {[
-            ["Check-in", villa.checkInTime, "Your rooms are ready from this time."],
-            ["Check-out", villa.checkOutTime, "Late check-out on request, subject to the next stay."],
+            ["Check-in", times.arrival, "Your rooms are ready from this time."],
+            ["Check-out", times.departure, "Late check-out on request, subject to the next stay."],
           ].map(([label, time, hint]) => (
             <div
               key={label}

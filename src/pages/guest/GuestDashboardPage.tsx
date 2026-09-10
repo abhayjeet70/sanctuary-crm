@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, Logo, StatusBadge } from "@/components/common";
 import { collage, photo } from "@/lib/assets";
+import { stayTimes } from "@/services/domain";
 import { useGuestStay } from "@/hooks/useGuest";
 import { bookingStatus, foodOrderStatus, paymentStatus } from "@/lib/status";
 import { formatDate, money, nightsBetween } from "@/lib/format";
@@ -95,6 +96,8 @@ export default function GuestDashboardPage() {
   const status = bookingStatus.get(booking.status);
   const pay = paymentStatus.get(booking.paymentStatus);
   const nights = nightsBetween(booking.checkIn, booking.checkOut);
+  // What was agreed for this stay, not the villa's standard hours.
+  const times = stayTimes(booking, villa);
   const upcoming = booking.checkIn > today;
   const liveOrder = orders.find(
     (o) => o.status !== "billed" && o.status !== "cancelled" && o.status !== "served",
@@ -166,7 +169,7 @@ export default function GuestDashboardPage() {
             <div>
               <dt className="text-xs font-semibold text-stone-600">Check-in</dt>
               <dd className="mt-0.5 text-sm font-medium text-ink">{formatDate(booking.checkIn)}</dd>
-              <dd className="text-xs text-stone-600">from {villa?.checkInTime}</dd>
+              <dd className="text-xs text-stone-600">from {times.arrival}</dd>
             </div>
           </div>
           <div className="flex-1 flex gap-4 p-4">
@@ -176,7 +179,7 @@ export default function GuestDashboardPage() {
             <div>
               <dt className="text-xs font-semibold text-stone-600">Check-out</dt>
               <dd className="mt-0.5 text-sm font-medium text-ink">{formatDate(booking.checkOut)}</dd>
-              <dd className="text-xs text-stone-600">by {villa?.checkOutTime}</dd>
+              <dd className="text-xs text-stone-600">by {times.departure}</dd>
             </div>
           </div>
           <div className="flex-1 flex gap-4 p-4">
