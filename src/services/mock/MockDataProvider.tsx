@@ -30,6 +30,7 @@ import type {
   PropertySettings,
   Room,
   Customer,
+  Department,
   Employee,
   EmployeePay,
   Tax,
@@ -56,6 +57,7 @@ export interface MockData {
   menuItems: MenuItem[];
   settings: PropertySettings | null;
   taxes: Tax[];
+  departments: Department[];
   employees: Employee[];
   /** Owner-only; empty for everyone else because RLS returns nothing. */
   employeePay: EmployeePay[];
@@ -101,6 +103,11 @@ export interface MockData {
   /** Add or edit a tax. Omit `id` to add. */
   saveTax: (tax: Partial<Tax> & { id?: ID }) => void;
   /** Add or edit an employee. Omit `id` to add. */
+  /** Add or edit a department, permissions included. Omit `id` to add. */
+  saveDepartment: (department: Partial<Department> & { id?: ID }) => void;
+  deleteDepartment: (id: ID) => void;
+  /** The owner's own display name, as it appears across the app. */
+  updateOwnName: (name: string) => void;
   saveEmployee: (employee: Partial<Employee> & { id?: ID }) => void;
   deleteEmployee: (id: ID) => void;
   savePay: (employeeId: ID, monthlySalary: number, note?: string) => void;
@@ -226,6 +233,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       // The offline harness has no configuration; the invoice falls back to a
       // single "Tax" line, which is what taxBreakdown does with an empty list.
       taxes: [],
+      departments: [],
       employees: [],
       employeePay: [],
       foodOrders,
@@ -303,6 +311,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       createInvoice: () => {},
       setInvoiceStatus: () => {},
       refresh: async () => {},
+      saveDepartment: () => {},
+      deleteDepartment: () => {},
+      updateOwnName: () => {},
       saveEmployee: () => {},
       deleteEmployee: () => {},
       savePay: () => {},

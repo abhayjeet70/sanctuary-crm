@@ -268,6 +268,14 @@ export const useTaxes = () => useMockData().taxes;
 
 export const useEmployees = () => useMockData().employees;
 
+/** The departments the property runs, newest configuration first-hand. */
+export const useDepartments = () => useMockData().departments;
+
+export function useDepartment(id: ID | undefined) {
+  const { departments } = useMockData();
+  return departments.find((d) => d.id === id);
+}
+
 /** The salary for one employee. Empty unless the owner is signed in. */
 export function useEmployeePay(employeeId: ID | undefined) {
   const { employeePay } = useMockData();

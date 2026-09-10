@@ -21,6 +21,7 @@ import FeedbackPage from "@/pages/admin/FeedbackPage";
 import InvoicesPage from "@/pages/admin/InvoicesPage";
 import SettingsPage from "@/pages/admin/SettingsPage";
 import EmployeesPage from "@/pages/admin/EmployeesPage";
+import ReportsPage from "@/pages/admin/ReportsPage";
 import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
@@ -131,6 +132,14 @@ export function AppRoutes() {
         <Route path="requests" element={<RequestsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
+        <Route
+          path="reports"
+          element={
+            <RequireOwner>
+              <ReportsPage />
+            </RequireOwner>
+          }
+        />
         <Route
           path="employees"
           element={

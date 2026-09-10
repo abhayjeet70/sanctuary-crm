@@ -43,6 +43,19 @@ export function useSession() {
  * figures up. It keeps the business's position off screens the manager works
  * on all day; it does not withhold it from someone determined to total it.
  */
+/**
+ * Does the signed-in person's department grant this?
+ *
+ * The owner holds everything, and never depends on a row somebody could
+ * delete — which is how you lock yourself out of your own property.
+ */
+export function usePermission(key: string) {
+  const { session } = useSession();
+  if (!session) return false;
+  if (session.role === "admin") return true;
+  return session.permissions?.includes(key as never) ?? false;
+}
+
 export function useShowsFinancials() {
   return useSession().session?.role === "admin";
 }

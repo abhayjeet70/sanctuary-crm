@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
   const { data: employee, error: readError } = await supabase
     .from("employees")
-    .select("id, full_name, email, team, status, profile_id")
+    .select("id, full_name, email, team, department_id, status, profile_id")
     .eq("id", employeeId)
     .maybeSingle();
 
@@ -134,6 +134,9 @@ Deno.serve(async (req) => {
       role: requested,
       full_name: employee.full_name,
       team: employee.team,
+      // The department is what the policies read; `team` is carried along
+      // only so older rows stay legible.
+      department_id: employee.department_id,
       customer_id: null,
     });
   if (profileError) return fail(profileError.message, 400);

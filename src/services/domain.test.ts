@@ -13,6 +13,8 @@ import {
   amountInWords,
   configuredTaxRate,
   taxBreakdown,
+  monthlyFigures,
+  occupancyRate,
   type TaxComponent,
 } from "./domain";
 
@@ -154,5 +156,29 @@ assert.equal(amountInWords(264320), "Rupees Two Lakh Sixty Four Thousand Three H
 assert.equal(amountInWords(0), "Rupees Zero Only");
 assert.equal(amountInWords(1), "Rupees One Only");
 assert.equal(amountInWords(10000000), "Rupees One Crore Only");
+
+/* --- monthly figures ---------------------------------------------------- */
+const row = (checkIn: string, status: string, total: number, paid: number) =>
+  ({ checkIn, status, nights: 2, total, tax: Math.round(total * 0.18), paid });
+
+const months = monthlyFigures([
+  row("2026-09-04", "confirmed", 10000, 5000),
+  row("2026-09-20", "completed", 20000, 20000),
+  row("2026-10-02", "confirmed", 30000, 0),
+  // Neither of these was ever earned.
+  row("2026-09-11", "cancelled", 99999, 0),
+  row("2026-09-12", "inquiry", 88888, 0),
+]);
+assert.deepEqual(months.map((m) => m.month), ["2026-09", "2026-10"]);
+assert.equal(months[0].revenue, 30000, "cancelled and enquiry stays are not revenue");
+assert.equal(months[0].collected, 25000);
+assert.equal(months[0].bookings, 2);
+assert.equal(months[1].revenue, 30000);
+assert.deepEqual(monthlyFigures([]), []);
+
+/* --- occupancy ---------------------------------------------------------- */
+assert.equal(occupancyRate(30, 3, 30), 30 / 90);
+assert.equal(occupancyRate(0, 3, 30), 0);
+assert.equal(occupancyRate(10, 0, 30), 0, "no villas is not a division by zero");
 
 console.log("domain.ts — all checks passed");

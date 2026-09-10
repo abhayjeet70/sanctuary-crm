@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eyebrow, LoadingState, PageHeader } from "@/components/common";
 import { MenuManager } from "./MenuManager";
 import { TaxManager } from "./TaxManager";
+import { DepartmentManager } from "./DepartmentManager";
 import { ChangePassword } from "./ChangePassword";
 import { useMockData, useSettings, useVillas } from "@/hooks/useData";
 import { useSession } from "@/services/session";
@@ -26,7 +27,8 @@ export default function SettingsPage() {
   const villas = useVillas();
   const { session } = useSession();
   const settings = useSettings();
-  const { updateSettings } = useMockData();
+  const { updateSettings, updateOwnName } = useMockData();
+  const [ownName, setOwnName] = useState(session?.name ?? "");
 
   const [draft, setDraft] = useState<PropertySettings | null>(settings);
   const [saving, setSaving] = useState(false);
@@ -82,6 +84,7 @@ export default function SettingsPage() {
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
           <TabsTrigger value="taxes">Taxes</TabsTrigger>
           <TabsTrigger value="property">Property</TabsTrigger>
+          <TabsTrigger value="departments">Departments</TabsTrigger>
           <TabsTrigger value="menu">Menu</TabsTrigger>
           <TabsTrigger value="villas">Villas</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
@@ -277,7 +280,34 @@ export default function SettingsPage() {
 
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-gold/12">
             <Eyebrow className="text-gold-700">This build</Eyebrow>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-600">
+            <div className="mt-4 max-w-sm space-y-1.5">
+              <Label htmlFor="own-name">Your name</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="own-name"
+                  value={ownName}
+                  onChange={(event) => setOwnName(event.target.value)}
+                  placeholder="Anjali Rao"
+                />
+                <Button
+                  variant="outline"
+                  disabled={ownName.trim().length < 2 || ownName.trim() === session?.name}
+                  onClick={() => {
+                    updateOwnName(ownName.trim());
+                    toast.success("Name updated", {
+                      description: "Sign out and back in to see it everywhere.",
+                    });
+                  }}
+                >
+                  Save
+                </Button>
+              </div>
+              <p className="text-xs text-stone-600">
+                Shown in the sidebar, on activity you record and beside decisions you make.
+              </p>
+            </div>
+
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-stone-600">
               Signed in as {session?.name} · {session?.role}. Authentication, the database
               and storage are real. There is no payment gateway by design — guests pay by
               UPI or transfer and upload a receipt, which staff verify.
@@ -289,6 +319,11 @@ export default function SettingsPage() {
               </Link>
             </Button>
           </section>
+        </TabsContent>
+
+        {/* --------------------------------------------------- departments */}
+        <TabsContent value="departments" className="pt-5">
+          <DepartmentManager />
         </TabsContent>
 
         {/* ---------------------------------------------------------- menu */}

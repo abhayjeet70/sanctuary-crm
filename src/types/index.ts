@@ -265,8 +265,9 @@ export interface GuestRequest {
   description: string;
   priority: RequestPriority;
   status: RequestStatus;
+  departmentId?: ID;
   assignedTo?: Team;
-  /** The person on the hook, where assignedTo is only the team. */
+  /** The person on the hook, where the department is only the team. */
   assignedUser?: ID;
   acknowledgedAt?: ISODateTime;
   resolvedAt?: ISODateTime;
@@ -320,7 +321,10 @@ export interface MockSession {
   role: Role;
   /** Set for the guest role — the customer record they are signed in as. */
   customerId?: ID;
-  /** Set for the staff role — which queue they see. */
+  /** Set for staff — which queue they see, and what they may do. */
+  departmentId?: ID;
+  permissions?: PermissionKey[];
+  /** Legacy, from before departments were rows. */
   team?: Team;
   name: string;
   /** The sign-in address, used to re-authenticate before a password change. */
@@ -362,6 +366,28 @@ export interface PropertySettings {
   signatoryName: string;
 }
 
+/* ----------------------------------------------------------- departments */
+
+/** What a department may do. Presence in `permissions` grants it. */
+export type PermissionKey =
+  | "requests.work"
+  | "requests.all"
+  | "kitchen.work"
+  | "bookings.view"
+  | "guests.view";
+
+export interface Department {
+  id: ID;
+  name: string;
+  slug: string;
+  description: string;
+  /** Job titles this department offers, suggested on the employee form. */
+  designations: string[];
+  sortOrder: number;
+  active: boolean;
+  permissions: PermissionKey[];
+}
+
 /* ---------------------------------------------------------------- people */
 
 export type EmploymentType = "full_time" | "part_time" | "contract" | "seasonal";
@@ -375,6 +401,8 @@ export interface Employee {
   /** The job title as the property prints it: "Sous chef", "Front desk". */
   designation: string;
   /** Decides which queue they see once they have a login. */
+  departmentId?: ID;
+  /** Legacy, from before departments were rows. Not read any more. */
   team?: Team;
   phone: string;
   email: string;

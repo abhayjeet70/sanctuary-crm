@@ -258,3 +258,71 @@ export function amountInWords(amount: number): string {
 
   return `Rupees ${parts.join(" ")} Only`;
 }
+
+/* ----------------------------------------------------------------- reports */
+
+export interface MonthlyFigure {
+  /** "2026-09" */
+  month: string;
+  revenue: number;
+  tax: number;
+  collected: number;
+  nights: number;
+  bookings: number;
+}
+
+/**
+ * The book, by month.
+ *
+ * Cancelled and rejected stays are left out of revenue — they were never
+ * earned — but the count of them is worth having elsewhere, so this returns
+ * only what was actually billed. `collected` is money received rather than
+ * invoiced, which is the number that pays wages.
+ */
+export function monthlyFigures(
+  rows: {
+    checkIn: string;
+    status: string;
+    nights: number;
+    total: number;
+    tax: number;
+    paid: number;
+  }[],
+): MonthlyFigure[] {
+  const byMonth = new Map<string, MonthlyFigure>();
+
+  for (const row of rows) {
+    if (row.status === "cancelled" || row.status === "rejected" || row.status === "inquiry") {
+      continue;
+    }
+    const month = row.checkIn.slice(0, 7);
+    const figure = byMonth.get(month) ?? {
+      month,
+      revenue: 0,
+      tax: 0,
+      collected: 0,
+      nights: 0,
+      bookings: 0,
+    };
+    figure.revenue += row.total;
+    figure.tax += row.tax;
+    figure.collected += row.paid;
+    figure.nights += row.nights;
+    figure.bookings += 1;
+    byMonth.set(month, figure);
+  }
+
+  return [...byMonth.values()].sort((a, b) => a.month.localeCompare(b.month));
+}
+
+/**
+ * Occupancy as a fraction of what could have been sold.
+ *
+ * Nights sold over nights available: villas × days in the window. A number
+ * over 1 means the villas are split into rooms and more than one stay shares
+ * a villa, which is real rather than an error.
+ */
+export function occupancyRate(nightsSold: number, villas: number, days: number) {
+  const available = villas * days;
+  return available > 0 ? nightsSold / available : 0;
+}

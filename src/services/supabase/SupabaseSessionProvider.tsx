@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "./client";
 import { SessionContext } from "@/services/session";
-import type { MockSession, Role } from "@/types";
+import type { MockSession, PermissionKey, Role } from "@/types";
 
 /**
  * Real authentication, behind the same `useSession()` shape the mock provider
@@ -31,9 +31,20 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
 
       const { data } = await supabase
         .from("profiles")
-        .select("role, full_name, customer_id, team")
+        .select("role, full_name, customer_id, team, department_id")
         .eq("id", userId)
         .maybeSingle();
+
+      // What their department may do, so the shell can avoid offering a door
+      // the policies would refuse. RLS stays the boundary; this is courtesy.
+      let permissions: PermissionKey[] = [];
+      if (data?.department_id) {
+        const { data: grants } = await supabase
+          .from("department_permissions")
+          .select("permission")
+          .eq("department_id", data.department_id);
+        permissions = (grants ?? []).map((g) => g.permission as PermissionKey);
+      }
 
       if (!active) return;
       setSession({
@@ -41,6 +52,8 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
         name: data?.full_name || email?.split("@")[0] || "Guest",
         email,
         customerId: data?.customer_id ?? undefined,
+        departmentId: data?.department_id ?? undefined,
+        permissions,
         team: data?.team ?? undefined,
       });
       setLoading(false);

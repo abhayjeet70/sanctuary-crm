@@ -13,6 +13,7 @@ import {
   toInvoice,
   toMenuItem,
   toNotification,
+  toDepartment,
   toEmployee,
   toEmployeePay,
   toPayment,
@@ -30,8 +31,10 @@ import type {
   Invoice,
   MenuItem,
   Payment,
+  Department,
   Employee,
   EmployeePay,
+  PermissionKey,
   PropertySettings,
   Tax,
   Villa,
@@ -67,6 +70,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [taxes, setTaxes] = useState<Tax[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeePay, setEmployeePay] = useState<EmployeePay[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -81,7 +85,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const refetch = useCallback(async () => {
     if (!session) return;
 
-    const [v, ra, c, b, p, i, tx, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
+    const [v, ra, c, b, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
       supabase.from("villas").select(SELECTS.villas).order("name"),
       supabase.from("room_availability").select("*"),
       supabase.from("customers").select("*").order("name"),
@@ -89,6 +93,8 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
       supabase.from("taxes").select("*").order("sort_order"),
+      supabase.from("departments").select("*").order("sort_order"),
+      supabase.from("department_permissions").select("*"),
       supabase.from("employees").select("*").order("employee_code"),
       supabase.from("employee_pay").select("*"),
       supabase.from("menu_items").select("*").order("sort_order").order("name"),
@@ -102,7 +108,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     // A guest legitimately gets empty arrays for admin-only tables — that is RLS
     // working, not a failure, so only real errors are surfaced.
-    const firstError = [v, ra, c, b, p, i, tx, em, ep, m, f, q, fb, a, n, ps].find(
+    const firstError = [v, ra, c, b, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
       (res) => res.error,
     )?.error;
     if (firstError && firstError.code !== "PGRST116") {
@@ -115,6 +121,20 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     setPayments((p.data ?? []).map(toPayment));
     setInvoices((i.data ?? []).map(toInvoice));
     setTaxes((tx.data ?? []).map(toTax));
+    // Permissions arrive as their own rows; stitched on here so a component
+    // asking "what may this department do" never has to join by hand.
+    const grants = (dperm.data ?? []) as { department_id: string; permission: string }[];
+    setDepartments(
+      (dep.data ?? []).map((row) => {
+        const department = toDepartment(row);
+        return {
+          ...department,
+          permissions: grants
+            .filter((g) => g.department_id === department.id)
+            .map((g) => g.permission as PermissionKey),
+        };
+      }),
+    );
     setEmployees((em.data ?? []).map(toEmployee));
     // Empty for anyone but the owner — that is RLS, not a failure.
     setEmployeePay((ep.data ?? []).map(toEmployeePay));
@@ -193,6 +213,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       payments,
       invoices,
       taxes,
+      departments,
       employees,
       employeePay,
       menuItems,
@@ -548,12 +569,86 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
       refresh: refetch,
 
+      saveDepartment: (department) => {
+        void (async () => {
+          const columns = {
+            name: department.name,
+            slug:
+              department.slug ||
+              (department.name ?? "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-"),
+            description: department.description ?? "",
+            designations: department.designations ?? [],
+            sort_order: department.sortOrder ?? 0,
+            active: department.active ?? true,
+          };
+
+          const { data, error } = department.id
+            ? await supabase.from("departments").update(columns).eq("id", department.id).select().single()
+            : await supabase.from("departments").insert(columns).select().single();
+          if (report(error, "Could not save the department")) return;
+
+          // Permissions are rows, so a change is a replace: delete what is no
+          // longer granted, insert what newly is. Doing it as a wholesale
+          // delete-then-insert would briefly leave a department with none,
+          // and RLS reads it live.
+          const id = (data as { id: string }).id;
+          if (department.permissions) {
+            const wanted = new Set(department.permissions);
+            const { data: existing } = await supabase
+              .from("department_permissions")
+              .select("permission")
+              .eq("department_id", id);
+            const held = new Set((existing ?? []).map((r) => (r as { permission: string }).permission));
+
+            const toAdd = [...wanted].filter((p) => !held.has(p));
+            const toDrop = [...held].filter((p) => !wanted.has(p as PermissionKey));
+
+            if (toAdd.length) {
+              const { error: addError } = await supabase
+                .from("department_permissions")
+                .insert(toAdd.map((permission) => ({ department_id: id, permission })));
+              if (report(addError, "Could not grant those permissions")) return;
+            }
+            if (toDrop.length) {
+              const { error: dropError } = await supabase
+                .from("department_permissions")
+                .delete()
+                .eq("department_id", id)
+                .in("permission", toDrop);
+              if (report(dropError, "Could not remove those permissions")) return;
+            }
+          }
+          await refetch();
+        })();
+      },
+
+      deleteDepartment: (id) => {
+        void (async () => {
+          const { error } = await supabase.from("departments").delete().eq("id", id);
+          if (report(error, "Could not remove the department")) return;
+          await refetch();
+        })();
+      },
+
+      updateOwnName: (name) => {
+        void (async () => {
+          const { data: auth } = await supabase.auth.getUser();
+          if (!auth.user) return;
+          const { error } = await supabase
+            .from("profiles")
+            .update({ full_name: name.trim() })
+            .eq("id", auth.user.id);
+          if (report(error, "Could not change your name")) return;
+          await refetch();
+        })();
+      },
+
       saveEmployee: (employee) => {
         void (async () => {
           const columns: Record<string, unknown> = {
             full_name: employee.fullName,
             designation: employee.designation ?? "",
-            team: employee.team ?? null,
+            department_id: employee.departmentId ?? null,
             phone: employee.phone ?? "",
             email: (employee.email ?? "").trim().toLowerCase(),
             date_of_joining: employee.dateOfJoining || null,
@@ -668,7 +763,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       },
     };
   }, [
-    villas, customers, bookings, payments, invoices, taxes, employees, employeePay, menuItems,
+    villas, customers, bookings, payments, invoices, taxes, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
   ]);
 

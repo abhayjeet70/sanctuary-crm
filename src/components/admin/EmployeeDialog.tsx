@@ -19,30 +19,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useEmployeePay, useMockData } from "@/hooks/useData";
+import { useDepartments, useEmployeePay, useMockData } from "@/hooks/useData";
 import { useShowsFinancials } from "@/services/session";
 import { cleanPhone, isPhone } from "@/lib/format";
 import { titleCase } from "@/lib/status";
-import type { Employee, EmployeeStatus, EmploymentType, Team } from "@/types";
+import type { Employee, EmployeeStatus, EmploymentType } from "@/types";
 
-const TEAMS: Team[] = ["housekeeping", "kitchen", "maintenance", "manager"];
 const TYPES: EmploymentType[] = ["full_time", "part_time", "contract", "seasonal"];
 const STATUSES: EmployeeStatus[] = ["active", "on_leave", "left"];
 const NO_TEAM = "none";
 
-/** Common titles, so the desk types fewer of them. Free text underneath. */
-const SUGGESTED = [
-  "Villa attendant",
-  "Housekeeping supervisor",
-  "Chef de partie",
-  "Sous chef",
-  "Kitchen assistant",
-  "Front desk executive",
-  "Maintenance technician",
-  "Gardener",
-  "Driver",
-  "Operations manager",
-];
+/** Plain words for the permission keys, for the line under the picker. */
+const PERMISSION_WORDS: Record<string, string> = {
+  "requests.work": "work their requests",
+  "requests.all": "see every request",
+  "kitchen.work": "work kitchen orders",
+  "bookings.view": "view bookings",
+  "guests.view": "view guest records",
+};
 
 /**
  * Add or edit an employee.
@@ -60,13 +54,18 @@ export function EmployeeDialog({
   onClose: () => void;
 }) {
   const { saveEmployee, savePay } = useMockData();
+  const departments = useDepartments().filter(
+    // A retired department stays visible on whoever is already in it, so an
+    // existing record does not silently change department on the next save.
+    (d) => d.active || d.id === employee?.departmentId,
+  );
   const pay = useEmployeePay(employee?.id);
   const showsPay = useShowsFinancials();
 
   const [form, setForm] = useState({
     fullName: employee?.fullName ?? "",
     designation: employee?.designation ?? "",
-    team: employee?.team ?? (NO_TEAM as string),
+    departmentId: employee?.departmentId ?? NO_TEAM,
     phone: employee?.phone ?? "",
     email: employee?.email ?? "",
     dateOfJoining: employee?.dateOfJoining ?? "",
@@ -79,6 +78,8 @@ export function EmployeeDialog({
     notes: employee?.notes ?? "",
     salary: pay ? String(pay.monthlySalary) : "",
   });
+
+  const chosen = departments.find((d) => d.id === form.departmentId);
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -97,7 +98,7 @@ export function EmployeeDialog({
       id: employee?.id,
       fullName: form.fullName.trim(),
       designation: form.designation.trim(),
-      team: form.team === NO_TEAM ? undefined : (form.team as Team),
+      departmentId: form.departmentId === NO_TEAM ? undefined : form.departmentId,
       phone: form.phone.trim(),
       email: form.email.trim(),
       dateOfJoining: form.dateOfJoining || undefined,
@@ -154,22 +155,39 @@ export function EmployeeDialog({
                   onChange={(e) => set("designation", e.target.value)}
                   placeholder="Villa attendant"
                 />
+                {/* The titles the owner listed against this department. */}
                 <datalist id="designation-suggestions">
-                  {SUGGESTED.map((title) => (
+                  {(chosen?.designations ?? []).map((title) => (
                     <option key={title} value={title} />
                   ))}
                 </datalist>
               </Field>
-              <Field label="Team" htmlFor="emp-team" hint="Decides the queue they see">
-                <Select value={form.team} onValueChange={(v) => set("team", v)}>
+              <Field
+                label="Department"
+                htmlFor="emp-team"
+                hint={
+                  chosen
+                    ? chosen.permissions.length > 0
+                      ? `They will be able to: ${chosen.permissions
+                          .map((p) => PERMISSION_WORDS[p] ?? p)
+                          .join(", ")}.`
+                      : "This department has no permissions yet — set them in Departments."
+                    : "Departments are set up in Settings → Departments."
+                }
+              >
+                <Select
+                  value={form.departmentId}
+                  onValueChange={(v) => set("departmentId", v)}
+                >
                   <SelectTrigger id="emp-team">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NO_TEAM}>No portal access</SelectItem>
-                    {TEAMS.map((team) => (
-                      <SelectItem key={team} value={team}>
-                        {titleCase(team)}
+                    <SelectItem value={NO_TEAM}>No department</SelectItem>
+                    {departments.map((department) => (
+                      <SelectItem key={department.id} value={department.id}>
+                        {department.name}
+                        {!department.active && " (retired)"}
                       </SelectItem>
                     ))}
                   </SelectContent>

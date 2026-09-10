@@ -40,6 +40,7 @@ const ROUTES = [
   "/admin/requests",
   "/admin/feedback",
   "/admin/invoices",
+  "/admin/reports",
   "/admin/employees",
   "/admin/settings",
   "/guest",
@@ -182,6 +183,7 @@ for (const role of ["admin", "staff", "guest"] as const) {
   const cases: [string, string][] = [
     // Employee management and the payment decision are the owner's alone.
     ["/admin/employees", "Add employee"],
+    ["/admin/reports", "Collected"],
     ["/admin/payments", "Approve"],
     ["/admin/invoices", "Total billed"],
     ["/admin/invoices", "Still outstanding"],

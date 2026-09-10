@@ -5,7 +5,7 @@ import { ChefHat, ClipboardList, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, Eyebrow, Logo, StatCard, StatusBadge } from "@/components/common";
 import { ResolveRequestDialog } from "@/components/admin/ResolveRequestDialog";
-import { useFoodOrderViews, useMockData, useRequestViews } from "@/hooks/useData";
+import { useDepartment, useFoodOrderViews, useMockData, useRequestViews } from "@/hooks/useData";
 import { FOOD_PIPELINE, foodOrderStatus, requestPriority, requestStatus, titleCase } from "@/lib/status";
 import { formatTime, money } from "@/lib/format";
 import { useSession } from "@/services/session";
@@ -36,12 +36,20 @@ export default function StaffQueuePage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [finishing, setFinishing] = useState<GuestRequest | null>(null);
 
-  const isKitchen = session?.team === "kitchen";
+  // What they may do comes from their department now, not a hardcoded team.
+  const department = useDepartment(session?.departmentId);
+  const may = (key: string) => session?.permissions?.includes(key as never) ?? false;
+  const isKitchen = may("kitchen.work");
 
   // RLS already scopes what arrives here to this team, but the page must not
   // depend on that: a policy is the boundary, not the filter. "Jobs for you"
   // has to mean it whatever the server sends.
-  const mine = requests.filter((r) => !session?.team || r.request.assignedTo === session.team);
+  const mine = requests.filter(
+    (r) =>
+      may("requests.all") ||
+      !session?.departmentId ||
+      r.request.departmentId === session.departmentId,
+  );
 
   const open = mine.filter(
     (r) => r.request.status !== "completed" && r.request.status !== "rejected",
@@ -63,7 +71,7 @@ export default function StaffQueuePage() {
           <Logo variant="onDark" size="h-11" />
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-gold/15 px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-200 uppercase ring-1 ring-gold/30">
-              {titleCase(session?.team ?? "staff")}
+              {department?.name ?? titleCase(session?.team ?? "staff")}
             </span>
             <Button
               variant="ghost"

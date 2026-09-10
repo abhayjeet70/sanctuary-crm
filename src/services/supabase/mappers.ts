@@ -17,6 +17,7 @@ import type {
   MenuItem,
   Payment,
   PropertySettings,
+  Department,
   Employee,
   EmployeePay,
   Tax,
@@ -208,6 +209,7 @@ export const toGuestRequest = (row: unknown): GuestRequest => {
     description: x.description,
     priority: x.priority,
     status: x.status,
+    departmentId: x.department_id ?? undefined,
     assignedTo: x.assigned_to ?? undefined,
     assignedUser: x.assigned_user ?? undefined,
     acknowledgedAt: x.acknowledged_at ?? undefined,
@@ -344,6 +346,21 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   signatoryName: "signatory_name",
 };
 
+export const toDepartment = (row: unknown): Department => {
+  const x = r(row);
+  return {
+    id: x.id,
+    name: x.name,
+    slug: x.slug,
+    description: x.description ?? "",
+    designations: x.designations ?? [],
+    sortOrder: x.sort_order ?? 0,
+    active: x.active,
+    // Filled in by the provider, which reads the permission rows separately.
+    permissions: [],
+  };
+};
+
 export const toEmployee = (row: unknown): Employee => {
   const x = r(row);
   return {
@@ -351,6 +368,7 @@ export const toEmployee = (row: unknown): Employee => {
     employeeCode: x.employee_code,
     fullName: x.full_name,
     designation: x.designation ?? "",
+    departmentId: x.department_id ?? undefined,
     team: x.team ?? undefined,
     phone: x.phone ?? "",
     email: x.email ?? "",
