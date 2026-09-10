@@ -644,3 +644,54 @@ caught a wrong expectation of mine before it caught anything else.
    role today; a `bookings.move` permission would be the proper fix.
 8. **No rota.** "On shift" lists who is active on the roster, not who is
    working this afternoon. Shifts and hours are not modelled.
+
+---
+
+## 11. Round eleven — demo data visibility toggle
+
+### What was built
+
+A **Demo Data** tab in Admin Settings (`/admin/settings`) with a single toggle
+switch. Flipping it off hides all seeded sample records across every screen;
+flipping it back on restores them instantly. Nothing is deleted from the
+database.
+
+**Why a toggle instead of a delete button.** A delete would be irreversible and
+would break any link or bookmark pointing at a seeded record. A toggle costs
+nothing and can be undone in one click — the correct tool for "I'm showing
+this to a client and don't want sample stays cluttering the dashboard".
+
+### How demo records are identified
+
+Seed bookings have references `HOS-1001` → `HOS-1020`. The code compares the
+numeric part of each booking's `reference` against a threshold of `1025`
+(giving a buffer for any test rows created during development). A booking at
+or below that number is considered demo; everything above is real.
+
+Derived from demo booking IDs:
+
+- **Customers** — those whose *every* booking is a demo booking are also
+  hidden; a customer who has one demo stay and one real stay remains visible.
+- **Payments, invoices, food orders, requests, feedback** — filtered by
+  `booking_id` membership in the demo set.
+- **Waitlist entries** — filtered by `customer_id` membership in the demo
+  customer set.
+- **Activity and notifications** — not filtered (they carry no reliable
+  booking reference and are low-stakes to show).
+
+No schema change. No migration. No Supabase write of any kind.
+
+### Persistence
+
+Stored in `localStorage` as `sanctuary-demo-data-visible` (default: `true`).
+Survives page reloads. Per-browser — different staff on different machines are
+unaffected by each other's choice.
+
+### Files changed
+
+| File | Change |
+|---|---|
+| `src/services/mock/MockDataProvider.tsx` | `demoDataVisible: true` stub; `setDemoDataVisible` no-op (offline harness is all demo anyway) |
+| `src/services/supabase/SupabaseDataProvider.tsx` | `demoDataVisible` state initialised from localStorage; `isDemoRef()` identifies seed references; filtered views derived before the value memo; `setDemoDataVisible` writes back to localStorage |
+| `src/hooks/useData.ts` | `useDemoData()` convenience hook |
+| `src/pages/admin/SettingsPage.tsx` | "Demo Data" tab added; `DemoDataSection` component — toggle switch, status pill, live count grid, "How it works" explainer |

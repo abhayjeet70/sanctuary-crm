@@ -117,7 +117,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
   /** Returns true when a booking reference belongs to the seed data set. */
   const isDemoRef = (reference: string) => {
-    const m = reference.match(/^HOS-(\.+)$/) ?? reference.match(/^HOS-(\d+)$/);
+    const m = reference.match(/^HOS-(\d+)$/);
     if (!m) return false;
     return parseInt(m[1], 10) <= DEMO_REF_THRESHOLD;
   };
