@@ -112,23 +112,20 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
                       onClick={onNavigate}
                       className={({ isActive }) =>
                         cn(
-                          "group relative flex items-center gap-2.5 rounded-lg py-1.5 pr-2 pl-3 text-[0.8125rem] transition-colors",
+                          "group relative flex items-center gap-2.5 rounded-lg py-1.5 pr-2 pl-3 text-[0.8125rem] transition-all duration-150",
                           isActive
-                            ? "bg-white/[0.07] text-sand"
-                            : "text-sand/55 hover:bg-white/[0.04] hover:text-sand/90",
+                            ? "bg-gold/[0.09] text-sand ring-1 ring-gold/20"
+                            : "text-sand/55 hover:bg-white/[0.05] hover:text-sand/90",
                         )
                       }
                     >
                       {({ isActive }) => (
                         <>
-                          {/* A rail with its own rounded ends, inset from the
-                              edge. An inset box-shadow follows the corner
-                              curve and leaves a stray hook of brass showing
-                              past the rounding. */}
+                          {/* Gold accent rail — wider + taller when active */}
                           {isActive && (
                             <span
                               aria-hidden
-                              className="absolute top-1/2 left-0.5 h-4 w-0.5 -translate-y-1/2 rounded-full bg-gold"
+                              className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-gold"
                             />
                           )}
                           <Icon
