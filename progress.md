@@ -773,10 +773,33 @@ password field is in the markup *underneath* the reel.
 139 smoke checks green, six of them new and specific to the reel. `test`,
 `viz` and `build` all pass.
 
-### Standing gap added
+### The film, encoded
 
-- **The welcome film is 7.4 MB.** It is `preload="auto"` and only ever fetched
-  once per session, and nothing waits on it — but on a hotel's own patchy
-  uplink most visitors will see the poster and never the film. It wants a pass
-  through ffmpeg: 1280px wide, H.264 CRF 28, no audio track, which should land
-  it near 1 MB. A WebM sibling in a `<source>` list would be better again.
+The delivered file was **7.4 MB for eight seconds** — 720p at 7583 kb/s, which
+is roughly eight times the bitrate that resolution needs, plus an AAC track
+nobody will ever hear (the reel is muted by design).
+
+Re-encoded to **1.0 MB — 7.5x smaller**:
+
+```
+ffmpeg -i source.mp4 -an   -c:v libx264 -crf 32 -preset slow -profile:v high -pix_fmt yuv420p   -movflags +faststart welcome.mp4
+```
+
+- `-an` drops the audio stream outright rather than muting it.
+- `-movflags +faststart` moves the `moov` atom to the front, so the browser can
+  begin playing on the first bytes instead of waiting for the whole file.
+  Verified, not assumed: `moov` at byte 36, `mdat` at 3127.
+- CRF 32 rather than 28 because the reel plays at 55% opacity under two
+  gradient washes and a vignette. 28 gave 1.9 MB for quality nobody can see
+  through that.
+- No resize: the source was already 1280x720.
+
+**No WebM sibling.** VP9 was tried and only reached 740 KB at CRF 52 — a
+260 KB saving on a file fetched once per session, at a quality level that
+could not be verified here, in exchange for a second asset and a `<source>`
+list. H.264 plays everywhere including iOS Safari. Not worth it.
+
+ffmpeg is not installed on this machine and GitHub's asset CDN is unreachable
+from it, so `ffmpeg-static` fails; `@ffmpeg-installer/ffmpeg` ships its binary
+through the npm registry itself and works. Installed with `--no-save` and
+removed afterwards — `package.json` never saw it.
