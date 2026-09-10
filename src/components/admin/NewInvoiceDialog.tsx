@@ -68,7 +68,7 @@ export function NewInvoiceDialog({ onClose }: { onClose: () => void }) {
             <>
               <Label className="mb-2 block">Stay</Label>
               <ul
-                className="max-h-80 space-y-2 overflow-y-auto pr-1"
+                className="scrollbar-slim max-h-80 space-y-2 overflow-y-auto pr-1"
                 role="radiogroup"
                 aria-label="Bookings without an invoice"
               >

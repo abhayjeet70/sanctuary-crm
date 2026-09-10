@@ -145,7 +145,7 @@ export default function InvoicesPage() {
           list. Printing from here prints the invoice, not the page. */}
       {viewing && (
         <Dialog open onOpenChange={(open) => !open && setViewing(null)}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+          <DialogContent className="scrollbar-slim max-h-[90vh] overflow-y-auto sm:max-w-3xl">
             <DialogHeader className="print:hidden">
               <DialogTitle className="flex items-center justify-between gap-3">
                 {rows.find((r) => r.invoice.id === viewing)?.invoice.number}

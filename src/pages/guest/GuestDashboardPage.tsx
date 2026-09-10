@@ -20,7 +20,7 @@ import { Eyebrow, Logo, StatusBadge } from "@/components/common";
 import { collage, photo } from "@/lib/assets";
 import { useGuestStay } from "@/hooks/useGuest";
 import { bookingStatus, foodOrderStatus, paymentStatus } from "@/lib/status";
-import { formatDate, formatDateRange, money, nightsBetween } from "@/lib/format";
+import { formatDate, money, nightsBetween } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
 import { useSession } from "@/services/session";
 
@@ -361,7 +361,7 @@ export default function GuestDashboardPage() {
                 Good stays become great memories.
               </p>
               <div className="ml-auto opacity-80">
-                <Logo variant="mark" size="h-8" />
+                <Logo variant="onDark" size="h-8" />
               </div>
             </div>
           </div>

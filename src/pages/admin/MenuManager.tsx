@@ -210,7 +210,7 @@ export function MenuManager() {
 
       {/* ------------------------------------------------------------ editor */}
       <Dialog open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="scrollbar-slim max-h-[90vh] overflow-y-auto p-6 sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Edit dish" : "Add a dish"}</DialogTitle>
             <DialogDescription>

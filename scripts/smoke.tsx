@@ -239,4 +239,51 @@ for (const role of ["admin", "staff", "guest"] as const) {
 }
 
 console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes render");
-process.exit(failed ? 1 : 0);
+/* The sidebar describes whoever is signed in. It used to say "Owner" to
+ * everybody — including a manager, which is simply untrue, and the one line on
+ * screen a person would take at face value about their own access. */
+{
+  const sidebar = (role: "admin" | "manager") =>
+    renderToString(
+      <SessionContext.Provider
+        value={{
+          session: { role, name: role === "admin" ? "Anjali Rao" : "Vikram Nair" },
+          loading: false,
+          signIn: async () => ({ error: null }),
+          signOut: () => {},
+        } as never}
+      >
+        <TooltipProvider>
+          <MockDataProvider>
+            <MemoryRouter initialEntries={["/admin/dashboard"]}>
+              <AppRoutes />
+            </MemoryRouter>
+          </MockDataProvider>
+        </TooltipProvider>
+      </SessionContext.Provider>,
+    );
+
+  const owner = sidebar("admin");
+  const manager = sidebar("manager");
+
+  const checks: [string, boolean][] = [
+    ["the owner is called Owner", owner.includes(">Owner<")],
+    ["a manager is not called Owner", !manager.includes(">Owner<")],
+    ["a manager is called Manager", manager.includes(">Manager<")],
+    ["the nav is grouped", ["Today", "Property", "Business"].every((g) => owner.includes(">" + g + "<"))],
+    ["the active item carries its brass rail", /bg-gold[^"]*"/.test(owner) && owner.includes("-translate-y-1/2")],
+    ["the scroll region is not the platform default", owner.includes("scrollbar-slim")],
+  ];
+
+  for (const [what, passed] of checks) {
+    if (passed) {
+      console.log("  ok   " + what);
+    } else {
+      failed++;
+      console.error("  FAIL " + what);
+    }
+  }
+}
+
+const exitCode = failed ? 1 : 0;
+process.exit(exitCode);

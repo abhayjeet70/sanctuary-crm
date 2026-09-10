@@ -125,7 +125,7 @@ export function EmployeeDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="scrollbar-slim max-h-[90vh] overflow-y-auto p-6 sm:max-w-2xl">
         <form onSubmit={submit}>
           <DialogHeader>
             <DialogTitle>

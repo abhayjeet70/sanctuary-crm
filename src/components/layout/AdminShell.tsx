@@ -121,11 +121,14 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
                     >
                       {({ isActive }) => (
                         <>
-                          {/* Gold accent rail — wider + taller when active */}
+                          {/* The brass rail. Rounded ends and inset by 2px:
+                              a square bar flush at left-0 sits proud of the
+                              pill's own corner radius, which reads as a
+                              rendering slip rather than an accent. */}
                           {isActive && (
                             <span
                               aria-hidden
-                              className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 bg-gold"
+                              className="absolute top-1/2 left-0.5 h-5 w-[3px] -translate-y-1/2 rounded-full bg-gold"
                             />
                           )}
                           <Icon

@@ -147,7 +147,11 @@ export function CustomerDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      {/* Two columns and real padding. At the primitive's default `max-w-sm`
+          every field was full width in a 384px well, which turned a nine-field
+          form into a scrolling column — the same information, three times the
+          height, and a scrollbar down the middle of it. */}
+      <DialogContent className="scrollbar-slim max-h-[90vh] overflow-y-auto p-6 sm:max-w-2xl">
         <form onSubmit={submit}>
           <DialogHeader>
             <DialogTitle>{customer ? `Edit ${customer.name}` : "Add a guest"}</DialogTitle>
@@ -157,22 +161,21 @@ export function CustomerDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="mt-5 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="guest-name">Name</Label>
-              <Input
-                id="guest-name"
-                required
-                autoComplete="off"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Pooja Bothra"
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="guest-phone">Phone</Label>
+          <div className="mt-6 space-y-6">
+            <Section title="Who they are">
+              <div className="sm:col-span-2">
+                <Field label="Name" htmlFor="guest-name">
+                  <Input
+                    id="guest-name"
+                    required
+                    autoComplete="off"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder="Pooja Bothra"
+                  />
+                </Field>
+              </div>
+              <Field label="Phone" htmlFor="guest-phone">
                 <Input
                   id="guest-phone"
                   type="tel"
@@ -180,9 +183,8 @@ export function CustomerDialog({
                   onChange={(event) => setPhone(cleanPhone(event.target.value))}
                   placeholder="+91 98450 12345"
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="guest-email">Email</Label>
+              </Field>
+              <Field label="Email" htmlFor="guest-email">
                 <Input
                   id="guest-email"
                   type="email"
@@ -190,132 +192,129 @@ export function CustomerDialog({
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="name@example.com"
                 />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="guest-city">City</Label>
-              <Input
-                id="guest-city"
-                value={city}
-                onChange={(event) => setCity(event.target.value)}
-                placeholder="Bengaluru"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="guest-preferences">Preferences</Label>
-              <Input
-                id="guest-preferences"
-                value={preferences}
-                onChange={(event) => setPreferences(event.target.value)}
-                placeholder="Vegetarian, early breakfast, poolside dining"
-              />
-              <p className="text-xs text-stone-600">Separate them with commas.</p>
-            </div>
+              </Field>
+              <Field label="City" htmlFor="guest-city">
+                <Input
+                  id="guest-city"
+                  value={city}
+                  onChange={(event) => setCity(event.target.value)}
+                  placeholder="Bengaluru"
+                />
+              </Field>
+              <Field
+                label="Preferences"
+                htmlFor="guest-preferences"
+                hint="Separate them with commas."
+              >
+                <Input
+                  id="guest-preferences"
+                  value={preferences}
+                  onChange={(event) => setPreferences(event.target.value)}
+                  placeholder="Vegetarian, early breakfast"
+                />
+              </Field>
+            </Section>
 
             {/* --------------------------------------------------- photo ID */}
-            <section className="rounded-xl bg-sand-200/50 p-4">
-              <p className="label-caps flex items-center gap-2 text-gold-700">
-                <ShieldCheck className="size-3.5" aria-hidden />
-                Government ID
-              </p>
-              <p className="mt-1.5 text-xs text-stone-600">
-                Taken at check-in. The scan is held in a private store and never
-                becomes a link — only management can open it.
-              </p>
-
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="guest-id-type">Type</Label>
-                  <Select value={idType} onValueChange={setIdType}>
-                    <SelectTrigger id="guest-id-type">
-                      <SelectValue placeholder="Not recorded" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NO_ID}>Not recorded</SelectItem>
-                      {ID_TYPES.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="guest-id-number">Number</Label>
-                  <Input
-                    id="guest-id-number"
-                    value={idNumber}
-                    autoComplete="off"
-                    onChange={(event) => setIdNumber(event.target.value)}
-                    placeholder="As printed on the document"
-                    disabled={idType === NO_ID}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-1.5">
-                <Label htmlFor="guest-id-file">Photograph of the ID</Label>
-                <input
-                  ref={fileInput}
-                  id="guest-id-file"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,application/pdf"
-                  className="sr-only"
-                  onChange={(event) => {
-                    void pickFile(event.target.files?.[0]);
-                    // Cleared so re-picking the same file still fires a change.
-                    event.target.value = "";
-                  }}
+            <Section
+              title="Government ID"
+              icon={<ShieldCheck className="size-3.5" aria-hidden />}
+              note="Taken at check-in. The scan is held in a private store and never becomes a link — only management can open it."
+            >
+              <Field label="Type" htmlFor="guest-id-type">
+                <Select value={idType} onValueChange={setIdType}>
+                  <SelectTrigger id="guest-id-type" className="w-full">
+                    <SelectValue placeholder="Not recorded" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_ID}>Not recorded</SelectItem>
+                    {ID_TYPES.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Number" htmlFor="guest-id-number">
+                <Input
+                  id="guest-id-number"
+                  value={idNumber}
+                  autoComplete="off"
+                  onChange={(event) => setIdNumber(event.target.value)}
+                  placeholder="As printed on the document"
+                  disabled={idType === NO_ID}
                 />
+              </Field>
 
-                {idImagePath ? (
-                  <div className="flex items-center gap-3 rounded-lg bg-white p-3 ring-1 ring-gold/15">
-                    {idPreview && !idPreview.includes(".pdf") ? (
-                      <img
-                        src={idPreview}
-                        alt={`ID document on file for ${name || "this guest"}`}
-                        className="size-14 shrink-0 rounded-md object-cover ring-1 ring-gold/20"
-                      />
-                    ) : (
-                      <FileCheck2 className="size-6 shrink-0 text-status-confirmed" aria-hidden />
-                    )}
-                    <p className="min-w-0 flex-1 text-sm text-ink">
-                      Attached
-                      <span className="block truncate text-xs text-stone-600">
-                        {idImagePath.split("/").pop()}
-                      </span>
-                    </p>
+              <div className="sm:col-span-2">
+                <Field
+                  label="Photograph of the ID"
+                  htmlFor="guest-id-file"
+                  hint="JPG, PNG, WebP or PDF, up to 5 MB."
+                >
+                  <input
+                    ref={fileInput}
+                    id="guest-id-file"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    className="sr-only"
+                    onChange={(event) => {
+                      void pickFile(event.target.files?.[0]);
+                      // Cleared so re-picking the same file still fires a change.
+                      event.target.value = "";
+                    }}
+                  />
+
+                  {idImagePath ? (
+                    <div className="flex items-center gap-3 rounded-lg bg-sand-200/60 p-2.5 ring-1 ring-gold/15">
+                      {idPreview && !idPreview.includes(".pdf") ? (
+                        <img
+                          src={idPreview}
+                          alt={`ID document on file for ${name || "this guest"}`}
+                          className="size-12 shrink-0 rounded-md object-cover ring-1 ring-gold/20"
+                        />
+                      ) : (
+                        <FileCheck2
+                          className="size-5 shrink-0 text-status-confirmed"
+                          aria-hidden
+                        />
+                      )}
+                      <p className="min-w-0 flex-1 text-sm text-ink">
+                        Attached
+                        <span className="block truncate text-xs text-stone-600">
+                          {idImagePath.split("/").pop()}
+                        </span>
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIdImagePath("")}
+                      >
+                        <X aria-hidden />
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIdImagePath("")}
+                      variant="outline"
+                      className="w-full"
+                      disabled={uploading}
+                      onClick={() => fileInput.current?.click()}
                     >
-                      <X aria-hidden />
-                      Remove
+                      {uploading ? (
+                        <Loader2 className="animate-spin" aria-hidden />
+                      ) : (
+                        <Upload aria-hidden />
+                      )}
+                      {uploading ? "Uploading…" : "Attach a photo or scan"}
                     </Button>
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    disabled={uploading}
-                    onClick={() => fileInput.current?.click()}
-                  >
-                    {uploading ? (
-                      <Loader2 className="animate-spin" aria-hidden />
-                    ) : (
-                      <Upload aria-hidden />
-                    )}
-                    {uploading ? "Uploading…" : "Attach a photo or scan"}
-                  </Button>
-                )}
-                <p className="text-xs text-stone-600">JPG, PNG, WebP or PDF, up to 5 MB.</p>
+                  )}
+                </Field>
               </div>
-            </section>
+            </Section>
 
             <div className="space-y-1.5">
               <Label htmlFor="guest-notes">Internal notes</Label>
@@ -338,5 +337,49 @@ export function CustomerDialog({
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Section({
+  title,
+  icon,
+  note,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  note?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <p className="label-caps flex items-center gap-2 text-gold-700">
+        {icon}
+        {title}
+      </p>
+      <hr className="rule-gold mt-2 mb-3" />
+      {note && <p className="mb-4 text-xs leading-relaxed text-stone-600">{note}</p>}
+      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    </section>
+  );
+}
+
+function Field({
+  label,
+  htmlFor,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={htmlFor}>{label}</Label>
+      {children}
+      {hint && <p className="text-xs text-stone-600">{hint}</p>}
+    </div>
   );
 }

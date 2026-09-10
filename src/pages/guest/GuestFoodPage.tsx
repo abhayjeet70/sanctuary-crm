@@ -153,7 +153,7 @@ export default function GuestFoodPage() {
               <SheetTitle>Your order</SheetTitle>
             </SheetHeader>
 
-            <div className="flex-1 overflow-y-auto px-4">
+            <div className="scrollbar-slim flex-1 overflow-y-auto px-4">
               {lines.length === 0 ? (
                 <EmptyState
                   icon={<ShoppingBag className="size-5" />}
