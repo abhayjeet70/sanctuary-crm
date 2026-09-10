@@ -4,8 +4,8 @@ import { Plus, Trash2, Users2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Eyebrow } from "@/components/common";
+import { JobTitlesEditor } from "@/components/admin/JobTitlesEditor";
 import { useDepartments, useEmployees, useMockData } from "@/hooks/useData";
 import { cn } from "@/lib/utils";
 import type { Department, PermissionKey } from "@/types";
@@ -146,9 +146,7 @@ function DepartmentCard({
   onSave: (d: Partial<Department> & { id?: string }) => void;
   onDelete: (id: string) => void;
 }) {
-  const [titles, setTitles] = useState(department.designations.join(", "));
   const [confirmRemove, setConfirmRemove] = useState(false);
-  const dirty = titles !== department.designations.join(", ");
 
   const toggle = (key: PermissionKey, on: boolean) =>
     onSave({
@@ -224,33 +222,13 @@ function DepartmentCard({
         </ul>
       </fieldset>
 
-      <div className="mt-5 space-y-1.5">
-        <Label htmlFor={`titles-${department.id}`}>Job titles</Label>
-        <Textarea
-          id={`titles-${department.id}`}
-          rows={2}
-          value={titles}
-          onChange={(event) => setTitles(event.target.value)}
-          placeholder="Villa attendant, Housekeeping supervisor"
+      <div className="mt-5">
+        <JobTitlesEditor
+          id={department.id}
+          slug={department.slug}
+          titles={department.designations}
+          onChange={(designations) => onSave({ ...department, designations })}
         />
-        <p className="text-xs text-stone-600">
-          Separated by commas. Offered when adding someone to this department.
-        </p>
-        {dirty && (
-          <Button
-            size="sm"
-            className="mt-2"
-            onClick={() => {
-              onSave({
-                ...department,
-                designations: titles.split(",").map((t) => t.trim()).filter(Boolean),
-              });
-              toast.success(`${department.name} job titles saved`);
-            }}
-          >
-            Save job titles
-          </Button>
-        )}
       </div>
 
       <div className="mt-5 flex justify-end">
