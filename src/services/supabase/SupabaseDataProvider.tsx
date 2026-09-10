@@ -447,22 +447,26 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         return { error: null };
       },
 
-      createRequest: (request) => {
-        void (async () => {
-          const { error } = await supabase.from("guest_requests").insert({
-            reference: request.reference,
-            booking_id: request.bookingId,
-            customer_id: request.customerId,
-            villa_id: request.villaId,
-            category: request.category,
-            description: request.description,
-            // Guests may only open at normal priority; RLS enforces it too.
-            priority: "normal",
-            status: "pending",
-          });
-          if (report(error, "Could not send the request")) return;
-          await refetch();
-        })();
+      createRequest: async (request) => {
+        const { error } = await supabase.from("guest_requests").insert({
+          reference: request.reference,
+          booking_id: request.bookingId,
+          customer_id: request.customerId,
+          villa_id: request.villaId,
+          category: request.category,
+          description: request.description,
+          // Guests may only open at normal priority; RLS enforces it too.
+          priority: "normal",
+          status: "pending",
+          // Left null on purpose: a trigger routes it to the right team after
+          // the insert is checked. A guest choosing their own team is exactly
+          // what the insert policy refuses.
+        });
+        if (report(error, "Could not send the request")) {
+          return { error: error?.message ?? "Could not send the request" };
+        }
+        await refetch();
+        return { error: null };
       },
 
       updateRequest: (id, patch) => {
@@ -481,19 +485,20 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
-      createFeedback: (entry) => {
-        void (async () => {
-          const { error } = await supabase.from("feedback").insert({
-            booking_id: entry.bookingId,
-            customer_id: entry.customerId,
-            villa_id: entry.villaId,
-            rating: entry.rating,
-            comment: entry.comment,
-            reviewed: false,
-          });
-          if (report(error, "Could not send your feedback")) return;
-          await refetch();
-        })();
+      createFeedback: async (entry) => {
+        const { error } = await supabase.from("feedback").insert({
+          booking_id: entry.bookingId,
+          customer_id: entry.customerId,
+          villa_id: entry.villaId,
+          rating: entry.rating,
+          comment: entry.comment,
+          reviewed: false,
+        });
+        if (report(error, "Could not send your feedback")) {
+          return { error: error?.message ?? "Could not send your feedback" };
+        }
+        await refetch();
+        return { error: null };
       },
 
       updateFeedback: (id, patch) => {

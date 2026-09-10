@@ -34,7 +34,7 @@ export default function GuestFeedbackPage() {
   };
   const blocked = Object.values(errors).some(Boolean);
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
     if (blocked) return;
@@ -51,16 +51,16 @@ export default function GuestFeedbackPage() {
       createdAt: new Date().toISOString(),
     };
 
-    window.setTimeout(() => {
-      createFeedback(entry);
-      setRating(0);
-      setComment("");
-      setSubmitted(false);
-      setSending(false);
-      toast.success("Thank you — that has reached us", {
-        description: "We read every one of these.",
-      });
-    }, 600);
+    const { error } = await createFeedback(entry);
+    setSending(false);
+    if (error) return;
+
+    setRating(0);
+    setComment("");
+    setSubmitted(false);
+    toast.success("Thank you — that has reached us", {
+      description: "We read every one of these.",
+    });
   };
 
   const shown = hover || rating;
@@ -76,7 +76,7 @@ export default function GuestFeedbackPage() {
       </header>
 
       <form
-        onSubmit={submit}
+        onSubmit={(event) => void submit(event)}
         noValidate
         className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15"
       >

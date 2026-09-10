@@ -43,7 +43,7 @@ export default function GuestRequestsPage() {
   };
   const blocked = Object.values(errors).some(Boolean);
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
     if (blocked || !category) return;
@@ -57,21 +57,23 @@ export default function GuestRequestsPage() {
       villaId: view.booking.villaId,
       category,
       description: description.trim(),
-      priority: category === "maintenance" ? "high" : "normal",
+      // Guests open at normal whatever the category; RLS refuses anything
+      // higher, and the desk raises it if the job warrants.
+      priority: "normal",
       status: "pending",
       createdAt: new Date().toISOString(),
     };
 
-    window.setTimeout(() => {
-      createRequest(request);
-      setCategory(null);
-      setDescription("");
-      setSubmitted(false);
-      setSending(false);
-      toast.success("Request sent", {
-        description: "Someone from the team will pick this up shortly.",
-      });
-    }, 600);
+    const { error } = await createRequest(request);
+    setSending(false);
+    if (error) return;
+
+    setCategory(null);
+    setDescription("");
+    setSubmitted(false);
+    toast.success("Request sent", {
+      description: "Someone from the team will pick this up shortly.",
+    });
   };
 
   return (
@@ -86,7 +88,7 @@ export default function GuestRequestsPage() {
       </header>
 
       <form
-        onSubmit={submit}
+        onSubmit={(event) => void submit(event)}
         noValidate
         className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-gold/15"
       >

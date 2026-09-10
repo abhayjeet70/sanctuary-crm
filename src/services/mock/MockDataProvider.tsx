@@ -84,9 +84,11 @@ export interface MockData {
   /** Resolves with the reason it was refused, so the page does not claim
    *  success for an order the kitchen never received. */
   createFoodOrder: (order: FoodOrder) => Promise<{ error: string | null }>;
-  createRequest: (request: GuestRequest) => void;
+  /** Resolves with the reason it was refused, so the page cannot claim to
+   *  have sent something the server rejected. */
+  createRequest: (request: GuestRequest) => Promise<{ error: string | null }>;
   updateRequest: (id: ID, patch: Partial<GuestRequest>) => void;
-  createFeedback: (entry: Feedback) => void;
+  createFeedback: (entry: Feedback) => Promise<{ error: string | null }>;
   updateFeedback: (id: ID, patch: Partial<Feedback>) => void;
   logActivity: (entityId: ID, kind: ActivityKind, title: string, detail?: string) => void;
   markNotificationsRead: () => void;
@@ -278,14 +280,16 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
         logActivity(order.bookingId, "food", "Kitchen order placed", order.reference);
         return { error: null };
       },
-      createRequest: (request) => {
+      createRequest: async (request) => {
         setRequests((prev) => [request, ...prev]);
         logActivity(request.bookingId, "request", "Guest request raised", request.description);
+        return { error: null };
       },
       updateRequest: (id, patch) => setRequests((prev) => patchById(prev, id, patch)),
-      createFeedback: (entry) => {
+      createFeedback: async (entry) => {
         setFeedback((prev) => [entry, ...prev]);
         logActivity(entry.bookingId, "feedback", "Feedback submitted", `${entry.rating} out of 5`);
+        return { error: null };
       },
       updateFeedback: (id, patch) => setFeedback((prev) => patchById(prev, id, patch)),
       logActivity,
