@@ -125,7 +125,7 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
                           {isActive && (
                             <span
                               aria-hidden
-                              className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-gold"
+                              className="absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 bg-gold"
                             />
                           )}
                           <Icon

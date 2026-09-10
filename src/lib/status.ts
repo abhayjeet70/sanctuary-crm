@@ -38,6 +38,16 @@ export const toneSolid: Record<Tone, string> = {
   completed: "bg-status-completed text-white",
 };
 
+/** Outlined variant, elegant on dark backgrounds. */
+export const toneOutline: Record<Tone, string> = {
+  pending: "border-status-pending text-status-pending bg-transparent",
+  uploaded: "border-status-uploaded text-status-uploaded bg-transparent",
+  confirmed: "border-status-confirmed text-status-confirmed bg-transparent",
+  inhouse: "border-status-inhouse text-status-inhouse bg-transparent",
+  cancelled: "border-status-cancelled text-status-cancelled bg-transparent",
+  completed: "border-status-completed text-status-completed bg-transparent",
+};
+
 interface Descriptor<T extends string> {
   label: string;
   tone: Tone;
