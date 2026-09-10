@@ -11,6 +11,7 @@ import {
   notifications as notificationSeed,
 } from "@/data/mocks/operations";
 import { payments as paymentSeed } from "@/data/mocks/payments";
+import { waitlist as waitlistSeed } from "@/data/mocks/waitlist";
 import { villas as villaSeed } from "@/data/mocks/villas";
 import { orderTotal, settledPaymentStatus } from "@/services/domain";
 import type {
@@ -36,6 +37,7 @@ import type {
   Tax,
   Villa,
   VillaMode,
+  WaitlistEntry,
 } from "@/types";
 
 /**
@@ -52,6 +54,8 @@ export interface MockData {
   villas: Villa[];
   customers: typeof customerSeed;
   bookings: Booking[];
+  /** Requests for dates already sold. Oldest first — position is this order. */
+  waitlist: WaitlistEntry[];
   payments: Payment[];
   invoices: Invoice[];
   menuItems: MenuItem[];
@@ -71,6 +75,14 @@ export interface MockData {
   /** `newGuest` is supplied when the booking is for someone with no customer
    *  record yet; the implementation creates both in one transaction. */
   createBooking: (booking: Booking, newGuest?: NewGuest) => void;
+  /** Put someone in the queue for dates that are already held. `newGuest` is
+   *  supplied when they have no customer record yet. */
+  joinWaitlist: (
+    entry: Omit<WaitlistEntry, "id" | "createdAt" | "status">,
+    newGuest?: NewGuest,
+  ) => Promise<{ error: string | null }>;
+  /** Offer, withdraw, or mark an entry converted. */
+  updateWaitlistEntry: (id: ID, patch: Partial<WaitlistEntry>) => void;
   approvePayment: (paymentId: ID) => void;
   rejectPayment: (paymentId: ID, reason: PaymentRejectionReason, note?: string) => void;
   addPayment: (payment: Payment) => void;
@@ -137,6 +149,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
   const [foodOrders, setFoodOrders] = useState<FoodOrder[]>(foodOrderSeed);
   const [requests, setRequests] = useState<GuestRequest[]>(requestSeed);
   const [feedback, setFeedback] = useState<Feedback[]>(feedbackSeed);
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(waitlistSeed);
   const [activity, setActivity] = useState<ActivityEvent[]>(activitySeed);
   const [notifications, setNotifications] = useState<AppNotification[]>(notificationSeed);
 
@@ -226,6 +239,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       villas,
       customers: customerSeed,
       bookings,
+      waitlist,
       payments,
       invoices: invoiceSeed,
       menuItems: menuSeed,
@@ -247,6 +261,20 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
         setBookings((prev) => [booking, ...prev]);
         logActivity(booking.id, "booking", "Booking created", `Source: ${booking.source}`);
       },
+      joinWaitlist: async (entry) => {
+        setWaitlist((prev) => [
+          ...prev,
+          {
+            ...entry,
+            id: `w-${Date.now()}`,
+            status: "waiting",
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        return { error: null };
+      },
+      updateWaitlistEntry: (id, patch) =>
+        setWaitlist((prev) => patchById(prev, id, patch)),
       approvePayment,
       rejectPayment,
       addPayment: (payment) => {
@@ -324,7 +352,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       deleteMenuItem: () => {},
     }),
     [
-      villas, bookings, payments, foodOrders, requests, feedback, activity, notifications,
+      villas, bookings, waitlist, payments, foodOrders, requests, feedback, activity, notifications,
       updateBooking, approvePayment, rejectPayment, logActivity,
     ],
   );

@@ -1,6 +1,12 @@
 import { useContext, useMemo } from "react";
 import { MockDataContext, type MockData } from "@/services/mock/MockDataProvider";
-import { bookingTotals, holdsInventory, orderTotal } from "@/services/domain";
+import {
+  bookingTotals,
+  holdsInventory,
+  orderTotal,
+  queuePosition,
+  waitlistOpenings,
+} from "@/services/domain";
 import type { Booking, Customer, ID, Villa } from "@/types";
 
 /**
@@ -91,6 +97,30 @@ export function useBookingViews(): BookingView[] {
 
 export function useBookingView(id: ID | undefined) {
   return useBookingViews().find((view) => view.booking.id === id);
+}
+
+/* ---------------------------------------------------------------- waitlist */
+
+export const useWaitlist = () => useMockData().waitlist;
+
+/** A waitlist entry joined to its guest and villa, with its place in the queue
+ *  and whether the dates it wants have since come free. */
+export function useWaitlistViews() {
+  const { waitlist, villas, customers, bookings } = useMockData();
+  return useMemo(() => {
+    const villaIds = villas.map((v) => v.id);
+    return waitlist.map((entry) => {
+      const openings = waitlistOpenings(entry, villaIds, bookings);
+      return {
+        entry,
+        customer: customers.find((c) => c.id === entry.customerId),
+        villa: villas.find((v) => v.id === entry.villaId),
+        position: queuePosition(entry, waitlist),
+        /** Villas that could take them today. Empty means still full. */
+        openings: villas.filter((v) => openings.includes(v.id)),
+      };
+    });
+  }, [waitlist, villas, customers, bookings]);
 }
 
 /* ----------------------------------------------------------------- payments */

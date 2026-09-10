@@ -49,6 +49,9 @@ export interface Villa {
 
 export type GuestType = "new" | "returning" | "vip" | "corporate";
 
+/** The photo IDs an Indian property is given at check-in. */
+export type GovtIdType = "aadhaar" | "passport" | "driving_licence" | "voter_id" | "pan" | "other";
+
 export interface Customer {
   id: ID;
   name: string;
@@ -58,6 +61,11 @@ export interface Customer {
   /** Decides CGST + SGST against IGST on the invoice. */
   state?: string;
   guestType: GuestType;
+  /** Photo ID taken at check-in. `idImagePath` is a path in the private
+   *  `guest-ids` bucket, never a URL — it needs signing to be shown. */
+  idType?: GovtIdType;
+  idNumber?: string;
+  idImagePath?: string;
   preferences: string[];
   notes?: string;
   createdAt: ISODateTime;
@@ -121,6 +129,11 @@ export interface Booking {
   bookingMode: VillaMode;
   checkIn: ISODate;
   checkOut: ISODate;
+  /** Agreed arrival time, `HH:MM`. Undefined means the villa's standard time —
+   *  which is different from "nobody asked", and is why it is not defaulted. */
+  checkInTime?: string;
+  /** Agreed departure time, `HH:MM`. Undefined means the villa's standard. */
+  checkOutTime?: string;
   adults: number;
   children: number;
   source: BookingSource;
@@ -130,6 +143,36 @@ export interface Booking {
   amountPaid: number;
   specialRequests?: string;
   internalNotes?: string;
+  createdAt: ISODateTime;
+}
+
+/* ---------------------------------------------------------------- waitlist */
+
+export type WaitlistStatus = "waiting" | "offered" | "converted" | "expired" | "cancelled";
+
+/**
+ * Someone who wanted dates that were already sold.
+ *
+ * There is no `position` field on purpose. Position is `created_at` order,
+ * derived on read — a stored number has to be rewritten for every row behind
+ * one that leaves, and a renumbering that half-runs is a queue nobody trusts.
+ */
+export interface WaitlistEntry {
+  id: ID;
+  customerId: ID;
+  /** Undefined means any villa — they want the dates more than the house. */
+  villaId?: ID;
+  checkIn: ISODate;
+  checkOut: ISODate;
+  adults: number;
+  children: number;
+  source: BookingSource;
+  note: string;
+  status: WaitlistStatus;
+  /** When the desk offered them the freed dates. */
+  offeredAt?: ISODateTime;
+  /** The stay it became, once it became one. */
+  bookingId?: ID;
   createdAt: ISODateTime;
 }
 
@@ -374,7 +417,9 @@ export type PermissionKey =
   | "requests.all"
   | "kitchen.work"
   | "bookings.view"
-  | "guests.view";
+  | "guests.view"
+  | "frontdesk.view"
+  | "waitlist.manage";
 
 export interface Department {
   id: ID;

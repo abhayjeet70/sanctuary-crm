@@ -38,6 +38,38 @@ export function bookingTotals(charges: BookingCharges, amountPaid: number): Book
   };
 }
 
+/** When a stay actually starts and ends, and whether that was arranged. */
+export interface StayTimes {
+  arrival: string;
+  departure: string;
+  /** True when the guest asked for something other than the villa's hours —
+   *  which is the only reason the desk needs to look twice at a row. */
+  arrivalArranged: boolean;
+  departureArranged: boolean;
+}
+
+/**
+ * The agreed times, falling back to the villa's standard hours.
+ *
+ * A booking stores null when nothing was arranged, so this is where "no
+ * special arrangement" becomes "14:00" — deliberately not at write time, where
+ * it would erase the difference between a guest who asked for a late arrival
+ * and one who never mentioned it.
+ */
+export function stayTimes(
+  booking: { checkInTime?: string; checkOutTime?: string },
+  villa?: { checkInTime: string; checkOutTime: string },
+): StayTimes {
+  const standardIn = villa?.checkInTime ?? "14:00";
+  const standardOut = villa?.checkOutTime ?? "11:00";
+  return {
+    arrival: booking.checkInTime || standardIn,
+    departure: booking.checkOutTime || standardOut,
+    arrivalArranged: Boolean(booking.checkInTime) && booking.checkInTime !== standardIn,
+    departureArranged: Boolean(booking.checkOutTime) && booking.checkOutTime !== standardOut,
+  };
+}
+
 /** Two half-open date ranges overlap when each starts before the other ends. */
 export const datesOverlap = (
   aStart: string,
@@ -74,6 +106,58 @@ export function findConflicts(query: ConflictQuery, all: Booking[]): Booking[] {
     if (queryIsWhole || otherIsWhole) return true;
     return query.roomIds.some((id) => other.roomIds.includes(id));
   });
+}
+
+/* ---------------------------------------------------------------- waitlist */
+
+/** The shape the waitlist maths needs. Kept structural so the tests can pass
+ *  a literal rather than build a whole entry. */
+export interface WaitedFor {
+  id: string;
+  villaId?: string;
+  checkIn: string;
+  checkOut: string;
+  status: string;
+  createdAt: string;
+}
+
+/**
+ * Which villas could now take this entry.
+ *
+ * Deliberately asks whether the villa is free as a *whole*. A waitlist entry
+ * carries no room selection — "I want Villa Maaya on the 3rd" is a request for
+ * the house — so in split mode this is conservative: it will not claim an
+ * opening because one bedroom happens to be free. Reception can still sell
+ * that room; the queue just will not promise it.
+ */
+export function waitlistOpenings(
+  entry: WaitedFor,
+  villaIds: string[],
+  bookings: Booking[],
+): string[] {
+  const candidates = entry.villaId ? [entry.villaId] : villaIds;
+  return candidates.filter(
+    (villaId) =>
+      findConflicts(
+        { villaId, roomIds: [], checkIn: entry.checkIn, checkOut: entry.checkOut },
+        bookings,
+      ).length === 0,
+  );
+}
+
+/**
+ * Where someone stands in the queue, 1-based.
+ *
+ * Counted against everyone still waiting for the same villa, oldest first —
+ * first come, first served, with nothing stored that could drift. An entry
+ * that is no longer waiting has no position and returns 0.
+ */
+export function queuePosition(entry: WaitedFor, all: WaitedFor[]): number {
+  if (entry.status !== "waiting") return 0;
+  const sameQueue = all
+    .filter((other) => other.status === "waiting" && other.villaId === entry.villaId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return sameQueue.findIndex((other) => other.id === entry.id) + 1;
 }
 
 /** Bookings sitting on a villa (or one of its rooms) on a given date. */

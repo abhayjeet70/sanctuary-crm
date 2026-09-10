@@ -19,6 +19,7 @@ import {
   toPayment,
   toTax,
   toVilla,
+  toWaitlistEntry,
 } from "./mappers";
 import { useSession } from "@/services/session";
 import type {
@@ -38,6 +39,7 @@ import type {
   PropertySettings,
   Tax,
   Villa,
+  WaitlistEntry,
 } from "@/types";
 
 /**
@@ -67,6 +69,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [villas, setVillas] = useState<Villa[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [taxes, setTaxes] = useState<Tax[]>([]);
@@ -85,11 +88,13 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const refetch = useCallback(async () => {
     if (!session) return;
 
-    const [v, ra, c, b, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
+    const [v, ra, c, b, wl, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
       supabase.from("villas").select(SELECTS.villas).order("name"),
       supabase.from("room_availability").select("*"),
       supabase.from("customers").select("*").order("name"),
       supabase.from("bookings").select(SELECTS.bookings).order("check_in", { ascending: false }),
+      // Oldest first. That order is the queue — see the waitlist table comment.
+      supabase.from("waitlist").select("*").order("created_at", { ascending: true }),
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
       supabase.from("taxes").select("*").order("sort_order"),
@@ -108,7 +113,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     // A guest legitimately gets empty arrays for admin-only tables — that is RLS
     // working, not a failure, so only real errors are surfaced.
-    const firstError = [v, ra, c, b, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
+    const firstError = [v, ra, c, b, wl, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
       (res) => res.error,
     )?.error;
     if (firstError && firstError.code !== "PGRST116") {
@@ -118,6 +123,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     setVillas(withDerivedRoomStatus((v.data ?? []).map(toVilla), ra.data ?? []));
     setCustomers((c.data ?? []).map(toCustomer));
     setBookings((b.data ?? []).map(toBooking));
+    setWaitlist((wl.data ?? []).map(toWaitlistEntry));
     setPayments((p.data ?? []).map(toPayment));
     setInvoices((i.data ?? []).map(toInvoice));
     setTaxes((tx.data ?? []).map(toTax));
@@ -177,6 +183,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     for (const table of [
       "notifications",
       "bookings",
+      "waitlist",
       "payments",
       "invoices",
       "food_orders",
@@ -210,6 +217,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       villas,
       customers,
       bookings,
+      waitlist,
       payments,
       invoices,
       taxes,
@@ -226,6 +234,24 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
       updateBooking: (id, patch) => {
         void (async () => {
+          // Agreed arrival and departure times. Written first and on their own
+          // because they touch no inventory and no money — and because the
+          // edit branch below returns early, which would otherwise drop them
+          // whenever the dates or the charges changed in the same save.
+          if (patch.checkInTime !== undefined || patch.checkOutTime !== undefined) {
+            const times: Record<string, unknown> = {};
+            // Empty string means "back to the villa's standard", which is null
+            // in the column — not 00:00.
+            if (patch.checkInTime !== undefined) {
+              times.check_in_time = patch.checkInTime || null;
+            }
+            if (patch.checkOutTime !== undefined) {
+              times.check_out_time = patch.checkOutTime || null;
+            }
+            const { error } = await supabase.from("bookings").update(times).eq("id", id);
+            if (report(error, "Could not save the arrival time")) return;
+          }
+
           // A lifecycle move.
           if (patch.status) {
             const { error } = await supabase.rpc("set_booking_status", {
@@ -326,6 +352,61 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      // The queue for dates that are already sold.
+      //
+      // Two writes rather than an RPC when the guest is new, and deliberately
+      // so: a customer record for someone who rang up is a lead, not garbage.
+      // If the second insert fails they are still worth having — which is the
+      // opposite of a half-made booking, and why that one needs a transaction
+      // and this one does not.
+      joinWaitlist: async (entry, newGuest) => {
+        let customerId = entry.customerId;
+
+        if (newGuest) {
+          const { data, error } = await supabase
+            .from("customers")
+            .insert({
+              name: newGuest.name,
+              phone: newGuest.phone,
+              email: newGuest.email,
+              preferences: [],
+            })
+            .select("id")
+            .single();
+          if (error) return { error: error.message };
+          customerId = (data as { id: string }).id;
+        }
+
+        const { error } = await supabase.from("waitlist").insert({
+          customer_id: customerId,
+          villa_id: entry.villaId ?? null,
+          check_in: entry.checkIn,
+          check_out: entry.checkOut,
+          adults: entry.adults,
+          children: entry.children,
+          source: entry.source,
+          note: entry.note,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      updateWaitlistEntry: (id, patch) => {
+        void (async () => {
+          const columns: Record<string, unknown> = {};
+          if (patch.status !== undefined) columns.status = patch.status;
+          if (patch.offeredAt !== undefined) columns.offered_at = patch.offeredAt;
+          if (patch.bookingId !== undefined) columns.booking_id = patch.bookingId ?? null;
+          if (patch.note !== undefined) columns.note = patch.note;
+          if (Object.keys(columns).length === 0) return;
+
+          const { error } = await supabase.from("waitlist").update(columns).eq("id", id);
+          if (report(error, "Could not update the waiting list")) return;
+          await refetch();
+        })();
+      },
+
       approvePayment: (paymentId) => {
         void (async () => {
           const { error } = await supabase.rpc("approve_payment", { p_payment_id: paymentId });
@@ -402,6 +483,11 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             city: customer.city ?? "",
             preferences: customer.preferences ?? [],
             notes: customer.notes || null,
+            // Nulls, not empty strings: "no ID on file" is a real state and
+            // the column is nullable so it can say so.
+            id_type: customer.idType ?? null,
+            id_number: customer.idNumber ?? null,
+            id_image_path: customer.idImagePath ?? null,
           };
           const { error } = customer.id
             ? await supabase.from("customers").update(columns).eq("id", customer.id)
@@ -763,7 +849,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       },
     };
   }, [
-    villas, customers, bookings, payments, invoices, taxes, departments, employees, employeePay, menuItems,
+    villas, customers, bookings, waitlist, payments, invoices, taxes, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
   ]);
 

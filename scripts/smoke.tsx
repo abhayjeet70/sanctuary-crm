@@ -23,6 +23,7 @@ const ROUTES = [
   "/design-system",
   "/admin",
   "/admin/dashboard",
+  "/admin/frontdesk",
   "/admin/bookings",
   "/admin/bookings/new",
   "/admin/bookings/b-1001",

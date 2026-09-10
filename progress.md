@@ -14,6 +14,7 @@ npm run test    # domain rules (money, tax, KPIs, CSV) — node assert, no frame
 npm run smoke   # renders every route × 3 roles offline; catches blank pages
 npm run viz     # renders the charts and statements; catches NaN in a report
 npm run build   # tsc -b && vite build
+npm run lint    # oxlint — warnings only at present
 
 # SQL checks — each wrapped in a transaction that rolls back, so they are
 # safe against the live database.
@@ -516,6 +517,113 @@ rules and the ink/gold bars stay brand. Three slots pass all-pairs (ΔE 9.2 CVD,
 (9.1 / 19.6). Three sit under 3:1 on white, so every chart direct-labels its
 values — identity never rests on colour.
 
+## 10. Round ten — the front desk
+
+Six things, five of them reception's and one of them the roster's.
+
+### Small fixes
+
+- **Download an uploaded receipt.** The receipts bucket is private, so a link
+  to it is a signed URL that expires in minutes. Saving rather than opening
+  needs a `Content-Disposition` header, which only the server can set — so the
+  viewer asks Storage for a second, download-flavoured signature. `<a download>`
+  alone does nothing across an origin. The button sits on `ReceiptViewer`, so
+  the payment queue and the booking record both got it from one change.
+- **Agreed check-in and check-out times.** New columns on `bookings`, and
+  **nullable on purpose**: null means "the villa's standard hours". Defaulting
+  every row to 14:00 would erase the difference between a guest who asked for a
+  late arrival and one who never mentioned it — which is precisely the
+  difference the front desk needs. `stayTimes()` resolves the fallback on read,
+  and flags an arrangement so the desk knows which rows to look at twice.
+- **Department before designation** on the employee form. The job titles come
+  *from* the department, so asking for the title first was asking a question
+  whose options were not on screen yet.
+
+### Guest identification
+
+`customers` gained `id_type`, `id_number` and `id_image_path`; the scan itself
+goes to a new private `guest-ids` bucket, management-only in both directions.
+Reception photographs the ID while adding someone who has no id yet, so the
+upload is keyed on a folder minted client-side rather than the customer id —
+the bucket policy carries the authorisation, not the path. A guest arriving with
+no ID on file is flagged on the arrivals list.
+
+### Front desk
+
+A new department (`front_desk`) and a new screen at `/admin/frontdesk`, in four
+parts: **Today** (arrivals and departures sorted by the time they are actually
+expected, with balance due and missing-ID flags), the **room rack**, **On
+shift**, and the **waiting list**.
+
+The rack is deliberately *today* rather than a date range — the Calendar
+already draws the tape chart, and the desk's question is "what is free this
+minute", which a fortnight-wide grid answers badly. A whole-villa house is one
+cell because that is how it sells; a split house is four. A whole-villa hold
+greys every bedroom under it, or reception sells a room twice.
+
+Reception reaches the same screen from `/staff` when their department holds
+`frontdesk.view`. Checking guests in stays with management, and the page does
+not offer the button to anyone RLS would refuse — offering an action that fails
+teaches people to distrust every other button on the page.
+
+**"On shift" is honestly named.** There is no rota and no hours in the system,
+so it says "on the books", not "on the clock". Free means no open job assigned
+to that person; a request only routed to a department is shown against the
+department, because nobody has picked it up yet.
+
+### Waiting list
+
+`waitlist` — a request for dates that were already sold. First come, first
+served on `created_at`.
+
+**Position is not a column.** It is arrival order among everyone still waiting
+for the same villa, computed on read. A stored number has to be rewritten for
+every row behind one that leaves, and a renumbering that half-runs is a queue
+nobody trusts again.
+
+- The booking form offers it instead of a dead end: when the conflict check
+  refuses the dates, "add them to the waiting list" reuses everything already
+  typed.
+- A row says on its own face when the dates it wants have come free, rather
+  than announcing it somewhere the desk has to go and look.
+- Cancelling a stay fires a trigger that counts who overlaps those dates and
+  tells the desk. Overlap, not equality — someone waiting for the 3rd to the
+  6th cares about a cancellation of the 1st to the 5th.
+- Converting goes through the booking form, which is where the conflict check,
+  the rate and the tax already live.
+- `waitlistOpenings()` asks whether the villa is free *as a whole*, which is
+  conservative in split mode: it will not promise a queue a single bedroom.
+
+Two new grantable permissions — `frontdesk.view` and `waitlist.manage` — both
+ordinary rows, so the owner can move them to another department without a
+migration.
+
+### Verification (round ten)
+
+`supabase/tests/front_desk_and_waitlist.sql`, nine checks, all passing:
+
+| Check | Result |
+|---|---|
+| A guest joins the queue | ok |
+| A guest queues as somebody else | refused |
+| A guest withdraws and rejoins | ok |
+| A guest marks themselves converted | refused |
+| Rows one guest can see | 1 of 2 |
+| Housekeeping sees the waiting list | 0 rows |
+| …after granting `waitlist.manage` | 2 rows |
+| Cancelling tells the desk | notified |
+| Re-saving the same status | still one notification |
+
+The fourth is the one that matters, and it was **proved to bite**: with the
+`status in ('waiting','cancelled')` clause removed from the policy's WITH
+CHECK, the same update succeeds. The refusal is the policy doing its job, not
+an accident of something else.
+
+`domain.test.ts` gained the time fallback, the queue and the openings —
+including the half-open boundary (a check-out on the 5th does not occupy the
+5th) and the case where the person in front withdraws. One of those assertions
+caught a wrong expectation of mine before it caught anything else.
+
 ### Standing gaps
 
 1. **Transactional email** — needs SMTP or a Resend key. Custom SMTP was tried
@@ -531,3 +639,8 @@ values — identity never rests on colour.
 5. **Point-in-time recovery** — not enabled.
 6. **Credential rotation** — the database password and personal access token
    have been pasted in chat and should be rotated.
+7. **Reception cannot check guests in.** Moving a stay through its lifecycle is
+   management's write. A receptionist who needs it has to be given a manager
+   role today; a `bookings.move` permission would be the proper fix.
+8. **No rota.** "On shift" lists who is active on the roster, not who is
+   working this afternoon. Shifts and hours are not modelled.

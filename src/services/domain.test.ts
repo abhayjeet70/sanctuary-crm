@@ -23,6 +23,9 @@ import {
   revenueBreakdown,
   efficiencyRatios,
   leadTimeBuckets,
+  stayTimes,
+  waitlistOpenings,
+  queuePosition,
   type RevenueRow,
   type TaxComponent,
 } from "./domain";
@@ -317,5 +320,104 @@ const lead = leadTimeBuckets([
   { checkIn: "2026-09-11", createdAt: "2026-09-10T10:00:00Z", status: "cancelled" },
 ]);
 assert.deepEqual(lead.map((b) => b.stays), [1, 1, 1, 1], "a cancelled stay is not demand");
+
+/* --- agreed arrival and departure times ---------------------------------- */
+const villaHours = { checkInTime: "14:00", checkOutTime: "11:00" };
+
+// Nothing arranged: the villa's hours, and nothing flagged for the desk.
+const usual = stayTimes({}, villaHours);
+assert.equal(usual.arrival, "14:00");
+assert.equal(usual.departure, "11:00");
+assert.equal(usual.arrivalArranged, false);
+assert.equal(usual.departureArranged, false);
+
+// A late arrival is the whole reason the column exists.
+const late = stayTimes({ checkInTime: "22:30" }, villaHours);
+assert.equal(late.arrival, "22:30");
+assert.equal(late.arrivalArranged, true, "a late arrival must be flagged");
+assert.equal(late.departureArranged, false, "one arrangement is not two");
+
+// Storing the villa's own time is not an arrangement — it is the default
+// written down. Flagging it would put every row in the "look twice" column.
+assert.equal(stayTimes({ checkInTime: "14:00" }, villaHours).arrivalArranged, false);
+
+// No villa: the industry defaults, not a crash.
+assert.equal(stayTimes({}).arrival, "14:00");
+
+/* --- the waiting list ---------------------------------------------------- */
+const held = booking({
+  id: "b-held",
+  villaId: "v-maaya",
+  checkIn: "2026-10-01",
+  checkOut: "2026-10-05",
+  status: "confirmed",
+});
+
+const wants = (over: Partial<Parameters<typeof queuePosition>[0]> = {}) => ({
+  id: "w1",
+  villaId: "v-maaya",
+  checkIn: "2026-10-02",
+  checkOut: "2026-10-04",
+  status: "waiting",
+  createdAt: "2026-09-01T10:00:00+05:30",
+  ...over,
+});
+
+const everyVilla = ["v-maaya", "v-praana"];
+
+// Held dates: no opening on the villa they asked for.
+assert.deepEqual(waitlistOpenings(wants(), everyVilla, [held]), []);
+
+// Cancelled: the whole point of the queue.
+assert.deepEqual(
+  waitlistOpenings(wants(), everyVilla, [booking({ ...held, status: "cancelled" })]),
+  ["v-maaya"],
+  "a cancelled stay releases the dates",
+);
+
+// No villa preference: the other house counts as an opening even while the
+// first is held.
+assert.deepEqual(
+  waitlistOpenings(wants({ villaId: undefined }), everyVilla, [held]),
+  ["v-praana"],
+);
+
+// Touching, not overlapping. Checking out on the 5th leaves the 5th free.
+assert.deepEqual(
+  waitlistOpenings(
+    wants({ checkIn: "2026-10-05", checkOut: "2026-10-07" }),
+    everyVilla,
+    [held],
+  ),
+  // Only v-maaya: the entry named a villa, so only that villa is a candidate.
+  ["v-maaya"],
+  "a check-out date is not an occupied night",
+);
+
+/* Position is arrival order among everyone still waiting for the same villa. */
+const queue = [
+  wants({ id: "w-first", createdAt: "2026-09-01T09:00:00+05:30" }),
+  wants({ id: "w-second", createdAt: "2026-09-02T09:00:00+05:30" }),
+  // A different villa is a different queue — it must not push anyone down.
+  wants({ id: "w-other", villaId: "v-praana", createdAt: "2026-09-01T08:00:00+05:30" }),
+  // Withdrawn, so no position and no effect on the others.
+  wants({ id: "w-gone", status: "cancelled", createdAt: "2026-08-30T09:00:00+05:30" }),
+];
+
+assert.equal(queuePosition(queue[0], queue), 1);
+assert.equal(queuePosition(queue[1], queue), 2, "second in, second served");
+assert.equal(queuePosition(queue[2], queue), 1, "another villa is another queue");
+assert.equal(queuePosition(queue[3], queue), 0, "a withdrawn entry holds no place");
+
+// Withdrawing the person in front moves everyone behind up, with nothing
+// stored that could disagree.
+const afterWithdrawal = queue.map((w) =>
+  w.id === "w-first" ? { ...w, status: "cancelled" } : w,
+);
+assert.equal(
+  queuePosition(afterWithdrawal[1], afterWithdrawal),
+  1,
+  "second becomes first when the first withdraws",
+);
 
 console.log("domain.ts — all checks passed");

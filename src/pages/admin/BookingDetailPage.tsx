@@ -47,6 +47,7 @@ import {
 } from "@/hooks/useData";
 import { bookingSource, bookingStatus, paymentStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateTime, money, nightsBetween } from "@/lib/format";
+import { stayTimes } from "@/services/domain";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/services/session";
 import type { BookingStatus, PaymentRejectionReason } from "@/types";
@@ -104,6 +105,8 @@ export default function BookingDetailPage() {
   const status = bookingStatus.get(booking.status);
   const pay = paymentStatus.get(booking.paymentStatus);
   const nights = nightsBetween(booking.checkIn, booking.checkOut);
+  // What was agreed, or the villa's standard hours where nothing was.
+  const times = stayTimes(booking, villa);
   const rejecting = payments.find((p) => p.id === rejectingId);
 
   const move = (to: BookingStatus, label: string) => {
@@ -241,10 +244,16 @@ export default function BookingDetailPage() {
                 </Detail>
                 <Detail label="Source">{bookingSource[booking.source]}</Detail>
                 <Detail label="Check-in">
-                  {formatDate(booking.checkIn)} from {villa?.checkInTime}
+                  {formatDate(booking.checkIn)} from {times.arrival}
+                  {times.arrivalArranged && (
+                    <span className="ml-1.5 text-xs text-clay">arranged</span>
+                  )}
                 </Detail>
                 <Detail label="Check-out">
-                  {formatDate(booking.checkOut)} by {villa?.checkOutTime}
+                  {formatDate(booking.checkOut)} by {times.departure}
+                  {times.departureArranged && (
+                    <span className="ml-1.5 text-xs text-clay">arranged</span>
+                  )}
                 </Detail>
                 <Detail label="Nights">{nights}</Detail>
                 <Detail label="Adults">{booking.adults}</Detail>

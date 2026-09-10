@@ -42,6 +42,17 @@ const PERMISSIONS: { key: PermissionKey; label: string; detail: string }[] = [
     label: "View guest records",
     detail: "Names, phone numbers and email addresses of guests.",
   },
+  {
+    key: "frontdesk.view",
+    label: "Open the front desk",
+    detail:
+      "Arrivals, departures, the room rack and who is free. Checking guests in stays with management.",
+  },
+  {
+    key: "waitlist.manage",
+    label: "Run the waiting list",
+    detail: "Add people to it, offer them freed dates, and take them off.",
+  },
 ];
 
 const BLANK = { name: "", description: "" };

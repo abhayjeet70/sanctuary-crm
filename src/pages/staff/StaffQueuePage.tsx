@@ -9,6 +9,7 @@ import { useDepartment, useFoodOrderViews, useMockData, useRequestViews } from "
 import { FOOD_PIPELINE, foodOrderStatus, requestPriority, requestStatus, titleCase } from "@/lib/status";
 import { formatTime, money } from "@/lib/format";
 import { useSession } from "@/services/session";
+import FrontDeskPage from "@/pages/admin/FrontDeskPage";
 import { cn } from "@/lib/utils";
 import type { GuestRequest, RequestStatus } from "@/types";
 
@@ -40,6 +41,7 @@ export default function StaffQueuePage() {
   const department = useDepartment(session?.departmentId);
   const may = (key: string) => session?.permissions?.includes(key as never) ?? false;
   const isKitchen = may("kitchen.work");
+  const isFrontDesk = may("frontdesk.view");
 
   // RLS already scopes what arrives here to this team, but the page must not
   // depend on that: a policy is the boundary, not the filter. "Jobs for you"
@@ -86,6 +88,15 @@ export default function StaffQueuePage() {
         </div>
       </header>
 
+      {/* Reception's job is not a queue of jobs — it is the desk. Same shell,
+          same sign-out, a different screen inside it. Nothing here is hidden
+          from them that they could act on: the desk page itself declines to
+          offer check-in to anyone RLS would refuse. */}
+      {isFrontDesk ? (
+        <main className="mx-auto max-w-6xl space-y-6 p-5">
+          <FrontDeskPage />
+        </main>
+      ) : (
       <main className="mx-auto max-w-3xl space-y-6 p-5">
         <div>
           <Eyebrow className="text-gold-700">{session?.name}</Eyebrow>
@@ -217,6 +228,7 @@ export default function StaffQueuePage() {
           </section>
         )}
       </main>
+      )}
     </div>
   );
 }

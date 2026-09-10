@@ -5,6 +5,7 @@ import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import DesignSystemPage from "@/pages/DesignSystemPage";
 import { AdminShell } from "@/components/layout/AdminShell";
 import DashboardPage from "@/pages/admin/DashboardPage";
+import FrontDeskPage from "@/pages/admin/FrontDeskPage";
 import BookingsListPage from "@/pages/admin/BookingsListPage";
 import BookingDetailPage from "@/pages/admin/BookingDetailPage";
 import NewBookingPage from "@/pages/admin/NewBookingPage";
@@ -118,6 +119,7 @@ export function AppRoutes() {
       >
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="frontdesk" element={<FrontDeskPage />} />
         <Route path="bookings" element={<BookingsListPage />} />
         <Route path="bookings/new" element={<NewBookingPage />} />
         <Route path="bookings/:id" element={<BookingDetailPage />} />

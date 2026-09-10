@@ -19,6 +19,7 @@ import {
   X,
   Building2,
   BookOpen,
+  ConciergeBell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -34,6 +35,7 @@ import { initials } from "@/lib/format";
 
 const NAV = [
   { to: "/admin/dashboard", label: "Dashboard", icon: Home },
+  { to: "/admin/frontdesk", label: "Front desk", icon: ConciergeBell },
   { to: "/admin/bookings", label: "Bookings", icon: BookOpen },
   { to: "/admin/payments", label: "Payments", icon: Wallet, badge: "payments" },
   { to: "/admin/calendar", label: "Calendar", icon: CalendarDays },

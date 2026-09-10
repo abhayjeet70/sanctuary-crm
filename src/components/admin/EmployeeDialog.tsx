@@ -36,6 +36,8 @@ const PERMISSION_WORDS: Record<string, string> = {
   "kitchen.work": "work kitchen orders",
   "bookings.view": "view bookings",
   "guests.view": "view guest records",
+  "frontdesk.view": "open the front desk",
+  "waitlist.manage": "run the waiting list",
 };
 
 /**
@@ -147,21 +149,6 @@ export function EmployeeDialog({
                   placeholder="Lakshmi Devi"
                 />
               </Field>
-              <Field label="Designation" htmlFor="emp-designation">
-                <Input
-                  id="emp-designation"
-                  list="designation-suggestions"
-                  value={form.designation}
-                  onChange={(e) => set("designation", e.target.value)}
-                  placeholder="Villa attendant"
-                />
-                {/* The titles the owner listed against this department. */}
-                <datalist id="designation-suggestions">
-                  {(chosen?.designations ?? []).map((title) => (
-                    <option key={title} value={title} />
-                  ))}
-                </datalist>
-              </Field>
               <Field
                 label="Department"
                 htmlFor="emp-team"
@@ -192,6 +179,29 @@ export function EmployeeDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </Field>
+              <Field
+                label="Designation"
+                htmlFor="emp-designation"
+                hint={
+                  chosen
+                    ? `Titles ${chosen.name} uses. Type anything else to add one.`
+                    : "Pick a department first and its job titles are offered here."
+                }
+              >
+                <Input
+                  id="emp-designation"
+                  list="designation-suggestions"
+                  value={form.designation}
+                  onChange={(e) => set("designation", e.target.value)}
+                  placeholder={chosen?.designations[0] ?? "Villa attendant"}
+                />
+                {/* The titles the owner listed against this department. */}
+                <datalist id="designation-suggestions">
+                  {(chosen?.designations ?? []).map((title) => (
+                    <option key={title} value={title} />
+                  ))}
+                </datalist>
               </Field>
               <Field label="Employment" htmlFor="emp-type">
                 <Select

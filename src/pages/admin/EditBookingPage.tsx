@@ -45,6 +45,10 @@ export default function EditBookingPage() {
     roomIds: view?.booking.roomIds ?? [],
     checkIn: view?.booking.checkIn ?? "",
     checkOut: view?.booking.checkOut ?? "",
+    // Empty means the villa's standard hours, which is what the column holds
+    // as null — so an empty field here saves as "no special arrangement".
+    checkInTime: view?.booking.checkInTime ?? "",
+    checkOutTime: view?.booking.checkOutTime ?? "",
     adults: String(view?.booking.adults ?? 2),
     children: String(view?.booking.children ?? 0),
     source: (view?.booking.source ?? "phone") as BookingSource,
@@ -177,6 +181,8 @@ export default function EditBookingPage() {
       bookingMode: isSplit ? "split" : "whole",
       checkIn: form.checkIn,
       checkOut: form.checkOut,
+      checkInTime: form.checkInTime,
+      checkOutTime: form.checkOutTime,
       adults: Number(form.adults),
       children: Number(form.children),
       source: form.source,
@@ -307,6 +313,20 @@ export default function EditBookingPage() {
               <Field label="Children" htmlFor="children">
                 <Input id="children" type="number" min={0} value={form.children} onChange={(e) => set("children", e.target.value)} />
               </Field>
+              <Field
+                label="Arrival time"
+                htmlFor="check-in-time"
+                hint={`Blank keeps the villa's ${villa?.checkInTime ?? "14:00"}`}
+              >
+                <Input id="check-in-time" type="time" value={form.checkInTime} onChange={(e) => set("checkInTime", e.target.value)} />
+              </Field>
+              <Field
+                label="Departure time"
+                htmlFor="check-out-time"
+                hint={`Blank keeps the villa's ${villa?.checkOutTime ?? "11:00"}`}
+              >
+                <Input id="check-out-time" type="time" value={form.checkOutTime} onChange={(e) => set("checkOutTime", e.target.value)} />
+              </Field>
             </div>
 
             {submitted && errors.dates && (
@@ -436,21 +456,25 @@ function Field({
   label,
   htmlFor,
   error,
+  hint,
   children,
 }: {
   label: string;
   htmlFor?: string;
   error?: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
-      {error && (
+      {error ? (
         <p role="alert" className="text-xs text-status-cancelled">
           {error}
         </p>
+      ) : (
+        hint && <p className="text-xs text-stone-600">{hint}</p>
       )}
     </div>
   );

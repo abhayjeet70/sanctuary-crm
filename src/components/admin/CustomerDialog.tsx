@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { FileCheck2, Loader2, ShieldCheck, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +13,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCustomers, useMockData } from "@/hooks/useData";
 import { cleanPhone, isPhone } from "@/lib/format";
-import type { Customer } from "@/types";
+import { resolveGuestIdUrl, uploadGuestId } from "@/services/supabase/receipts";
+import type { Customer, GovtIdType } from "@/types";
+
+const NO_ID = "none";
+
+/** What reception is actually handed across the desk. */
+const ID_TYPES: { value: GovtIdType; label: string }[] = [
+  { value: "aadhaar", label: "Aadhaar" },
+  { value: "passport", label: "Passport" },
+  { value: "driving_licence", label: "Driving licence" },
+  { value: "voter_id", label: "Voter ID" },
+  { value: "pan", label: "PAN" },
+  { value: "other", label: "Other" },
+];
 
 /**
  * Add a guest, or edit one.
@@ -40,6 +61,44 @@ export function CustomerDialog({
   const [city, setCity] = useState(customer?.city ?? "");
   const [preferences, setPreferences] = useState((customer?.preferences ?? []).join(", "));
   const [notes, setNotes] = useState(customer?.notes ?? "");
+
+  const [idType, setIdType] = useState<string>(customer?.idType ?? NO_ID);
+  const [idNumber, setIdNumber] = useState(customer?.idNumber ?? "");
+  const [idImagePath, setIdImagePath] = useState(customer?.idImagePath ?? "");
+  const [idPreview, setIdPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  // A new guest has no id to key the scan on, so one is minted for the folder.
+  // The bucket is management-only in both directions, so that first path
+  // segment carries no authorisation meaning — it only keeps files apart.
+  const folder = useRef(customer?.id ?? crypto.randomUUID());
+
+  // The bucket is private: a stored path needs signing before it can be shown.
+  useEffect(() => {
+    let active = true;
+    if (!idImagePath) {
+      setIdPreview(null);
+      return;
+    }
+    void resolveGuestIdUrl(idImagePath).then((url) => {
+      if (active) setIdPreview(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [idImagePath]);
+
+  const pickFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    const { path, error } = await uploadGuestId(folder.current, file);
+    setUploading(false);
+    if (error || !path) {
+      return toast.error("Could not upload that", { description: error ?? undefined });
+    }
+    setIdImagePath(path);
+    toast.success("ID photo attached");
+  };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -78,6 +137,9 @@ export function CustomerDialog({
         .map((p) => p.trim())
         .filter(Boolean),
       notes: notes.trim() || undefined,
+      idType: idType === NO_ID ? undefined : (idType as GovtIdType),
+      idNumber: idNumber.trim() || undefined,
+      idImagePath: idImagePath || undefined,
     });
     toast.success(customer ? `${name.trim()} updated` : `${name.trim()} added`);
     onClose();
@@ -85,7 +147,7 @@ export function CustomerDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <form onSubmit={submit}>
           <DialogHeader>
             <DialogTitle>{customer ? `Edit ${customer.name}` : "Add a guest"}</DialogTitle>
@@ -151,6 +213,109 @@ export function CustomerDialog({
               />
               <p className="text-xs text-stone-600">Separate them with commas.</p>
             </div>
+
+            {/* --------------------------------------------------- photo ID */}
+            <section className="rounded-xl bg-sand-200/50 p-4">
+              <p className="label-caps flex items-center gap-2 text-gold-700">
+                <ShieldCheck className="size-3.5" aria-hidden />
+                Government ID
+              </p>
+              <p className="mt-1.5 text-xs text-stone-600">
+                Taken at check-in. The scan is held in a private store and never
+                becomes a link — only management can open it.
+              </p>
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="guest-id-type">Type</Label>
+                  <Select value={idType} onValueChange={setIdType}>
+                    <SelectTrigger id="guest-id-type">
+                      <SelectValue placeholder="Not recorded" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_ID}>Not recorded</SelectItem>
+                      {ID_TYPES.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="guest-id-number">Number</Label>
+                  <Input
+                    id="guest-id-number"
+                    value={idNumber}
+                    autoComplete="off"
+                    onChange={(event) => setIdNumber(event.target.value)}
+                    placeholder="As printed on the document"
+                    disabled={idType === NO_ID}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-1.5">
+                <Label htmlFor="guest-id-file">Photograph of the ID</Label>
+                <input
+                  ref={fileInput}
+                  id="guest-id-file"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  className="sr-only"
+                  onChange={(event) => {
+                    void pickFile(event.target.files?.[0]);
+                    // Cleared so re-picking the same file still fires a change.
+                    event.target.value = "";
+                  }}
+                />
+
+                {idImagePath ? (
+                  <div className="flex items-center gap-3 rounded-lg bg-white p-3 ring-1 ring-gold/15">
+                    {idPreview && !idPreview.includes(".pdf") ? (
+                      <img
+                        src={idPreview}
+                        alt={`ID document on file for ${name || "this guest"}`}
+                        className="size-14 shrink-0 rounded-md object-cover ring-1 ring-gold/20"
+                      />
+                    ) : (
+                      <FileCheck2 className="size-6 shrink-0 text-status-confirmed" aria-hidden />
+                    )}
+                    <p className="min-w-0 flex-1 text-sm text-ink">
+                      Attached
+                      <span className="block truncate text-xs text-stone-600">
+                        {idImagePath.split("/").pop()}
+                      </span>
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIdImagePath("")}
+                    >
+                      <X aria-hidden />
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={uploading}
+                    onClick={() => fileInput.current?.click()}
+                  >
+                    {uploading ? (
+                      <Loader2 className="animate-spin" aria-hidden />
+                    ) : (
+                      <Upload aria-hidden />
+                    )}
+                    {uploading ? "Uploading…" : "Attach a photo or scan"}
+                  </Button>
+                )}
+                <p className="text-xs text-stone-600">JPG, PNG, WebP or PDF, up to 5 MB.</p>
+              </div>
+            </section>
 
             <div className="space-y-1.5">
               <Label htmlFor="guest-notes">Internal notes</Label>

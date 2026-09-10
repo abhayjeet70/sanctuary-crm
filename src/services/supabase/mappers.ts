@@ -23,6 +23,7 @@ import type {
   Tax,
   Room,
   Villa,
+  WaitlistEntry,
 } from "@/types";
 
 type Row = Record<string, never>;
@@ -78,6 +79,9 @@ export const toCustomer = (row: unknown): Customer => {
     city: x.city,
     state: x.state || undefined,
     guestType: x.guest_type,
+    idType: x.id_type || undefined,
+    idNumber: x.id_number || undefined,
+    idImagePath: x.id_image_path || undefined,
     preferences: x.preferences ?? [],
     notes: x.notes ?? undefined,
     createdAt: x.created_at,
@@ -100,6 +104,9 @@ export const toBooking = (row: unknown): Booking => {
     bookingMode: x.booking_mode,
     checkIn: x.check_in,
     checkOut: x.check_out,
+    // Postgres hands back `HH:MM:SS`; the form and every label want `HH:MM`.
+    checkInTime: x.check_in_time ? String(x.check_in_time).slice(0, 5) : undefined,
+    checkOutTime: x.check_out_time ? String(x.check_out_time).slice(0, 5) : undefined,
     adults: x.adults,
     children: x.children,
     source: x.source,
@@ -393,6 +400,25 @@ export const toEmployeePay = (row: unknown): EmployeePay => {
     monthlySalary: x.monthly_salary ?? 0,
     effectiveFrom: x.effective_from,
     note: x.note ?? "",
+  };
+};
+
+export const toWaitlistEntry = (row: unknown): WaitlistEntry => {
+  const x = r(row);
+  return {
+    id: x.id,
+    customerId: x.customer_id,
+    villaId: x.villa_id ?? undefined,
+    checkIn: x.check_in,
+    checkOut: x.check_out,
+    adults: x.adults,
+    children: x.children,
+    source: x.source,
+    note: x.note ?? "",
+    status: x.status,
+    offeredAt: x.offered_at ?? undefined,
+    bookingId: x.booking_id ?? undefined,
+    createdAt: x.created_at,
   };
 };
 

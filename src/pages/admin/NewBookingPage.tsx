@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { AlertTriangle, ArrowLeft, Check } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, Loader2, ListPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,8 @@ interface FormState {
   roomIds: string[];
   checkIn: string;
   checkOut: string;
+  checkInTime: string;
+  checkOutTime: string;
   adults: string;
   children: string;
   customerId: string;
@@ -48,18 +50,30 @@ export default function NewBookingPage() {
   const villas = useVillas();
   const customers = useCustomers();
   const bookings = useBookings();
-  const { createBooking, today } = useMockData();
+  const { createBooking, joinWaitlist, updateWaitlistEntry, today } = useMockData();
   const navigate = useNavigate();
+
+  // Arriving from the waiting list: everything the guest already told us,
+  // carried across rather than retyped. `waitlist` is the entry to close out
+  // once the stay actually exists.
+  const [params] = useSearchParams();
+  const fromWaitlist = params.get("waitlist");
+  const preset = <K extends string>(key: string, fallback: K) =>
+    (params.get(key) as K) || fallback;
 
   const [form, setForm] = useState<FormState>({
     source: "phone",
-    villaId: villas[0]?.id ?? "",
+    villaId: params.get("villa") || (villas[0]?.id ?? ""),
     roomIds: [],
-    checkIn: "",
-    checkOut: "",
-    adults: "2",
-    children: "0",
-    customerId: NEW_GUEST,
+    checkIn: params.get("from") ?? "",
+    checkOut: params.get("to") ?? "",
+    // Seeded from the villa's standard times, so the common case is one less
+    // thing to type — and an explicit agreed time is what actually gets stored.
+    checkInTime: villas[0]?.checkInTime ?? "14:00",
+    checkOutTime: villas[0]?.checkOutTime ?? "11:00",
+    adults: preset("adults", "2"),
+    children: preset("children", "0"),
+    customerId: params.get("customer") || NEW_GUEST,
     name: "",
     phone: "",
     email: "",
@@ -71,6 +85,7 @@ export default function NewBookingPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [waitlisting, setWaitlisting] = useState(false);
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -169,6 +184,8 @@ export default function NewBookingPage() {
       bookingMode: isSplit ? "split" : "whole",
       checkIn: form.checkIn,
       checkOut: form.checkOut,
+      checkInTime: form.checkInTime || undefined,
+      checkOutTime: form.checkOutTime || undefined,
       adults: Number(form.adults),
       children: Number(form.children),
       source: form.source,
@@ -187,12 +204,61 @@ export default function NewBookingPage() {
         : undefined,
     );
 
+    // The entry stops being a request the moment it becomes a stay. The
+    // booking id is allocated by the database, so it is not recorded here —
+    // marking it converted is what takes them out of the queue.
+    if (fromWaitlist) updateWaitlistEntry(fromWaitlist, { status: "converted" });
+
     // The reference is assigned by the database, so land on the list rather
     // than guessing an id that does not exist yet.
     toast.success("Booking created", {
       description: `${villa?.name} · ${formatDate(form.checkIn)}`,
     });
     window.setTimeout(() => navigate("/admin/bookings"), 400);
+  };
+
+  /**
+   * The other answer to "those dates are taken".
+   *
+   * Reception has already typed everything a waiting-list entry needs by the
+   * time the conflict appears, so this reuses the form rather than opening a
+   * second one. Position in the queue is arrival order — nothing here lets
+   * anyone jump it.
+   */
+  const addToWaitlist = async () => {
+    const isNewGuest = form.customerId === NEW_GUEST;
+    if (!form.checkIn || !form.checkOut || form.checkOut <= form.checkIn) {
+      return toast.error("Set the dates they are waiting for first");
+    }
+    if (isNewGuest && form.name.trim().length < 2) {
+      return toast.error("Whose name should go on the list?");
+    }
+
+    setWaitlisting(true);
+    const { error } = await joinWaitlist(
+      {
+        customerId: isNewGuest ? "" : form.customerId,
+        villaId: form.villaId || undefined,
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
+        adults: Number(form.adults) || 1,
+        children: Number(form.children) || 0,
+        source: form.source,
+        note: form.specialRequests.trim(),
+      },
+      isNewGuest
+        ? { name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() }
+        : undefined,
+    );
+    setWaitlisting(false);
+
+    if (error) {
+      return toast.error("Could not add them to the waiting list", { description: error });
+    }
+    toast.success("Added to the waiting list", {
+      description: `${villa?.name ?? "Any villa"} · ${formatDate(form.checkIn)}. You will be told if these dates free up.`,
+    });
+    navigate("/admin/frontdesk");
   };
 
   const showError = (key: string) => submitted && key in errors;
@@ -250,6 +316,9 @@ export default function NewBookingPage() {
                       villaId: value,
                       roomIds: [],
                       nightlyRate: String(rate),
+                      // Each villa keeps its own standard hours.
+                      checkInTime: next?.checkInTime ?? prev.checkInTime,
+                      checkOutTime: next?.checkOutTime ?? prev.checkOutTime,
                       // The legal rate follows the tariff, so it moves with it.
                       taxRate: String(suggestedGstRate(rate)),
                     }));
@@ -384,6 +453,30 @@ export default function NewBookingPage() {
                   onChange={(event) => set("children", event.target.value)}
                 />
               </Field>
+              <Field
+                label="Arrival time"
+                htmlFor="check-in-time"
+                hint={`${villa?.name ?? "The villa"} normally opens at ${villa?.checkInTime ?? "14:00"}`}
+              >
+                <Input
+                  id="check-in-time"
+                  type="time"
+                  value={form.checkInTime}
+                  onChange={(event) => set("checkInTime", event.target.value)}
+                />
+              </Field>
+              <Field
+                label="Departure time"
+                htmlFor="check-out-time"
+                hint={`Standard check-out is ${villa?.checkOutTime ?? "11:00"}`}
+              >
+                <Input
+                  id="check-out-time"
+                  type="time"
+                  value={form.checkOutTime}
+                  onChange={(event) => set("checkOutTime", event.target.value)}
+                />
+              </Field>
             </div>
 
             {submitted && errors.dates && (
@@ -425,6 +518,22 @@ export default function NewBookingPage() {
                       ? "A whole-villa hold blocks every room; a room can only be sold once."
                       : "A whole-villa booking needs all four bedrooms free."}
                   </p>
+                  {/* A "no" that keeps the guest. First come, first served if
+                      the stay above is ever cancelled. */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3"
+                    disabled={waitlisting}
+                    onClick={() => void addToWaitlist()}
+                  >
+                    {waitlisting ? (
+                      <Loader2 className="animate-spin" aria-hidden />
+                    ) : (
+                      <ListPlus aria-hidden />
+                    )}
+                    Add them to the waiting list
+                  </Button>
                 </div>
               </div>
             )}
@@ -626,12 +735,16 @@ function Field({
   label,
   htmlFor,
   error,
+  hint,
   className,
   children,
 }: {
   label: string;
   htmlFor?: string;
   error?: string;
+  /** Suppressed while an error is showing — two messages under one input is
+   *  one message too many. */
+  hint?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -640,10 +753,12 @@ function Field({
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={htmlFor}>{label}</Label>
       <div aria-describedby={error ? errorId : undefined}>{children}</div>
-      {error && (
+      {error ? (
         <p id={errorId} role="alert" className="text-xs text-status-cancelled">
           {error}
         </p>
+      ) : (
+        hint && <p className="text-xs text-stone-600">{hint}</p>
       )}
     </div>
   );

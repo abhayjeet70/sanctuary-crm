@@ -46,3 +46,6 @@ export const supabase = new Proxy({} as SupabaseClient, {
 });
 
 export const RECEIPTS_BUCKET = "payment-receipts";
+/** Photo IDs taken at check-in. Private, and management-only in both
+ *  directions — see the storage policies in the front-desk migration. */
+export const GUEST_IDS_BUCKET = "guest-ids";

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { FileText, FileWarning, Maximize2 } from "lucide-react";
+import { Download, FileText, FileWarning, Maximize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/common";
-import { resolveReceiptUrl } from "@/services/supabase/receipts";
+import { resolveReceiptDownloadUrl, resolveReceiptUrl } from "@/services/supabase/receipts";
 
 /**
  * Shows a payment receipt, with click-to-enlarge for reading a UTR off a phone
@@ -18,12 +18,18 @@ export function ReceiptViewer({
   src,
   alt,
   className,
+  downloadName,
+  showDownload = true,
 }: {
   src?: string;
   alt: string;
   className?: string;
+  /** What the saved file is called. Defaults to the stored filename. */
+  downloadName?: string;
+  showDownload?: boolean;
 }) {
   const [url, setUrl] = useState<string | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "error">(
     src ? "loading" : "error",
   );
@@ -35,6 +41,13 @@ export function ReceiptViewer({
       return;
     }
     setState("loading");
+
+    // Two signatures, because a link that saves needs the server to send a
+    // Content-Disposition header. The viewer sandbox ignores `<a download>` on
+    // a cross-origin href, so asking Storage for it is the only way that works.
+    void resolveReceiptDownloadUrl(src).then((resolved) => {
+      if (active) setDownloadUrl(resolved);
+    });
 
     void resolveReceiptUrl(src).then((resolved) => {
       if (!active) return;
@@ -71,6 +84,21 @@ export function ReceiptViewer({
   }
 
   const isPdf = url?.includes(".pdf");
+  // The stored name is `{booking}/{timestamp}.{ext}`; the last segment is what
+  // a person would recognise in their downloads folder.
+  const suggestedName = downloadName ?? src.split("/").pop() ?? "receipt";
+
+  const download = showDownload && downloadUrl && (
+    <a
+      href={downloadUrl}
+      download={suggestedName}
+      className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-clay underline-offset-4 transition-colors hover:bg-sand-200 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+    >
+      <Download className="size-3.5" aria-hidden />
+      Download receipt
+      <span className="sr-only"> — {alt}</span>
+    </a>
+  );
 
   return (
     <Dialog>
@@ -112,6 +140,8 @@ export function ReceiptViewer({
         </button>
       </DialogTrigger>
 
+      {download}
+
       <DialogContent className="max-w-3xl">
         <DialogTitle className="sr-only">{alt}</DialogTitle>
         {url && isPdf ? (
@@ -125,6 +155,7 @@ export function ReceiptViewer({
             <img src={url} alt={alt} className="max-h-[80vh] w-full rounded-lg object-contain" />
           )
         )}
+        {download}
       </DialogContent>
     </Dialog>
   );

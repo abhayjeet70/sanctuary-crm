@@ -19,6 +19,7 @@ import {
   useRequestViews,
 } from "@/hooks/useData";
 import { CustomerDialog } from "@/components/admin/CustomerDialog";
+import { GuestIdPanel } from "@/components/admin/GuestIdPanel";
 import { GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
 import { useShowsFinancials } from "@/services/session";
 import { bookingStatus, paymentStatus, requestStatus, titleCase } from "@/lib/status";
@@ -123,6 +124,9 @@ export default function CustomerDetailPage() {
             </ul>
           </>
         )}
+
+        <hr className="rule-gold my-5" />
+        <GuestIdPanel customer={customer} />
 
         {customer.notes && (
           <p className="mt-5 rounded-lg bg-status-uploaded-bg p-4 text-sm text-ink">
