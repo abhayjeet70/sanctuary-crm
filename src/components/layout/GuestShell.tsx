@@ -185,47 +185,62 @@ export function GuestShell() {
 
   return (
     <div className="min-h-dvh bg-sand pb-20 lg:pb-0">
-      {/* Slim chrome — the guest portal is photography-led, not app-led */}
+      {/* The guest portal is the property's front door, so the mark leads —
+          left, and tall enough to own the corner. It spans both rows of the
+          header rather than sitting in a thin strip above them. */}
       <header className="bg-ink">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-3 sm:px-8">
-          <Logo variant="onDark" size="h-11 sm:h-12" />
-          <div className="flex items-center gap-2">
-            <GuestNotificationTray />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-sand/70 hover:bg-sand/12 hover:text-sand"
-              onClick={leave}
+        <div className="mx-auto flex max-w-5xl items-stretch gap-5 px-5 sm:gap-8 sm:px-8">
+          <Link
+            to="/guest/dashboard"
+            aria-label="Homes of Sanctuary — your stay"
+            className="flex shrink-0 items-center py-3 transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+          >
+            <Logo variant="onDark" size="h-16 sm:h-20 lg:h-24" />
+          </Link>
+
+          {/* Centred below lg, where the nav rail is hidden and `between`
+              would strand the actions at the top over dead space. */}
+          <div className="flex min-w-0 flex-1 flex-col justify-center lg:justify-between">
+            <div className="flex items-center justify-end gap-2 py-2.5">
+              <GuestNotificationTray />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sand/70 hover:bg-sand/12 hover:text-sand"
+                onClick={leave}
+              >
+                <LogOut aria-hidden />
+                <span className="hidden sm:inline">Sign out</span>
+              </Button>
+            </div>
+
+            {/* Desktop nav rail. `whitespace-nowrap` because "Book a stay" and
+                "Booking details" were folding onto two lines and dragging the
+                whole rail out of alignment. */}
+            <nav
+              aria-label="Guest portal"
+              className="hidden justify-end gap-0.5 lg:flex"
             >
-              <LogOut aria-hidden />
-              <span className="hidden sm:inline">Sign out</span>
-            </Button>
+              {[...PRIMARY, ...SECONDARY].map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-1.5 rounded-t-lg px-2.5 py-2.5 text-[0.8125rem] whitespace-nowrap transition-colors",
+                      isActive
+                        ? "bg-sand text-ink"
+                        : "text-sand/65 hover:bg-sand/10 hover:text-sand",
+                    )
+                  }
+                >
+                  <Icon className="size-4 shrink-0" aria-hidden />
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
           </div>
         </div>
-
-        {/* Desktop nav rail */}
-        <nav
-          aria-label="Guest portal"
-          className="mx-auto hidden max-w-5xl gap-1 px-8 pb-1 lg:flex"
-        >
-          {[...PRIMARY, ...SECONDARY].map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-2 rounded-t-lg px-3 py-2.5 text-sm transition-colors",
-                  isActive
-                    ? "bg-sand text-ink"
-                    : "text-sand/65 hover:bg-sand/10 hover:text-sand",
-                )
-              }
-            >
-              <Icon className="size-4" aria-hidden />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
       </header>
 
       <main className="mx-auto max-w-5xl">

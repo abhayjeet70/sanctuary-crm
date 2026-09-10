@@ -91,7 +91,7 @@ export default function LoginPage() {
 
       <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-6 py-10 sm:px-10">
         <header className="flex items-center justify-between gap-4">
-          <Logo variant="onDark" size="h-20 sm:h-24" />
+          <Logo variant="onDark" size="h-24 sm:h-32" />
           <span className="rounded-full bg-gold/15 px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-200 uppercase ring-1 ring-gold/30">
             Staff & guest sign-in
           </span>

@@ -70,7 +70,7 @@ export default function StaffQueuePage() {
     <div className="min-h-dvh bg-sand">
       <header className="bg-sidebar">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-3">
-          <Logo variant="onDark" size="h-11" />
+          <Logo variant="onDark" size="h-16" />
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-gold/15 px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-200 uppercase ring-1 ring-gold/30">
               {department?.name ?? titleCase(session?.team ?? "staff")}

@@ -148,7 +148,7 @@ export default function DesignSystemPage() {
             Back to login
           </Link>
           <div className="mt-8">
-            <Logo variant="onDark" size="h-24" />
+            <Logo variant="onDark" size="h-28" />
           </div>
           <Eyebrow className="mt-8 text-gold-400">Living style guide</Eyebrow>
           <h1 className="display-caps mt-4 text-[2.5rem] text-white sm:text-[3.75rem]">
@@ -774,13 +774,13 @@ export default function DesignSystemPage() {
             <div className="rounded-xl bg-paper p-5 shadow-soft">
               <p className="label-caps mb-3">The mark on ink</p>
               <div className="flex items-center justify-center rounded-lg bg-ink p-6">
-                <Logo variant="onDark" size="h-20" />
+                <Logo variant="onDark" size="h-24" />
               </div>
             </div>
             <div className="rounded-xl bg-paper p-5 shadow-soft">
               <p className="label-caps mb-3">The mark on sand</p>
               <div className="flex items-center justify-center rounded-lg bg-sand p-6">
-                <Logo variant="onLight" size="h-20" />
+                <Logo variant="onLight" size="h-24" />
               </div>
             </div>
           </div>

@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
           aria-hidden
           className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent"
         />
-        <Logo variant="onDark" size="h-14" />
+        <Logo variant="onDark" size="h-20" />
         <p className="mt-5 font-display text-2xl text-white">
           {session ? `Welcome, ${session.name}` : "Choose a new password"}
         </p>

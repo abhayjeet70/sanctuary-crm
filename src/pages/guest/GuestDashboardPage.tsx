@@ -364,7 +364,7 @@ export default function GuestDashboardPage() {
                 Good stays become great memories.
               </p>
               <div className="ml-auto opacity-80">
-                <Logo variant="onDark" size="h-8" />
+                <Logo variant="onDark" size="h-12" />
               </div>
             </div>
           </div>

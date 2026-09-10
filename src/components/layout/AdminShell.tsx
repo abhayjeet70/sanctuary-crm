@@ -323,7 +323,7 @@ export function AdminShell() {
         className="sticky top-0 hidden h-dvh flex-col border-r border-gold/10 bg-sidebar px-2.5 py-4 lg:flex"
       >
         <div className="px-1.5 pb-1">
-          <Logo variant="onDark" size="h-12" />
+          <Logo variant="onDark" size="h-20" />
         </div>
         {/* `min-h-0` is what lets this actually shrink inside the flex column;
             without it the region grows and the whole page scrolls instead. */}
@@ -377,7 +377,7 @@ export function AdminShell() {
             <SheetContent side="left" className="bg-sidebar text-sand">
               <SheetHeader>
                 <SheetTitle className="text-sand">
-                  <Logo variant="onDark" />
+                  <Logo variant="onDark" size="h-20" />
                 </SheetTitle>
               </SheetHeader>
               <div className="scrollbar-slim overflow-y-auto px-3 pb-4">
@@ -394,7 +394,7 @@ export function AdminShell() {
               </div>
             </SheetContent>
           </Sheet>
-          <Logo variant="onDark" size="h-11" className="lg:hidden" />
+          <Logo variant="onDark" size="h-14" className="lg:hidden" />
           <div className="ml-auto">
             <NotificationTray />
           </div>
