@@ -80,10 +80,10 @@ export default function LoginPage() {
         src={HERO}
         alt=""
         aria-hidden
-        className="absolute inset-0 size-full object-cover opacity-45 transition-transform duration-700 ease-out"
+        className="absolute inset-0 size-full object-cover opacity-70 transition-transform duration-700 ease-out"
         style={{ transform: `scale(1.08) translate3d(${x * -18}px, ${y * -12}px, 0)` }}
       />
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-ink/88 via-ink/65 to-ink/96" />
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-ink/60 via-ink/40 to-ink/70" />
       <div
         aria-hidden
         className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_20%,rgba(201,169,97,0.18),transparent_60%)]"
