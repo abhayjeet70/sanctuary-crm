@@ -51,8 +51,22 @@ export function StaffAccountPanel({ employee }: { employee: Employee }) {
     });
     setBusy(null);
 
-    const failure =
-      error?.message ?? (data as { error?: string } | null)?.error ?? null;
+    // When the edge function returns a non-2xx status the Supabase client
+    // wraps it as FunctionsHttpError. The real reason lives in the JSON body
+    // ({ error: "..." }), not in error.message which is just the generic
+    // "Edge Function returned a non-2xx status code" string.
+    let failure: string | null = null;
+    if (error) {
+      try {
+        const body = await (error as { context?: Response }).context?.json() as { error?: string } | undefined;
+        failure = body?.error ?? error.message ?? "Something went wrong";
+      } catch {
+        failure = error.message ?? "Something went wrong";
+      }
+    } else {
+      failure = (data as { error?: string } | null)?.error ?? null;
+    }
+
     if (failure) {
       return toast.error("Could not do that", { description: failure });
     }
