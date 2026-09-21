@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, KeyRound } from "lucide-react";
 import { Eyebrow, Logo } from "@/components/common";
-import { collage, photo } from "@/lib/assets";
+import { collage } from "@/lib/assets";
 import { useSession } from "@/services/session";
 import { AuthPanel } from "./AuthPanel";
 import { cn } from "@/lib/utils";
 
-const HERO = photo.hills;
+const HERO = "/loginbg.png";
 
 /**
  * Demo accounts, seeded by supabase/migrations/..._demo_auth_users.sql.
