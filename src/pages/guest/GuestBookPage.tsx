@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { BedDouble, CalendarDays, Check, Search, Users } from "lucide-react";
+import { BedDouble, CalendarDays, Check, Hourglass, Search, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
-import { useMockData, useVillas } from "@/hooks/useData";
+import { useMockData, useVillas, useWaitlist } from "@/hooks/useData";
 import { supabase } from "@/services/supabase/client";
-import { money, nightsBetween } from "@/lib/format";
+import { useSession } from "@/services/session";
+import { formatDateRange, money, nightsBetween } from "@/lib/format";
 import { toISODate } from "@/services/domain";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,11 @@ const dayAfter = (from: string, days: number) => {
 export default function GuestBookPage() {
   const villas = useVillas();
   const navigate = useNavigate();
-  const { today } = useMockData();
+  const { session } = useSession();
+  const { today, joinWaitlist, updateWaitlistEntry } = useMockData();
+  // RLS means this is already only their own rows.
+  const waitlist = useWaitlist().filter((entry) => entry.status === "waiting");
+  const [waiting, setWaiting] = useState<string | null>(null);
 
   const [checkIn, setCheckIn] = useState(tomorrow());
   const [checkOut, setCheckOut] = useState(dayAfter(tomorrow(), 2));
@@ -117,6 +122,52 @@ export default function GuestBookPage() {
   const nightly = isSplit
     ? rooms.filter((r) => chosenRooms.includes(r.room_id)).reduce((s, r) => s + r.base_rate, 0)
     : (chosen?.nightly_rate ?? 0);
+
+  /**
+   * Ask to be told when dates that are already sold come free.
+   *
+   * The guest's own row, inserted under their own session — the waitlist
+   * policy lets them join for themselves and withdraw, and nothing else. A
+   * villa id of undefined means "any house will do", which is a real answer
+   * and the one most people give.
+   */
+  const joinQueue = async (villaId?: string, villaName?: string) => {
+    if (checkOut <= checkIn) return toast.error("Set your dates first");
+
+    const already = waitlist.some(
+      (entry) =>
+        entry.checkIn === checkIn &&
+        entry.checkOut === checkOut &&
+        (entry.villaId ?? undefined) === villaId,
+    );
+    if (already) {
+      return toast.info("You are already on the list for those dates");
+    }
+
+    if (!session?.customerId) {
+      return toast.error("We could not find your guest record — call us and we will add you");
+    }
+
+    setWaiting(villaId ?? "any");
+    const { error } = await joinWaitlist({
+      customerId: session.customerId,
+      villaId,
+      checkIn,
+      checkOut,
+      adults: Number(adults) || 1,
+      children: Number(children) || 0,
+      source: "website",
+      note: requests.trim(),
+    });
+    setWaiting(null);
+
+    if (error) {
+      return toast.error("Could not add you to the list", { description: error });
+    }
+    toast.success("You are on the waiting list", {
+      description: `We will be in touch the moment ${villaName ?? "a house"} frees up for those dates.`,
+    });
+  };
 
   const confirm = async () => {
     if (!chosen) return;
@@ -294,10 +345,49 @@ export default function GuestBookPage() {
                       )}
                     </span>
                   </button>
+
+                  {/* A house that is taken is not a dead tile: the dates may
+                      come free, and this is the only moment the guest is
+                      actually thinking about them. */}
+                  {!free && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full"
+                      disabled={waiting === row.villa_id}
+                      onClick={() => void joinQueue(row.villa_id, row.villa_name)}
+                    >
+                      <Hourglass aria-hidden />
+                      {waiting === row.villa_id
+                        ? "Adding you…"
+                        : `Tell me if ${row.villa_name} frees up`}
+                    </Button>
+                  )}
                 </li>
               );
             })}
           </ul>
+
+          {results.length > 0 &&
+            results.every((r) => (r.villa_mode === "split" ? r.free_rooms === 0 : !r.whole_available)) && (
+            <div className="mt-4 rounded-2xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
+              <Eyebrow className="text-gold-400">All taken</Eyebrow>
+              <p className="mt-2 max-w-lg text-sm text-sand/80">
+                Every house is held for {formatDateRange(checkIn, checkOut)}. Plans change
+                more often than you would think — put your name down and we will write to
+                you the moment one is released, before it goes back on sale.
+              </p>
+              <Button
+                variant="secondary"
+                className="mt-4 bg-gold/15 text-gold-200 ring-1 ring-gold/35 hover:bg-gold/25 hover:text-white"
+                disabled={waiting === "any"}
+                onClick={() => void joinQueue(undefined, "a house")}
+              >
+                <Hourglass aria-hidden />
+                {waiting === "any" ? "Adding you…" : "Put me on the waiting list"}
+              </Button>
+            </div>
+          )}
 
           {results.length === 0 && (
             <EmptyState
@@ -305,6 +395,40 @@ export default function GuestBookPage() {
               description="Try a different window — the houses book up on weekends and holidays."
             />
           )}
+        </section>
+      )}
+
+      {/* ------------------------------------------------- already waiting */}
+      {waitlist.length > 0 && (
+        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+          <Eyebrow className="text-gold-700">You are waiting for</Eyebrow>
+          <ul className="mt-3 divide-y divide-ink/8">
+            {waitlist.map((entry) => (
+              <li key={entry.id} className="flex flex-wrap items-center gap-3 py-3">
+                <Hourglass className="size-4 shrink-0 text-stone" aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-ink">
+                    {villas.find((v) => v.id === entry.villaId)?.name ?? "Any house"}
+                  </p>
+                  <p className="text-xs text-stone-600">
+                    {formatDateRange(entry.checkIn, entry.checkOut)} · {entry.adults + entry.children}{" "}
+                    guests
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    updateWaitlistEntry(entry.id, { status: "cancelled" });
+                    toast.success("Taken off the list");
+                  }}
+                >
+                  <X aria-hidden />
+                  Withdraw
+                </Button>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
