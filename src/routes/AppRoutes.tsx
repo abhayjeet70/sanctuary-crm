@@ -23,6 +23,15 @@ import InvoicesPage from "@/pages/admin/InvoicesPage";
 import SettingsPage from "@/pages/admin/SettingsPage";
 import EmployeesPage from "@/pages/admin/EmployeesPage";
 import ReportsPage from "@/pages/admin/ReportsPage";
+import HousekeepingPage from "@/pages/admin/HousekeepingPage";
+import MaintenancePage from "@/pages/admin/MaintenancePage";
+import AmenitiesPage from "@/pages/admin/AmenitiesPage";
+import EnquiriesPage from "@/pages/admin/EnquiriesPage";
+import QuotesPage from "@/pages/admin/QuotesPage";
+import FollowUpsPage from "@/pages/admin/FollowUpsPage";
+import ActivityLogPage from "@/pages/admin/ActivityLogPage";
+import RolesPage from "@/pages/admin/RolesPage";
+import ExpensesPage from "@/pages/admin/ExpensesPage";
 import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
@@ -132,6 +141,12 @@ export function AppRoutes() {
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="food" element={<KitchenPage />} />
         <Route path="requests" element={<RequestsPage />} />
+        <Route path="housekeeping" element={<HousekeepingPage />} />
+        <Route path="maintenance" element={<MaintenancePage />} />
+        <Route path="amenities" element={<AmenitiesPage />} />
+        <Route path="enquiries" element={<EnquiriesPage />} />
+        <Route path="quotes" element={<QuotesPage />} />
+        <Route path="followups" element={<FollowUpsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route
@@ -147,6 +162,30 @@ export function AppRoutes() {
           element={
             <RequireOwner>
               <EmployeesPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="expenses"
+          element={
+            <RequireOwner>
+              <ExpensesPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="roles"
+          element={
+            <RequireOwner>
+              <RolesPage />
+            </RequireOwner>
+          }
+        />
+        <Route
+          path="activity"
+          element={
+            <RequireOwner>
+              <ActivityLogPage />
             </RequireOwner>
           }
         />

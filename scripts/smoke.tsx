@@ -44,6 +44,15 @@ const ROUTES = [
   "/admin/invoices",
   "/admin/reports",
   "/admin/employees",
+  "/admin/housekeeping",
+  "/admin/maintenance",
+  "/admin/amenities",
+  "/admin/enquiries",
+  "/admin/quotes",
+  "/admin/followups",
+  "/admin/expenses",
+  "/admin/roles",
+  "/admin/activity",
   "/admin/settings",
   "/guest",
   "/guest/dashboard",
@@ -190,7 +199,7 @@ for (const role of ["admin", "staff", "guest"] as const) {
     ["/admin/invoices", "Total billed"],
     ["/admin/invoices", "Still outstanding"],
     ["/admin/customers", "Lifetime spend"],
-    ["/admin/dashboard", "Outstanding balance"],
+    ["/admin/dashboard", "Revenue today"],
     ["/admin/customers/c-pooja", "Lifetime spend"],
   ];
 
@@ -270,7 +279,7 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
     ["the owner is called Owner", owner.includes(">Owner<")],
     ["a manager is not called Owner", !manager.includes(">Owner<")],
     ["a manager is called Manager", manager.includes(">Manager<")],
-    ["the nav is grouped", ["Today", "Property", "Business"].every((g) => owner.includes(">" + g + "<"))],
+    ["the nav is grouped", ["Operations", "Property", "Sales", "Finance", "Management"].every((g) => owner.includes(">" + g + "<"))],
     ["the active item carries its brass rail", /bg-gold[^"]*"/.test(owner) && owner.includes("-translate-y-1/2")],
     ["the scroll region is not the platform default", owner.includes("scrollbar-slim")],
   ];

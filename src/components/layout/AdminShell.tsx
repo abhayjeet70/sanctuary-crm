@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
+  Brush,
   CalendarDays,
   ChefHat,
   ClipboardList,
@@ -10,6 +11,9 @@ import {
   MessageSquareQuote,
   Receipt,
   Settings,
+  ScrollText,
+  ShieldCheck,
+  Sparkles,
   Users,
   Users2,
   TrendingUp,
@@ -20,6 +24,11 @@ import {
   Building2,
   BookOpen,
   ConciergeBell,
+  FileText,
+  MessageCircle,
+  Wrench,
+  Banknote,
+  PhoneCall,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -33,40 +42,58 @@ import type { AppNotification, Role } from "@/types";
 import { initials } from "@/lib/format";
 
 /**
- * The sections, in three groups.
+ * The sections, grouped by the job being done.
  *
- * Fourteen identical rows in one column is a wall — nothing to aim at, and
- * every item costs the same glance. Grouping by what the person is doing gives
- * the eye three targets instead of fourteen, and it costs almost no height
- * because the rows themselves get tighter in exchange.
+ * One flat column of twenty rows is a wall — nothing to aim at, and every item
+ * costs the same glance. Grouping gives the eye five targets instead of twenty,
+ * and it costs almost no height because the rows themselves are tight.
  */
 const NAV = [
   {
-    label: "Today",
+    label: "Operations",
     items: [
       { to: "/admin/dashboard", label: "Dashboard", icon: Home },
       { to: "/admin/frontdesk", label: "Front desk", icon: ConciergeBell },
       { to: "/admin/bookings", label: "Bookings", icon: BookOpen },
-      { to: "/admin/payments", label: "Payments", icon: Wallet, badge: true },
       { to: "/admin/calendar", label: "Calendar", icon: CalendarDays },
+      { to: "/admin/customers", label: "Guests", icon: Users },
+      { to: "/admin/requests", label: "Requests", icon: ClipboardList },
+      { to: "/admin/housekeeping", label: "Housekeeping", icon: Brush },
+      { to: "/admin/food", label: "Kitchen", icon: ChefHat },
+      { to: "/admin/feedback", label: "Feedback", icon: MessageSquareQuote },
     ],
   },
   {
     label: "Property",
     items: [
-      { to: "/admin/villas", label: "Villas", icon: Building2 },
-      { to: "/admin/customers", label: "Guests", icon: Users },
-      { to: "/admin/food", label: "Kitchen", icon: ChefHat },
-      { to: "/admin/requests", label: "Requests", icon: ClipboardList },
-      { to: "/admin/feedback", label: "Feedback", icon: MessageSquareQuote },
+      { to: "/admin/villas", label: "Villas / Rooms", icon: Building2 },
+      { to: "/admin/maintenance", label: "Maintenance", icon: Wrench },
+      { to: "/admin/amenities", label: "Amenities", icon: Sparkles },
     ],
   },
   {
-    label: "Business",
+    label: "Sales",
     items: [
+      { to: "/admin/enquiries", label: "Enquiries", icon: MessageCircle },
+      { to: "/admin/quotes", label: "Quotes", icon: FileText },
+      { to: "/admin/followups", label: "Follow-ups", icon: PhoneCall },
+    ],
+  },
+  {
+    label: "Finance",
+    items: [
+      { to: "/admin/payments", label: "Payments", icon: Wallet, badge: true },
       { to: "/admin/invoices", label: "Invoices", icon: Receipt },
-      { to: "/admin/reports", label: "Finances", icon: TrendingUp, ownerOnly: true },
+      { to: "/admin/expenses", label: "Expenses", icon: Banknote, ownerOnly: true },
+      { to: "/admin/reports", label: "Reports", icon: TrendingUp, ownerOnly: true },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
       { to: "/admin/employees", label: "Employees", icon: Users2, ownerOnly: true },
+      { to: "/admin/roles", label: "Roles & Permissions", icon: ShieldCheck, ownerOnly: true },
+      { to: "/admin/activity", label: "Activity Logs", icon: ScrollText, ownerOnly: true },
       // Configuration belongs to the owner. RLS refuses a manager's write
       // either way; hiding the page keeps the UI from offering something that
       // will fail.

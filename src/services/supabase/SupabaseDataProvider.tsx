@@ -18,6 +18,7 @@ import {
   toEmployeePay,
   toPayment,
   toTax,
+  toExpense,
   toVilla,
   toWaitlistEntry,
 } from "./mappers";
@@ -38,6 +39,7 @@ import type {
   PermissionKey,
   PropertySettings,
   Tax,
+  Expense,
   Villa,
   WaitlistEntry,
 } from "@/types";
@@ -73,6 +75,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [taxes, setTaxes] = useState<Tax[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeePay, setEmployeePay] = useState<EmployeePay[]>([]);
@@ -126,7 +129,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const refetch = useCallback(async () => {
     if (!session) return;
 
-    const [v, ra, c, b, wl, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
+    const [v, ra, c, b, wl, p, i, tx, ex, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
       supabase.from("villas").select(SELECTS.villas).order("name"),
       supabase.from("room_availability").select("*"),
       supabase.from("customers").select("*").order("name"),
@@ -136,6 +139,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       supabase.from("payments").select("*").order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").order("issued_at", { ascending: false }),
       supabase.from("taxes").select("*").order("sort_order"),
+      // Owner-only. Everyone else gets an empty array from RLS, which is the
+      // same thing the UI shows when nothing has been spent.
+      supabase.from("expenses").select("*").order("spent_on", { ascending: false }),
       supabase.from("departments").select("*").order("sort_order"),
       supabase.from("department_permissions").select("*"),
       supabase.from("employees").select("*").order("employee_code"),
@@ -151,7 +157,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     // A guest legitimately gets empty arrays for admin-only tables — that is RLS
     // working, not a failure, so only real errors are surfaced.
-    const firstError = [v, ra, c, b, wl, p, i, tx, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
+    const firstError = [v, ra, c, b, wl, p, i, tx, ex, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
       (res) => res.error,
     )?.error;
     if (firstError && firstError.code !== "PGRST116") {
@@ -165,6 +171,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     setPayments((p.data ?? []).map(toPayment));
     setInvoices((i.data ?? []).map(toInvoice));
     setTaxes((tx.data ?? []).map(toTax));
+    setExpenses((ex.data ?? []).map(toExpense));
     // Permissions arrive as their own rows; stitched on here so a component
     // asking "what may this department do" never has to join by hand.
     const grants = (dperm.data ?? []) as { department_id: string; permission: string }[];
@@ -289,6 +296,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       payments:   visiblePayments,
       invoices:   visibleInvoices,
       taxes,
+      expenses,
       departments,
       employees,
       employeePay,
@@ -864,6 +872,34 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      saveExpense: (expense) => {
+        void (async () => {
+          const columns = {
+            villa_id: expense.villaId || null,
+            spent_on: expense.spentOn,
+            category: expense.category ?? "other",
+            amount: Math.round(expense.amount ?? 0),
+            payee: expense.payee ?? "",
+            note: expense.note ?? "",
+            method: expense.method ?? "",
+            reference: expense.reference ?? "",
+          };
+          const { error } = expense.id
+            ? await supabase.from("expenses").update(columns).eq("id", expense.id)
+            : await supabase.from("expenses").insert(columns);
+          if (report(error, "Could not save the expense")) return;
+          await refetch();
+        })();
+      },
+
+      deleteExpense: (id) => {
+        void (async () => {
+          const { error } = await supabase.from("expenses").delete().eq("id", id);
+          if (report(error, "Could not remove the expense")) return;
+          await refetch();
+        })();
+      },
+
       deleteTax: (id) => {
         void (async () => {
           const { error } = await supabase.from("taxes").delete().eq("id", id);
@@ -921,7 +957,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     };
 
   }, [
-    villas, customers, bookings, waitlist, payments, invoices, taxes, departments, employees, employeePay, menuItems,
+    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
     demoDataVisible, setDemoDataVisible,
   ]);

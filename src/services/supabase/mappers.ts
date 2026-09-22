@@ -21,6 +21,7 @@ import type {
   Employee,
   EmployeePay,
   Tax,
+  Expense,
   Room,
   Villa,
   WaitlistEntry,
@@ -431,6 +432,22 @@ export const toTax = (row: unknown): Tax => {
     kind: x.kind,
     active: x.active,
     sortOrder: x.sort_order ?? 0,
+  };
+};
+
+export const toExpense = (row: unknown): Expense => {
+  const x = r(row);
+  return {
+    id: x.id,
+    villaId: x.villa_id ?? undefined,
+    spentOn: x.spent_on,
+    category: x.category,
+    amount: Number(x.amount),
+    payee: x.payee ?? "",
+    note: x.note ?? "",
+    method: x.method ?? "",
+    reference: x.reference ?? "",
+    createdAt: x.created_at,
   };
 };
 

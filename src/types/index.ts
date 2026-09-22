@@ -484,6 +484,34 @@ export interface Tax {
   sortOrder: number;
 }
 
+/* ----------------------------------------------------------------- expenses */
+
+export type ExpenseCategory =
+  | "salaries"
+  | "utilities"
+  | "supplies"
+  | "maintenance"
+  | "food_and_beverage"
+  | "marketing"
+  | "commission"
+  | "taxes_and_fees"
+  | "other";
+
+/** Money out. Owner-only, like pay — see the expenses migration. */
+export interface Expense {
+  id: ID;
+  /** The villa it belongs to, when it belongs to one. */
+  villaId?: ID;
+  spentOn: ISODate;
+  category: ExpenseCategory;
+  amount: number;
+  payee: string;
+  note: string;
+  method: string;
+  reference: string;
+  createdAt: ISODateTime;
+}
+
 export interface AppNotification {
   id: ID;
   /** Booking, order or request this is about, so the tray can link to it. */

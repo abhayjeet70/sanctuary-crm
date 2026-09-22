@@ -297,6 +297,9 @@ export function useTodayOverview() {
   }, [views, villas, foodOrders, requests, payments, today]);
 }
 
+/** What the property has spent. Empty unless the owner is signed in. */
+export const useExpenses = () => useMockData().expenses;
+
 /** The taxes the property charges, in the order they print. */
 export const useTaxes = () => useMockData().taxes;
 
