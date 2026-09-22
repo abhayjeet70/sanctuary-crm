@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { ImagePlus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useMockData } from "@/hooks/useData";
+import { ACCEPTED_PHOTO_TYPES, uploadVillaPhoto } from "@/services/supabase/receipts";
 import type { VillaMode } from "@/types";
 
 /**
@@ -44,7 +45,6 @@ const BLANK = {
   checkInTime: "14:00",
   checkOutTime: "11:00",
   mode: "whole" as VillaMode,
-  image: "",
 };
 
 export function VillaDialog() {
@@ -52,6 +52,13 @@ export function VillaDialog() {
   const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+
+  // Derived during render; revoked when the file changes, because an object
+  // URL is a real resource rather than a piece of state.
+  const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   const [fields, setFields] = useState(BLANK);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -67,6 +74,21 @@ export function VillaDialog() {
     if (!Number(fields.baseRate)) return setError("Set a nightly rate.");
     setError(null);
     setSaving(true);
+
+    // The photograph goes up first: a villa row pointing at an upload that
+    // failed is worse than no villa at all, and this way a storage error is
+    // reported before anything is written.
+    let image = "";
+    if (photo) {
+      const { url, error: uploadFailed } = await uploadVillaPhoto("new", photo);
+      if (uploadFailed || !url) {
+        setSaving(false);
+        setError(uploadFailed ?? "Could not upload the photograph.");
+        return;
+      }
+      image = url;
+    }
+
     const { id, error: failure } = await createVilla({
       name: fields.name.trim(),
       description: fields.description.trim(),
@@ -77,7 +99,7 @@ export function VillaDialog() {
       checkInTime: fields.checkInTime,
       checkOutTime: fields.checkOutTime,
       mode: fields.mode,
-      image: fields.image.trim(),
+      image,
     });
     setSaving(false);
 
@@ -90,6 +112,7 @@ export function VillaDialog() {
       description: "Finish the description, amenities and rooms here.",
     });
     setFields(BLANK);
+    setPhoto(null);
     setOpen(false);
     navigate(`/admin/villas/${id}`);
   };
@@ -220,7 +243,7 @@ export function VillaDialog() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div>
             <div>
               <Label htmlFor="villa-mode">Sold as</Label>
               <Select
@@ -236,16 +259,54 @@ export function VillaDialog() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="villa-image">Photograph URL</Label>
-              <Input
-                id="villa-image"
-                className="mt-1.5"
-                value={fields.image}
-                onChange={(e) => set("image", e.target.value)}
-                placeholder="https://…"
-              />
-            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="villa-photo">Photograph</Label>
+            <input
+              ref={fileInput}
+              id="villa-photo"
+              type="file"
+              accept={ACCEPTED_PHOTO_TYPES.join(",")}
+              className="sr-only"
+              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+            />
+
+            {preview ? (
+              <div className="mt-1.5 overflow-hidden rounded-xl ring-1 ring-ink/10">
+                <img src={preview} alt="" className="h-40 w-full object-cover" />
+                <div className="flex items-center justify-between gap-3 bg-sand-200/70 px-3 py-2">
+                  <span className="min-w-0 truncate text-xs text-stone-600">
+                    {photo?.name}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setPhoto(null);
+                      if (fileInput.current) fileInput.current.value = "";
+                    }}
+                  >
+                    <X aria-hidden />
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-1.5 h-24 w-full border-dashed"
+                onClick={() => fileInput.current?.click()}
+              >
+                <ImagePlus aria-hidden />
+                Choose a photograph
+              </Button>
+            )}
+            <p className="mt-1.5 text-xs text-stone-600">
+              JPG, PNG or WebP, up to 5 MB. Landscape reads best on the villa cards.
+            </p>
           </div>
 
           {error && (

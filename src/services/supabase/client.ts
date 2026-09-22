@@ -49,3 +49,8 @@ export const RECEIPTS_BUCKET = "payment-receipts";
 /** Photo IDs taken at check-in. Private, and management-only in both
  *  directions — see the storage policies in the front-desk migration. */
 export const GUEST_IDS_BUCKET = "guest-ids";
+
+/** Public, unlike the other two: these photographs are rendered in an <img>
+ *  by the guest portal and the marketing site, where a signed URL would
+ *  expire. See the villa-photos migration. */
+export const VILLA_PHOTOS_BUCKET = "villa-photos";

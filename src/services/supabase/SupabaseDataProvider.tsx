@@ -583,6 +583,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           if (patch.capacity !== undefined) columns.capacity = patch.capacity;
           if (patch.amenities !== undefined) columns.amenities = patch.amenities;
           if (patch.status !== undefined) columns.status = patch.status;
+          if (patch.image !== undefined) columns.image = patch.image || null;
           if (!Object.keys(columns).length) return;
 
           const { error } = await supabase.from("villas").update(columns).eq("id", villaId);

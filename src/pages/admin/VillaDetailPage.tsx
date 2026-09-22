@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Eye, EyeOff, Pencil, Plus, Save, Wifi, X } from "lucide-react";
+import { ArrowLeft, Check, Eye, EyeOff, ImagePlus, Pencil, Plus, Save, Wifi, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ import { ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { RoomDialog } from "@/components/admin/RoomDialog";
 import { useBookings, useCustomers, useMockData, useVilla } from "@/hooks/useData";
 import { bookingsOnDate } from "@/services/domain";
+import { ACCEPTED_PHOTO_TYPES, uploadVillaPhoto } from "@/services/supabase/receipts";
 import { formatDateRange, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Room, VillaMode } from "@/types";
@@ -28,6 +29,8 @@ export default function VillaDetailPage() {
   const bookings = useBookings();
   const customers = useCustomers();
   const { setVillaMode, updateVilla, today } = useMockData();
+  const photoInput = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [pendingMode, setPendingMode] = useState<VillaMode | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -98,6 +101,41 @@ export default function VillaDetailPage() {
         <div className="relative h-48 sm:h-64">
           <Photo src={villa.image} alt={villa.name} className="size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent" />
+
+          {/* Replacing the photograph is a one-click job from the picture
+              itself, rather than a URL field buried in the form below. */}
+          <input
+            ref={photoInput}
+            id="villa-photo-replace"
+            type="file"
+            accept={ACCEPTED_PHOTO_TYPES.join(",")}
+            className="sr-only"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file || !villa) return;
+              setUploading(true);
+              const { url, error } = await uploadVillaPhoto(villa.id, file);
+              setUploading(false);
+              event.target.value = "";
+              if (error || !url) {
+                toast.error("Could not upload the photograph", { description: error ?? "" });
+                return;
+              }
+              updateVilla(villa.id, { image: url });
+              toast.success("Photograph updated");
+            }}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={uploading}
+            onClick={() => photoInput.current?.click()}
+            className="absolute top-4 right-4 bg-white/90 text-ink hover:bg-white"
+          >
+            <ImagePlus aria-hidden />
+            {uploading ? "Uploading…" : villa.image ? "Replace photo" : "Add photo"}
+          </Button>
           <div className="absolute inset-x-6 bottom-5 flex flex-wrap items-end justify-between gap-4">
             <div>
               <Eyebrow className="text-gold-400">

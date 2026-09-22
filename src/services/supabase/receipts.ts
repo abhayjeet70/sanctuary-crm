@@ -1,4 +1,4 @@
-import { GUEST_IDS_BUCKET, RECEIPTS_BUCKET, supabase } from "./client";
+import { GUEST_IDS_BUCKET, RECEIPTS_BUCKET, VILLA_PHOTOS_BUCKET, supabase } from "./client";
 
 /**
  * The private buckets: payment receipts, and guest ID scans.
@@ -119,3 +119,43 @@ export const resolveReceiptDownloadUrl = (
 /** A guest's ID scan. Null unless the viewer is management. */
 export const resolveGuestIdUrl = (path: string | undefined): Promise<string | null> =>
   resolveSignedUrl(GUEST_IDS_BUCKET, path, { ttlSeconds: 300 });
+
+/* ------------------------------------------------------------ villa photos */
+
+export const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+/**
+ * Upload a photograph of a villa.
+ *
+ * Returns a plain public URL rather than a path, because that is what the
+ * `villas.image` column has always held and what every <img> in the app and on
+ * the marketing site reads. The bucket is public by design — see the migration
+ * — so nothing here needs signing, and the URL keeps working forever.
+ *
+ * `folder` is the villa id once there is one, or "new" while the villa is
+ * still being filled in. It carries no authorisation meaning: the bucket
+ * policy is management-only whatever the path says.
+ */
+export async function uploadVillaPhoto(
+  folder: string,
+  file: File,
+): Promise<{ url: string | null; error: string | null }> {
+  if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+    return { url: null, error: "Send a JPG, PNG or WebP." };
+  }
+  if (file.size > MAX_RECEIPT_BYTES) {
+    return { url: null, error: "That photograph is larger than 5 MB." };
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `${folder}/${Date.now()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from(VILLA_PHOTOS_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: false });
+
+  if (error) return { url: null, error: error.message };
+
+  const { data } = supabase.storage.from(VILLA_PHOTOS_BUCKET).getPublicUrl(path);
+  return { url: data.publicUrl, error: null };
+}
