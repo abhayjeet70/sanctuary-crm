@@ -2,6 +2,14 @@ import { useState } from "react";
 import { ArrowRight, Lock, Mail, MailCheck, User } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "@/services/session";
@@ -26,6 +34,7 @@ export function AuthPanel() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [takenEmail, setTakenEmail] = useState<string | null>(null);
 
   const isSignup = mode === "signup";
   const isReset = mode === "reset";
@@ -59,9 +68,14 @@ export function AuthPanel() {
 
     setBusy(true);
     if (isSignup) {
-      const { error: signUpError, needsConfirmation } = await signUp(email, password, name);
+      const { error: signUpError, needsConfirmation, alreadyRegistered } = await signUp(
+        email,
+        password,
+        name,
+      );
       setBusy(false);
       if (signUpError) return setError(signUpError);
+      if (alreadyRegistered) return setTakenEmail(email.trim());
       if (needsConfirmation) setSentTo(email.trim());
       return;
     }
@@ -111,7 +125,42 @@ export function AuthPanel() {
     );
   }
 
+  const takenDialog = (
+    <Dialog open={takenEmail !== null} onOpenChange={(open) => !open && setTakenEmail(null)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>That email already has an account</DialogTitle>
+          <DialogDescription>
+            {takenEmail} is already registered. Sign in instead, or reset the password if you do
+            not remember it.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setTakenEmail(null);
+              switchTo("reset");
+            }}
+          >
+            Reset password
+          </Button>
+          <Button
+            onClick={() => {
+              setTakenEmail(null);
+              switchTo("signin");
+            }}
+          >
+            Sign in
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   return (
+    <>
+    {takenDialog}
     <form
       onSubmit={(event) => void submit(event)}
       className="relative overflow-hidden rounded-2xl bg-ink/45 p-6 ring-1 ring-gold/40 backdrop-blur-md"
@@ -263,6 +312,7 @@ export function AuthPanel() {
         </div>
       </div>
     </form>
+    </>
   );
 }
 

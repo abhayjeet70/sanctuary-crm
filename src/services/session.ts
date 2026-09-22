@@ -17,7 +17,12 @@ export interface SessionContextValue {
     email: string,
     password: string,
     fullName: string,
-  ) => Promise<{ error: string | null; needsConfirmation: boolean }>;
+  ) => Promise<{
+    error: string | null;
+    needsConfirmation: boolean;
+    /** The address already has an account — Supabase reports this silently. */
+    alreadyRegistered: boolean;
+  }>;
   signOut: () => Promise<void>;
   /** Emails a recovery link that lands on /reset-password. */
   resetPassword: (email: string) => Promise<{ error: string | null }>;

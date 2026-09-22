@@ -101,11 +101,18 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
       options: { data: { full_name: fullName.trim() } },
     });
 
-    if (error) return { error: error.message, needsConfirmation: false };
+    if (error) return { error: error.message, needsConfirmation: false, alreadyRegistered: false };
+
+    // Supabase does not error on a duplicate address — it returns a decoy user
+    // with no identities so signup cannot be used to probe who has an account.
+    // We only surface it because self-signup here is guests claiming a booking.
+    if (data.user && data.user.identities?.length === 0) {
+      return { error: null, needsConfirmation: false, alreadyRegistered: true };
+    }
 
     // A session here means confirmations are off; otherwise the account exists
     // but cannot sign in until the emailed link is followed.
-    return { error: null, needsConfirmation: !data.session };
+    return { error: null, needsConfirmation: !data.session, alreadyRegistered: false };
   }, []);
 
   /**
