@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BedDouble, Brush, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState, PageHeader, StatCard, StatusBadge } from "@/components/common";
+import { EmptyState, PageHeader, StatCard, StatusBadge, Photo } from "@/components/common";
 import { useMockData, useRequestViews, useTodayOverview, useVillas } from "@/hooks/useData";
 import { requestPriority, titleCase, type Tone } from "@/lib/status";
 import { relativeTime } from "@/lib/format";
@@ -117,10 +117,9 @@ export default function HousekeepingPage() {
               className="rounded-xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]"
             >
               <div className="flex items-center gap-3">
-                <img
+                <Photo
                   src={villa.image}
                   alt=""
-                  aria-hidden
                   className="size-10 rounded-lg object-cover ring-1 ring-gold/25"
                 />
                 <Link

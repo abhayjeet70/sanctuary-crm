@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { BedDouble, Users, ArrowRight } from "lucide-react";
-import { PageHeader, StatusBadge, Eyebrow } from "@/components/common";
+import { PageHeader, StatusBadge, Eyebrow, Photo } from "@/components/common";
+import { VillaDialog } from "@/components/admin/VillaDialog";
 import { useBookings, useVillas } from "@/hooks/useData";
 import { useMockData } from "@/hooks/useData";
 import { bookingsOnDate } from "@/services/domain";
@@ -14,9 +15,10 @@ export default function VillasListPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Three houses on the ridge"
+        eyebrow={`${villas.length} ${villas.length === 1 ? "house" : "houses"} on the ridge`}
         title="Villas & rooms"
-        description="Each villa can be sold whole or split into its four bedrooms. Switching mode changes what the calendar and the booking form will allow."
+        description="Each villa can be sold whole or split into its bedrooms. Switching mode changes what the calendar and the booking form will allow."
+        actions={<VillaDialog />}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -42,7 +44,7 @@ export default function VillasListPage() {
                     the same proportion at every width instead of cropping
                     differently as the column narrows. */}
                 <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
+                  <Photo
                     src={villa.image}
                     alt={`${villa.name} seen from the approach`}
                     className="size-full object-cover transition-transform duration-700 group-hover:scale-105"

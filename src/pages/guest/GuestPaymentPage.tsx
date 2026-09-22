@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyState, ErrorState, Eyebrow, StatusBadge } from "@/components/common";
+import { foodOrderStatus } from "@/lib/status";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { useGuestStay } from "@/hooks/useGuest";
 import { useMockData, useSettings } from "@/hooks/useData";
 import { paymentStatus, titleCase } from "@/lib/status";
+import { orderTotal } from "@/services/domain";
 import { formatDateTime, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Payment, PaymentMethod } from "@/types";
@@ -22,7 +24,7 @@ const MAX_MB = MAX_RECEIPT_BYTES / (1024 * 1024);
 const ACCEPTED = ACCEPTED_RECEIPT_TYPES;
 
 export default function GuestPaymentPage() {
-  const { view, payments } = useGuestStay();
+  const { view, payments, orders } = useGuestStay();
   const { addPayment } = useMockData();
   const settings = useSettings();
 
@@ -45,6 +47,17 @@ export default function GuestPaymentPage() {
 
   const { booking, totals } = view;
   const pay = paymentStatus.get(booking.paymentStatus);
+
+  // Food the kitchen has taken but not yet closed off. A billed order is
+  // already inside `charges.food` — counting it here too would show the guest
+  // their dinner twice.
+  const pendingFood = orders.filter(
+    (order) =>
+      order.bookingId === booking.id &&
+      order.status !== "billed" &&
+      order.status !== "cancelled",
+  );
+  const pendingFoodTotal = pendingFood.reduce((sum, o) => sum + orderTotal(o.lines), 0);
 
   const errors = {
     file: !file ? "Attach the receipt from your bank or UPI app." : undefined,
@@ -150,6 +163,52 @@ export default function GuestPaymentPage() {
         <hr className="rule-gold my-5" />
         <FinancialBreakdown charges={booking.charges} totals={totals} tone="dark" />
       </section>
+
+      {/* ------------------------------------------------- food not yet billed */}
+      {pendingFood.length > 0 && (
+        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <Eyebrow className="text-gold-700">Food & beverage</Eyebrow>
+              <p className="mt-1 text-sm text-stone-600">
+                Ordered during your stay. These are added to your bill when the
+                kitchen closes them off, so the balance above does not include
+                them yet.
+              </p>
+            </div>
+            <p className="font-display text-2xl text-ink tabular-nums">
+              {money(pendingFoodTotal)}
+            </p>
+          </div>
+
+          <ul className="mt-4 divide-y divide-ink/8">
+            {pendingFood.map((order) => {
+              const state = foodOrderStatus.get(order.status);
+              return (
+                <li key={order.id} className="flex flex-wrap items-center gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-ink">
+                      {order.lines.map((l) => `${l.quantity}× ${l.name}`).join(", ")}
+                    </p>
+                    <p className="mt-0.5 text-xs text-stone-600">
+                      {formatDateTime(order.placedAt)}
+                    </p>
+                  </div>
+                  <span className="text-sm tabular-nums text-ink">
+                    {money(orderTotal(order.lines))}
+                  </span>
+                  <StatusBadge label={state.label} tone={state.tone} />
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-4 border-t border-ink/8 pt-3 text-sm text-stone-600">
+            Your stay and food together come to{" "}
+            <span className="font-medium text-ink">{money(totals.total + pendingFoodTotal)}</span>.
+          </p>
+        </section>
+      )}
 
       {totals.balance > 0 && (
         <>

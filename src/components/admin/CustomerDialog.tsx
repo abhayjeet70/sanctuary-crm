@@ -27,6 +27,23 @@ import type { Customer, GovtIdType } from "@/types";
 
 const NO_ID = "none";
 
+/** Suggestions only — the field takes anything typed. The list is the places
+ *  guests on the ridge actually come from, not an atlas. */
+const COMMON_COUNTRIES = [
+  "India",
+  "United States",
+  "United Kingdom",
+  "United Arab Emirates",
+  "Singapore",
+  "Australia",
+  "Canada",
+  "Germany",
+  "France",
+  "Netherlands",
+  "Japan",
+  "New Zealand",
+];
+
 /** What reception is actually handed across the desk. */
 const ID_TYPES: { value: GovtIdType; label: string }[] = [
   { value: "aadhaar", label: "Aadhaar" },
@@ -59,6 +76,7 @@ export function CustomerDialog({
   const [phone, setPhone] = useState(customer?.phone ?? "");
   const [email, setEmail] = useState(customer?.email ?? "");
   const [city, setCity] = useState(customer?.city ?? "");
+  const [country, setCountry] = useState(customer?.country ?? "India");
   const [preferences, setPreferences] = useState((customer?.preferences ?? []).join(", "));
   const [notes, setNotes] = useState(customer?.notes ?? "");
 
@@ -132,6 +150,7 @@ export function CustomerDialog({
       phone: phone.trim(),
       email: email.trim().toLowerCase(),
       city: city.trim(),
+      country: country.trim() || "India",
       preferences: preferences
         .split(",")
         .map((p) => p.trim())
@@ -200,6 +219,23 @@ export function CustomerDialog({
                   onChange={(event) => setCity(event.target.value)}
                   placeholder="Bengaluru"
                 />
+              </Field>
+              <Field label="Country" htmlFor="guest-country">
+                <Input
+                  id="guest-country"
+                  value={country}
+                  onChange={(event) => setCountry(event.target.value)}
+                  list="guest-country-options"
+                  placeholder="India"
+                />
+                {/* A datalist, not a select: most guests are Indian and can
+                    leave it alone, and the rest can type anything rather than
+                    hunt through two hundred entries for theirs. */}
+                <datalist id="guest-country-options">
+                  {COMMON_COUNTRIES.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
               </Field>
               <Field
                 label="Preferences"

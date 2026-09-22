@@ -23,7 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EmptyState, Eyebrow, StatusBadge } from "@/components/common";
+import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useShowsFinancials, useSession } from "@/services/session";
 import {
   useBookingViews,
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                 key={villa.id}
                 className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]"
               >
-                <img src={villa.image} alt="" aria-hidden className="h-28 w-full object-cover" />
+                <Photo src={villa.image} alt="" aria-hidden className="h-28 w-full object-cover" />
                 <div className="p-4">
                   <Link
                     to={`/admin/villas/${villa.id}`}

@@ -4,7 +4,7 @@ import { Plus, Sparkles, Wifi, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EmptyState, PageHeader, StatCard } from "@/components/common";
+import { EmptyState, PageHeader, StatCard, Photo } from "@/components/common";
 import { useMockData, useVillas } from "@/hooks/useData";
 import type { Villa } from "@/types";
 
@@ -70,10 +70,9 @@ function VillaAmenities({ villa }: { villa: Villa }) {
 
   return (
     <section className="flex flex-col rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
-      <img
+      <Photo
         src={villa.image}
         alt=""
-        aria-hidden
         className="h-36 w-full rounded-t-xl object-cover"
       />
       <div className="flex flex-1 flex-col p-5">

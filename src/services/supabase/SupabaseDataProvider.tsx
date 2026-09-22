@@ -529,6 +529,44 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      createVilla: async (villa) => {
+        // The slug is what the public site and every link key off, so it is
+        // derived from the name rather than typed — a villa called "Villa
+        // Maaya" is always /villa-maaya, whoever adds it.
+        const slug = (villa.slug ?? villa.name ?? "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+        if (!slug) return { id: null, error: "Give the villa a name" };
+
+        const { data, error } = await supabase
+          .from("villas")
+          .insert({
+            slug,
+            name: villa.name,
+            description: villa.description ?? "",
+            image: villa.image || null,
+            bedrooms: villa.bedrooms ?? 1,
+            capacity: villa.capacity ?? 2,
+            mode: villa.mode ?? "whole",
+            status: villa.status ?? "active",
+            base_rate: villa.baseRate ?? 0,
+            weekend_rate: villa.weekendRate ?? 0,
+            seasonal_rate: villa.seasonalRate ?? 0,
+            check_in_time: villa.checkInTime ?? "14:00",
+            check_out_time: villa.checkOutTime ?? "11:00",
+            amenities: villa.amenities ?? [],
+            wifi_network: villa.wifiNetwork ?? "",
+            wifi_password: villa.wifiPassword ?? "",
+          })
+          .select("id")
+          .single();
+
+        if (error) return { id: null, error: error.message };
+        await refetch();
+        return { id: (data as { id: string }).id, error: null };
+      },
+
       updateVilla: (villaId, patch) => {
         void (async () => {
           const columns: Record<string, unknown> = {};
@@ -553,6 +591,21 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      deleteCustomer: async (id) => {
+        const { error } = await supabase.from("customers").delete().eq("id", id);
+        if (error) {
+          // 23503 is the restrict on bookings.customer_id. The raw message
+          // names a constraint, which is no use to whoever pressed the button.
+          const message =
+            error.code === "23503"
+              ? "This guest has bookings against their name. Cancel or reassign those first."
+              : error.message;
+          return { error: message };
+        }
+        await refetch();
+        return { error: null };
+      },
+
       saveCustomer: (customer) => {
         void (async () => {
           const columns = {
@@ -560,6 +613,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             phone: customer.phone ?? "",
             email: customer.email ?? "",
             city: customer.city ?? "",
+            country: customer.country?.trim() || "India",
             preferences: customer.preferences ?? [],
             notes: customer.notes || null,
             // Nulls, not empty strings: "no ID on file" is a real state and

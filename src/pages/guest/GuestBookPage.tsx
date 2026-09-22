@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { EmptyState, Eyebrow, StatusBadge } from "@/components/common";
+import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useMockData, useVillas } from "@/hooks/useData";
 import { supabase } from "@/services/supabase/client";
 import { money, nightsBetween } from "@/lib/format";
@@ -106,6 +106,14 @@ export default function GuestBookPage() {
 
   const chosen = results?.find((r) => r.villa_id === chosenVilla);
   const isSplit = chosen?.villa_mode === "split";
+  const guests = Number(adults) + Number(children);
+  const chosenVillaRecord = villas.find((v) => v.id === chosenVilla);
+  // What the picked rooms sleep between them, so the guest is told before they
+  // arrive rather than at the door.
+  const roomsSleep = rooms
+    .filter((r) => chosenRooms.includes(r.room_id))
+    .reduce((sum, r) => sum + r.capacity, 0);
+
   const nightly = isSplit
     ? rooms.filter((r) => chosenRooms.includes(r.room_id)).reduce((s, r) => s + r.base_rate, 0)
     : (chosen?.nightly_rate ?? 0);
@@ -240,7 +248,7 @@ export default function GuestBookPage() {
                     )}
                   >
                     <span className="relative block aspect-[3/2] overflow-hidden">
-                      <img
+                      <Photo
                         src={villa?.image}
                         alt={row.villa_name}
                         className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -305,9 +313,25 @@ export default function GuestBookPage() {
         <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
           <Eyebrow className="text-gold-700">Your stay at {chosen.villa_name}</Eyebrow>
 
+          {!isSplit && (
+            <p className="mt-2 text-sm text-stone-600">
+              The whole villa is yours — all {chosen.total_rooms} bedrooms, sleeping up to{" "}
+              {chosenVillaRecord?.capacity ?? chosen.total_rooms * 2} guests. There are no
+              other guests in the house.
+            </p>
+          )}
+
           {isSplit && (
             <fieldset className="mt-4">
-              <legend className="label-caps mb-2">Choose your rooms</legend>
+              <legend className="label-caps mb-2">
+                Choose your rooms — {chosenRooms.length} of {chosen.free_rooms} free
+              </legend>
+              <p className="mb-3 text-sm text-stone-600">
+                {guests} {guests === 1 ? "guest" : "guests"}:{" "}
+                {roomsSleep >= guests && chosenRooms.length > 0
+                  ? `the ${chosenRooms.length === 1 ? "room" : "rooms"} you have picked sleep ${roomsSleep}.`
+                  : `you will need enough beds for everyone — pick rooms sleeping ${guests} between them.`}
+              </p>
               <div className="grid gap-2 sm:grid-cols-4">
                 {rooms.map((room) => {
                   const picked = chosenRooms.includes(room.room_id);
@@ -377,6 +401,13 @@ export default function GuestBookPage() {
                 </div>
               </dl>
             </div>
+          )}
+
+          {isSplit && chosenRooms.length > 0 && roomsSleep < guests && (
+            <p role="alert" className="mt-4 rounded-xl bg-status-pending-bg p-3 text-sm text-status-pending">
+              Those rooms sleep {roomsSleep}, and you are {guests}. Add another room, or
+              tell us below and we will add an extra bed.
+            </p>
           )}
 
           <Button

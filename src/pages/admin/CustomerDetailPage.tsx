@@ -20,6 +20,7 @@ import {
 } from "@/hooks/useData";
 import { CustomerDialog } from "@/components/admin/CustomerDialog";
 import { GuestIdPanel } from "@/components/admin/GuestIdPanel";
+import { GuestAccountActions } from "@/components/admin/GuestAccountActions";
 import { GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
 import { useShowsFinancials } from "@/services/session";
 import { bookingStatus, paymentStatus, requestStatus, titleCase } from "@/lib/status";
@@ -94,14 +95,17 @@ export default function CustomerDetailPage() {
               </a>
               <span className="flex items-center gap-1.5">
                 <MapPin className="size-3.5" aria-hidden />
-                {customer.city}
+                {[customer.city, customer.country].filter(Boolean).join(", ")}
               </span>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden />
-            Edit
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Pencil aria-hidden />
+              Edit
+            </Button>
+            <GuestAccountActions customer={customer} bookingCount={stats.bookingCount} />
+          </div>
         </div>
 
         {editing && (

@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ErrorState, Eyebrow, StatusBadge } from "@/components/common";
+import { ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { RoomDialog } from "@/components/admin/RoomDialog";
 import { useBookings, useCustomers, useMockData, useVilla } from "@/hooks/useData";
 import { bookingsOnDate } from "@/services/domain";
@@ -96,7 +96,7 @@ export default function VillaDetailPage() {
       {/* ------------------------------------------------------------ header */}
       <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
         <div className="relative h-48 sm:h-64">
-          <img src={villa.image} alt={villa.name} className="size-full object-cover" />
+          <Photo src={villa.image} alt={villa.name} className="size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/40 to-transparent" />
           <div className="absolute inset-x-6 bottom-5 flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -406,7 +406,7 @@ export default function VillaDetailPage() {
             <ul className="mt-3 grid grid-cols-3 gap-2">
               {villa.gallery.map((src, index) => (
                 <li key={`${src}-${index}`}>
-                  <img
+                  <Photo
                     src={src}
                     alt={`${villa.name}, view ${index + 1}`}
                     loading="lazy"

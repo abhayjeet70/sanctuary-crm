@@ -91,9 +91,15 @@ export interface MockData {
   addPayment: (payment: Payment) => void;
   setVillaMode: (villaId: ID, mode: VillaMode) => void;
   updateVilla: (villaId: ID, patch: Partial<Villa>) => void;
+  /** Open a new villa. Resolves with its id, so the caller can go straight to
+   *  the detail page and finish it off. */
+  createVilla: (villa: Partial<Villa>) => Promise<{ id: ID | null; error: string | null }>;
   /** Add a room, or edit one. Omit `id` to add. */
   /** Add a guest, or edit one. Omit `id` to add. */
   saveCustomer: (customer: Partial<Customer> & { id?: ID }) => void;
+  /** Remove a guest for good. Refused by the database while any booking still
+   *  points at them — their stays are the property's own records. */
+  deleteCustomer: (id: ID) => Promise<{ error: string | null }>;
   saveRoom: (villaId: ID, room: Partial<Room> & { id?: ID }) => void;
   /** Refused by the database while a booking still holds the room. */
   deleteRoom: (roomId: ID) => void;
@@ -304,6 +310,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       },
       setVillaMode: (villaId, mode) => setVillas((prev) => patchById(prev, villaId, { mode })),
       updateVilla: (villaId, patch) => setVillas((prev) => patchById(prev, villaId, patch)),
+      createVilla: async () => ({ id: null, error: "Not available in the demo fixtures" }),
       // BR12 — billing an order moves its value onto the booking's food charge,
       // so it appears on the invoice and in the balance. Guarded against a
       // double-add if the same order is billed twice.
@@ -349,6 +356,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       // Settings, invoices and the menu are read-only in the offline harness;
       // the Supabase provider implements them.
       saveCustomer: () => {},
+      deleteCustomer: async () => ({ error: "Not available" }),
       saveRoom: () => {},
       deleteRoom: () => {},
       createInvoice: () => {},

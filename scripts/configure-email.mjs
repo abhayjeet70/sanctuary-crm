@@ -37,7 +37,10 @@ console.log("  2. A Supabase access token  https://supabase.com/dashboard/accoun
 console.log("A verified sending domain in Resend is required for anything other");
 console.log("than your own address. Until then use onboarding@resend.dev.\n");
 
-const resendKey = (await ask("Resend API key: ")).trim();
+// Environment first, so this can run unattended from a machine that already
+// holds the credentials — the prompts are for a human doing it once by hand.
+const resendKey = (env.RESEND_API_KEY ?? env.RESEND_KEY ?? "").trim() ||
+  (await ask("Resend API key: ")).trim();
 if (!resendKey.startsWith("re_")) {
   console.error("\nThat does not look like a Resend key (they start with re_).");
   rl.close();
@@ -45,11 +48,15 @@ if (!resendKey.startsWith("re_")) {
 }
 
 const fromAddress =
-  (await ask('Send from [Homes of Sanctuary <onboarding@resend.dev>]: ')).trim() ||
+  (env.NOTIFY_FROM ?? "").trim() ||
+  (env.CI || env.RESEND_API_KEY || env.RESEND_KEY
+    ? ""
+    : (await ask('Send from [Homes of Sanctuary <onboarding@resend.dev>]: ')).trim()) ||
   "Homes of Sanctuary <onboarding@resend.dev>";
 
 const accessToken =
-  env.SUPABASE_ACCESS_TOKEN?.trim() || (await ask("Supabase access token: ")).trim();
+  (env.SUPABASE_ACCESS_TOKEN ?? env.SUPABASE_TOKEN ?? "").trim() ||
+  (await ask("Supabase access token: ")).trim();
 if (!accessToken.startsWith("sbp_")) {
   console.error("\nThat does not look like a Supabase access token (they start with sbp_).");
   rl.close();

@@ -58,6 +58,9 @@ export interface Customer {
   phone: string;
   email: string;
   city: string;
+  /** Country of origin. Decides the foreign-national paperwork a property
+   *  files, so it is asked for rather than assumed. */
+  country: string;
   /** Decides CGST + SGST against IGST on the invoice. */
   state?: string;
   guestType: GuestType;

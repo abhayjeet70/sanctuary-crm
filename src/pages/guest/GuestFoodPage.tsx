@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { EmptyState, ErrorState, Eyebrow, StatusBadge } from "@/components/common";
+import { EmptyState, ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
 import { useMenuForVilla, useMockData } from "@/hooks/useData";
 import { foodOrderStatus, titleCase } from "@/lib/status";
@@ -308,7 +308,7 @@ export default function GuestFoodPage() {
               )}
             >
               <div className="relative h-40">
-                <img
+                <Photo
                   src={item.image}
                   alt={item.name}
                   loading="lazy"

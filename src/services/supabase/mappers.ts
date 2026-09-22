@@ -78,6 +78,7 @@ export const toCustomer = (row: unknown): Customer => {
     phone: x.phone,
     email: x.email,
     city: x.city,
+    country: x.country || "India",
     state: x.state || undefined,
     guestType: x.guest_type,
     idType: x.id_type || undefined,

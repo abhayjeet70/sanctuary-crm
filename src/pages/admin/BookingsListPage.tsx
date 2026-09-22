@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EmptyState, PageHeader, StatusBadge } from "@/components/common";
+import { EmptyState, PageHeader, StatusBadge, Photo } from "@/components/common";
 import { useBookingViews, useVillas } from "@/hooks/useData";
 import { bookingSource, bookingStatus, paymentStatus, sourceOptions } from "@/lib/status";
 import { formatDateRange, formatShortDate, money, nightsBetween } from "@/lib/format";
@@ -401,10 +401,9 @@ function BookingCard({ view }: { view: BookingView }) {
         className="group block overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] transition-all hover:shadow-lift hover:ring-gold/35"
       >
         <div className="relative h-28 overflow-hidden">
-          <img
+          <Photo
             src={villa?.image}
             alt=""
-            aria-hidden
             className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/80 to-transparent" />

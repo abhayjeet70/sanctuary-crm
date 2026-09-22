@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Eyebrow, Logo, StatusBadge } from "@/components/common";
+import { Eyebrow, Logo, StatusBadge, Photo } from "@/components/common";
 import { collage, photo } from "@/lib/assets";
 import { stayTimes } from "@/services/domain";
 import { useGuestStay } from "@/hooks/useGuest";
@@ -44,10 +44,9 @@ export default function GuestDashboardPage() {
     return (
       <div className="p-5 sm:p-8">
         <section className="relative overflow-hidden rounded-2xl bg-ink text-sand">
-          <img
+          <Photo
             src={photo.hills}
             alt=""
-            aria-hidden
             className="absolute inset-0 size-full object-cover opacity-40"
           />
           <div className="relative p-8 sm:p-12">
@@ -79,7 +78,7 @@ export default function GuestDashboardPage() {
         <ul className="mt-6 grid gap-3 sm:grid-cols-3">
           {collage.slice(0, 3).map((image) => (
             <li key={image.src} className="overflow-hidden rounded-2xl ring-1 ring-gold/20">
-              <img
+              <Photo
                 src={image.src}
                 alt={image.alt}
                 loading="lazy"
@@ -119,7 +118,7 @@ export default function GuestDashboardPage() {
     <div className="pb-8">
       {/* ------------------------------------------------------------- hero */}
       <section className="relative overflow-hidden">
-        <img
+        <Photo
           src={villa?.image}
           alt={`${villa?.name} at Homes of Sanctuary`}
           className="h-72 w-full object-cover sm:h-96"

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ErrorState, Eyebrow, StatusBadge } from "@/components/common";
+import { ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { stayTimes } from "@/services/domain";
 import { useGuestStay } from "@/hooks/useGuest";
@@ -92,13 +92,13 @@ export default function GuestBookingPage() {
 
       {/* ------------------------------------------------------------- stay */}
       <section className="overflow-hidden rounded-2xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
-        <img src={villa?.image} alt={villa?.name} className="h-44 w-full object-cover" />
+        <Photo src={villa?.image} alt={villa?.name ?? ""} className="h-44 w-full object-cover" />
         <div className="p-6">
           <h2 className="font-display text-2xl text-ink">{villa?.name}</h2>
           <p className="mt-1 text-sm text-stone-600">
             {booking.bookingMode === "whole"
-              ? "The whole villa is yours — all four bedrooms."
-              : `Your rooms: ${roomNames.join(", ")}`}
+              ? `The whole villa is yours — all ${villa?.bedrooms ?? 0} bedrooms, sleeping up to ${villa?.capacity ?? 0}.`
+              : `${roomNames.length} of ${villa?.rooms.length ?? 0} rooms in this villa are yours.`}
           </p>
 
           <hr className="rule-gold my-5" />
@@ -110,6 +110,12 @@ export default function GuestBookingPage() {
               ["Nights", String(nights)],
               ["Adults", String(booking.adults)],
               ["Children", String(booking.children)],
+              [
+                booking.bookingMode === "whole" ? "Bedrooms" : "Your rooms",
+                booking.bookingMode === "whole"
+                  ? `All ${villa?.bedrooms ?? 0}`
+                  : roomNames.join(", ") || "To be assigned",
+              ],
               ["Booked via", bookingSource[booking.source]],
             ].map(([label, value]) => (
               <div key={label}>
@@ -165,10 +171,9 @@ export default function GuestBookingPage() {
                   key={other.id}
                   className="flex flex-wrap items-center gap-4 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
                 >
-                  <img
+                  <Photo
                     src={otherVilla?.image}
                     alt=""
-                    aria-hidden
                     className="size-12 rounded-lg object-cover ring-1 ring-gold/25"
                   />
                   <div className="min-w-0 flex-1">

@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EmptyState, Eyebrow, StatusBadge } from "@/components/common";
+import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useMenu, useMockData, useVillas } from "@/hooks/useData";
 import { titleCase } from "@/lib/status";
 import { money } from "@/lib/format";
@@ -150,7 +150,7 @@ export function MenuManager() {
               >
                 <div className="relative h-28">
                   {item.image ? (
-                    <img src={item.image} alt={item.name} className="size-full object-cover" />
+                    <Photo src={item.image} alt={item.name} className="size-full object-cover" />
                   ) : (
                     <div className="flex size-full items-center justify-center bg-sand-300/50 text-stone">
                       <Utensils className="size-6" aria-hidden />
@@ -305,7 +305,7 @@ export function MenuManager() {
               <Label>Photo</Label>
               <div className="flex flex-wrap items-center gap-3">
                 {editing?.image ? (
-                  <img
+                  <Photo
                     src={editing.image}
                     alt=""
                     className="size-20 rounded-lg object-cover ring-1 ring-gold/25"

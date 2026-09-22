@@ -31,6 +31,7 @@ import {
   ErrorState,
   Eyebrow,
   StatusBadge,
+  Photo,
 } from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
@@ -139,7 +140,7 @@ export default function BookingDetailPage() {
 
         <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
           <div className="relative h-40 sm:h-48">
-            <img src={villa?.image} alt="" aria-hidden className="size-full object-cover" />
+            <Photo src={villa?.image} alt="" aria-hidden className="size-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/45 to-transparent" />
             <div className="absolute inset-x-6 bottom-5 flex flex-wrap items-end justify-between gap-4">
               <div className="min-w-0">

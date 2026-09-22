@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Check, Clock, Copy, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ErrorState, Eyebrow } from "@/components/common";
+import { ErrorState, Eyebrow, Photo } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
 import { stayTimes } from "@/services/domain";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,8 @@ export default function GuestAmenitiesPage() {
   const [copied, setCopied] = useState(false);
 
   if (!view?.villa) return <ErrorState className="m-5" title="No stay found" />;
-  const { villa, booking } = view;
+  const { villa, booking, roomNames } = view;
+  const wholeVilla = booking.bookingMode === "whole";
   // This page is the guest's own stay, so it must agree with their booking
   // page. Quoting the villa's standard hours here would contradict it.
   const times = stayTimes(booking, villa);
@@ -31,7 +32,7 @@ export default function GuestAmenitiesPage() {
   return (
     <div className="pb-8">
       <section className="relative">
-        <img
+        <Photo
           src={villa.image}
           alt={villa.name}
           className="h-56 w-full object-cover sm:h-80"
@@ -45,6 +46,41 @@ export default function GuestAmenitiesPage() {
 
       <div className="space-y-6 p-5 sm:p-8">
         <p className="max-w-2xl text-base leading-relaxed text-ink">{villa.description}</p>
+
+        {/* ---------------------------------------------------- your rooms */}
+        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+          <Eyebrow className="text-gold-700">Your rooms</Eyebrow>
+          <p className="mt-2 text-ink">
+            {wholeVilla
+              ? `You have the whole villa: all ${villa.bedrooms} bedrooms, sleeping up to ${villa.capacity} guests.`
+              : `${roomNames.length} of the ${villa.rooms.length} rooms in this villa are yours.`}
+          </p>
+
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {villa.rooms.map((room) => {
+              const yours = wholeVilla || roomNames.includes(room.name);
+              return (
+                <li
+                  key={room.id}
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm",
+                    yours ? "bg-sand-200/70 text-ink" : "text-stone-600",
+                  )}
+                >
+                  <span>{room.name}</span>
+                  <span className="text-xs">
+                    {yours ? `Yours · sleeps ${room.capacity}` : "Another guest"}
+                  </span>
+                </li>
+              );
+            })}
+            {villa.rooms.length === 0 && (
+              <li className="text-sm text-stone-600">
+                {villa.bedrooms} bedrooms, sleeping up to {villa.capacity} guests.
+              </li>
+            )}
+          </ul>
+        </section>
 
         {/* --------------------------------------------------------- wifi */}
         <section className="overflow-hidden rounded-2xl bg-ink text-sand shadow-lift ring-1 ring-gold/30">
@@ -146,7 +182,7 @@ export default function GuestAmenitiesPage() {
                   index === 0 && "col-span-2 row-span-2",
                 )}
               >
-                <img
+                <Photo
                   src={src}
                   alt={`${villa.name}, view ${index + 1}`}
                   loading="lazy"
