@@ -36,6 +36,7 @@ import {
 } from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
+import { VoucherDocument } from "@/components/booking/VoucherDocument";
 import { EmailGuestButton, GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
 import { SendBookingDetails } from "@/components/booking/SendBookingDetails";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
@@ -216,6 +217,7 @@ export default function BookingDetailPage() {
                 <span className="ml-1.5 text-xs text-stone-600">{payments.length}</span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="voucher">Voucher</TabsTrigger>
             <TabsTrigger value="invoice">Invoice</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
@@ -416,6 +418,22 @@ export default function BookingDetailPage() {
                 );
               })
             )}
+          </TabsContent>
+
+          {/* ---------------------------------------------------- voucher */}
+          <TabsContent value="voucher" className="space-y-4 pt-5">
+            <div className="flex flex-wrap gap-2 print:hidden">
+              <Button size="sm" onClick={() => window.print()}>
+                <Printer aria-hidden />
+                Print
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => window.print()}>
+                <Download aria-hidden />
+                Save as PDF
+              </Button>
+              <SendBookingDetails view={view} />
+            </div>
+            <VoucherDocument view={view} className="rounded-xl" />
           </TabsContent>
 
           {/* ---------------------------------------------------- invoice */}

@@ -37,6 +37,7 @@ import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
 import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
+import GuestVoucherPage from "@/pages/guest/GuestVoucherPage";
 import GuestBookingPage from "@/pages/guest/GuestBookingPage";
 import GuestPaymentPage from "@/pages/guest/GuestPaymentPage";
 import GuestInvoicePage from "@/pages/guest/GuestInvoicePage";
@@ -215,6 +216,7 @@ export function AppRoutes() {
         <Route path="waitlist" element={<GuestWaitlistPage />} />
         <Route path="booking" element={<GuestBookingPage />} />
         <Route path="payment" element={<GuestPaymentPage />} />
+        <Route path="voucher" element={<GuestVoucherPage />} />
         <Route path="invoice" element={<GuestInvoicePage />} />
         <Route path="amenities" element={<GuestAmenitiesPage />} />
         <Route path="food" element={<GuestFoodPage />} />

@@ -59,6 +59,7 @@ const ROUTES = [
   "/guest/dashboard",
   "/guest/book",
   "/guest/waitlist",
+  "/guest/voucher",
   "/guest/booking",
   "/guest/payment",
   "/guest/invoice",

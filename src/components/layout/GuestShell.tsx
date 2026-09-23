@@ -10,7 +10,9 @@ import {
   Home,
   LogOut,
   MessageSquareQuote,
+  Hourglass,
   Receipt,
+  Ticket,
   Sparkles,
   Wallet,
   X,
@@ -37,6 +39,8 @@ const PRIMARY = [
 const SECONDARY = [
   { to: "/guest/book", label: "Book a stay", icon: CalendarPlus },
   { to: "/guest/booking", label: "Booking details", icon: CalendarCheck },
+  { to: "/guest/voucher", label: "Voucher", icon: Ticket },
+  { to: "/guest/waitlist", label: "Waiting list", icon: Hourglass },
   { to: "/guest/invoice", label: "Invoice", icon: Receipt },
   { to: "/guest/feedback", label: "Feedback", icon: MessageSquareQuote },
 ] as const;
