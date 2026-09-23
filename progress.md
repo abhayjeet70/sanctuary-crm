@@ -1,6 +1,6 @@
 # Homes of Sanctuary CRM — Progress
 
-Living status of the build. Updated 10 September 2026 (round twelve).
+Living status of the build. Updated 23 September 2026 (round fourteen).
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind v4 · shadcn/ui · React Router 7 · Supabase (Postgres + Auth + Storage + Edge Functions)
 
@@ -48,7 +48,7 @@ so the shared password is not in a deployed bundle.
   display type). `gold-700` is the only brass that clears AA on a light ground.
 - Status is never colour alone — every badge carries a written label.
 
-### Admin (11 routes)
+### Admin (26 routes)
 | Route | State |
 |---|---|
 | `/admin/dashboard` | Figures, today's movements, occupancy, kitchen + requests |
@@ -63,13 +63,17 @@ so the shared password is not in a deployed bundle.
 | `/admin/requests` | Assignment + priority board |
 | `/admin/feedback` | Ratings, reply, mark reviewed |
 | `/admin/invoices` · `/settings` | Invoice list; property config |
+| `/admin/housekeeping` · `/maintenance` · `/amenities` | Room readiness, repairs, what each villa offers |
+| `/admin/enquiries` · `/quotes` · `/followups` | The sales pipeline — see §14 |
+| `/admin/expenses` · `/reports` | Money out (owner-only) and money in |
+| `/admin/employees` · `/roles` · `/activity` | Roster, department permissions, event log |
 
 ### Guest (8 routes)
 Mobile-first, thumb-reachable bottom bar, desktop rail at `lg`.
 Stay dashboard · booking detail · payment + receipt upload · printable invoice ·
 amenities & Wi-Fi · food ordering with cart · requests · feedback.
 
-### Backend — 19 migrations, all applied
+### Backend — 47 migrations, all applied
 - 15 tables, all with RLS. 40 policies across `public` and `storage`.
 - **BR1–BR5 enforced structurally.** A whole-villa booking expands by trigger
   into a hold on all four bedrooms; one `btree_gist` exclusion constraint over
@@ -81,9 +85,12 @@ amenities & Wi-Fi · food ordering with cart · requests · feedback.
 - RPCs for every multi-row operation: `create_booking`, `approve_payment`,
   `reject_payment`, `place_food_order`, `set_food_order_status`,
   `set_booking_status`, `find_booking_conflicts`, `create_booking_with_guest`.
-- Private `payment-receipts` bucket, no DELETE policy for anyone.
-- 4 Edge Functions deployed, all using the **caller's JWT, never service-role**:
-  `verify-payment`, `create-booking`, `receipt-url`, `send-notification`.
+- Private `payment-receipts` and `guest-ids` buckets, no DELETE policy for anyone.
+- Public `villa-photos` bucket — see §14 for why that one is public.
+- 6 Edge Functions deployed. Four run on the **caller's JWT, never service-role**:
+  `verify-payment`, `create-booking`, `receipt-url`, `send-notification`. Two hold
+  the service key (`manage-staff`, `invite-guest`) and authorise the caller with
+  their own JWT before the privileged client is touched.
 - Realtime on 5 tables; notification triggers for uploaded receipts, new kitchen
   orders, guest requests and feedback of 3 stars or below.
 - Three roles: `admin` (everything), `staff` (their team's queue only),
@@ -835,3 +842,142 @@ Amenities are a flat `string[]`, so grouping them under headings would mean
 inventing categories and sorting by guesswork. A list that silently files
 "Plunge pool" under the wrong heading is worse than an ungrouped one. It wants
 a category on the amenity record first.
+
+---
+
+## 14. Round fourteen — 22–23 September
+
+The operations sidebar and dashboard rebuilt to a supplied design, nine new
+sections, an expenses ledger, and the QA findings from the TC01–TC11 pass.
+**47 migrations, 6 edge functions, 37 routes.**
+
+### The sidebar, regrouped
+
+Three groups over fourteen items became five over twenty-two: **Operations,
+Property, Sales, Finance, Management**. The old grouping (Today / Property /
+Business) had no home for the work a property does between bookings —
+housekeeping, maintenance, the sales pipeline — so those sections had nowhere
+to be added.
+
+### The dashboard, rebuilt
+
+It was a row of four counters and three lists. It is now the screen the day is
+run from:
+
+| Panel | Where the numbers come from |
+|---|---|
+| Four stat tiles | Arrivals, departures, in-house, awaiting verification — each links through, each carries the one or two lines that qualify it |
+| Revenue today | One night of each live stay, plus today's kitchen sales and a night's share of add-ons. **Not** booking totals, which belong to the nights they cover. Owner-only |
+| Occupancy | A ring, with occupied / available / cleaning / maintenance beside it |
+| Needs attention | Derived: payments to verify, overdue checkouts, guests arriving unpaid, urgent requests, unconfirmed orders. Sorted oldest first |
+| Today's schedule | Arrivals and departures in time order, at the times actually agreed |
+| Villa status | Photo cards — occupied with who and until when, or how many rooms are free |
+| Booking funnel | This month's bookings by lifecycle stage, with the conversion rate |
+| Guest satisfaction | Real average and the real 5-to-1 distribution |
+
+The mock showed per-category satisfaction scores (cleanliness, staff, food).
+Feedback carries one overall rating, so those would have been invented. The
+rating distribution answers the same question from data that exists.
+
+### Nine sections added
+
+Eight needed no schema change — the records were already there, unassembled:
+
+| Section | Assembled from |
+|---|---|
+| Housekeeping | Room statuses, today's departures, floor requests. Mark-clean acts on the room |
+| Maintenance | Maintenance jobs plus every villa and room held out of service |
+| Amenities | Per-villa lists, editable in place, so three villas describe themselves consistently |
+| Enquiries | `inquiry` bookings and the waitlist, kept apart — one needs a price, the other needs a cancellation |
+| Quotes | Priced unpaid bookings with the full breakdown. **No quote record exists by design:** the booking already carries the numbers, and a quote living apart is a second set to keep in step |
+| Follow-ups | Derived chase list — unanswered enquiries, unpaid deposits, balances after checkout, freed waitlist dates, unreplied low ratings. Nothing is stored, so settling a balance removes the row by itself |
+| Activity log | Every recorded event, searchable and filtered by kind |
+| Roles & permissions | The department permission editor, given its own route |
+
+**Expenses** was the one with nothing behind it, so it got a table
+(`20260922090000_expenses.sql`): category, amount, payee, method, reference,
+optional villa. Owner-only at the RLS level — a manager runs the property
+without seeing what it pays its electrician, and hiding a nav item is
+presentation, not access control.
+
+### The QA pass — TC01–TC11
+
+| | Reported | What was actually wrong |
+|---|---|---|
+| TC01 / TC07 | No "Add new villa" | A villa could be edited but never opened. Add-villa dialog, carrying both times — a villa with no check-in hour is one the desk has to guess about |
+| TC02 | Broken menu images | Remote URLs fail; the browser answers with a torn-paper glyph. `<Photo>` falls back to a sand panel with the subject's initial, applied across 13 pages — the fix is for every photo, not the three that were reported |
+| TC03 | Food missing from the bill | It only appeared once the kitchen billed it. Unbilled orders are now listed with their total and the combined figure, **without** touching the balance the BR12 trigger owns |
+| TC04 | Villa section too thin | It claimed "all four bedrooms" whatever the villa had. Reads the real count now, and names which rooms are the guest's |
+| TC05 | No room selection | It existed, but only for split villas and with nothing said about capacity. Both modes now state what is being booked, and a party too large for the rooms picked is told so |
+| TC08 | Cannot delete a guest | Delete with a type-the-name confirmation. The database refuses while any booking names them — their stays are the property's own records |
+| TC09 | Cannot reset a guest password | A reset link goes to the guest's own address. **The password is never set for them**, so nobody at the property ever knows a guest's password |
+| TC10 | No "Needs attention" | Built, above |
+| TC11 | No country on a client | Column added (`20260922140000_customer_country.sql`), defaulted to India. It decides the foreign-national paperwork a property files, which no city column can answer |
+
+**TC06 — UI/UX across the four portals — was not done.** The finding reads
+"interfaces *likely* suffer from inconsistent design languages", which is a
+guess rather than an observation. It wants specific complaints before anything
+is redesigned against it.
+
+### Villa photographs are uploaded, not linked
+
+Asking for a URL asks the wrong person to do the wrong job: whoever adds a
+villa has the photograph on their machine. File picker with a preview, and a
+**Replace photo** button on the villa's own picture.
+
+The `villa-photos` bucket is **public**, unlike receipts and guest IDs, and
+deliberately: these render in an `<img>` on the guest portal and the marketing
+site, where a signed URL expires and leaves a villa with a hole in it. Writing
+is management-only. The upload runs before the insert, so a storage failure
+never leaves a row pointing at a photograph that is not there.
+
+### A guest can join the waiting list
+
+Until now the only way on was an admin hitting a conflict in the New Booking
+form. A guest who searched a sold-out weekend saw "nothing free" and closed the
+tab — at the one moment they were certainly thinking about those dates.
+
+A taken house now carries "Tell me if it frees up"; when every house is held
+the page asks outright; and the guest can see what they are waiting for and
+withdraw. No migration — `guests join the waitlist` and `guests withdraw from
+the waitlist` have been on the table since the front-desk work, and they allow
+exactly this and nothing else. Self-joins carry source `website`, so the desk
+can tell them from ones it added.
+
+### Email is configured but has no provider
+
+`send-notification` supports Resend's HTTP API or raw SMTP and reports honestly
+when it has neither, which is what the "Email is not configured" card is. The
+missing piece is credentials, not code:
+
+1. **Auth SMTP** — Authentication → Emails → SMTP Settings: `smtp.resend.com`,
+   port 465, user `resend`, password the Resend key.
+2. **Function secrets** — Edge Functions → Secrets: `RESEND_API_KEY` and
+   `NOTIFY_FROM`.
+
+`npm run configure-email` does both, and now reads `RESEND_KEY` / `SUPABASE_TOKEN`
+from the environment rather than prompting. It needs a Supabase access token
+with **Auth** and **Secrets** scopes — a token scoped to Project Settings alone
+returns 403, which is what blocked this.
+
+Until a domain is verified in Resend, mail only reaches your own address.
+
+### Applying migrations
+
+The management API refuses the tokens on hand (403), but the database accepts
+the pooler connection. With `SUPABASE_DB_PASSWORD` in `.env.local`:
+
+```bash
+set -a && . ./.env.local && set +a && npx supabase db push
+```
+
+All three of this round's migrations are applied and verified against the live
+database.
+
+### Notes for next time
+
+- **Expenses do not reach the reports yet.** The table is there and the page
+  writes to it; `/admin/reports` still shows revenue alone.
+- **TC06** needs specific complaints, per above.
+- **Guest self-joins are silent.** The waitlist row is created, but nobody is
+  emailed when their dates free up — that waits on the provider keys.
