@@ -220,6 +220,172 @@ export interface CompanionCredentials {
   temporaryPassword: string;
 }
 
+/* ----------------------------------------------------------- lost & found */
+
+export type LostItemCategory =
+  | "electronics" | "jewellery" | "watch" | "clothing" | "bag" | "documents"
+  | "medication" | "cash" | "toiletries" | "books" | "toys" | "accessories" | "other";
+
+export type LostItemSensitivity = "normal" | "high_value" | "sensitive";
+
+export type LostItemLocation =
+  | "villa" | "room" | "common_area" | "restaurant" | "kitchen" | "pool"
+  | "garden" | "front_desk" | "parking" | "other";
+
+/** The state machine lives in the database (`lost_item_transition_allowed`);
+ *  this is only its vocabulary. */
+export type LostItemStatus =
+  | "found" | "under_review" | "guest_identified" | "guest_contacted"
+  | "claim_pending" | "claim_verified" | "claim_rejected"
+  | "return_method_selected" | "return_arranged" | "ready_for_pickup"
+  | "in_transit" | "returned" | "unclaimed" | "disposed" | "closed";
+
+export type LostItemDisposition =
+  | "returned" | "donated" | "disposed" | "transferred" | "handed_to_authorities" | "other";
+
+export type CourierStatus =
+  | "quote_required" | "awaiting_payment" | "ready_to_ship" | "pickup_scheduled"
+  | "picked_up" | "in_transit" | "out_for_delivery" | "delivered"
+  | "delivery_failed" | "returned_to_property";
+
+/** A found item, as staff see it. Guests never receive this shape. */
+export interface LostItem {
+  id: ID;
+  reference: string;
+  title: string;
+  category: LostItemCategory;
+  sensitivity: LostItemSensitivity;
+  description: string;
+  brand: string;
+  colour: string;
+  /** The detail a real owner could describe. Never shown to a claimant. */
+  distinguishing: string;
+  quantity: number;
+  photoPaths: string[];
+  location: LostItemLocation;
+  villaId?: ID;
+  roomId?: ID;
+  locationNote: string;
+  foundAt: ISODateTime;
+  foundByName: string;
+  departmentId?: ID;
+  bookingId?: ID;
+  customerId?: ID;
+  companionId?: ID;
+  storageLocation: string;
+  storageRef: string;
+  secured: boolean;
+  status: LostItemStatus;
+  retentionUntil?: ISODate;
+  disposition?: LostItemDisposition;
+  dispositionNote: string;
+  closedAt?: ISODateTime;
+  createdBy?: ID;
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+}
+
+export interface LostItemClaim {
+  id: ID;
+  itemId: ID;
+  customerId?: ID;
+  companionId?: ID;
+  statement: string;
+  status: "pending" | "verified" | "rejected";
+  verifiedBy?: ID;
+  verifiedAt?: ISODateTime;
+  rejectionNote: string;
+  createdAt: ISODateTime;
+}
+
+export interface LostItemReturn {
+  id: ID;
+  itemId: ID;
+  method: "pickup" | "courier";
+  pickupAt?: ISODateTime;
+  collectedBy: string;
+  idChecked: boolean;
+  releasedAt?: ISODateTime;
+  recipientName: string;
+  recipientPhone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  country: string;
+  postalCode: string;
+  deliveryNotes: string;
+  courierProvider: string;
+  trackingNumber: string;
+  shippingCost?: number;
+  paidBy?: "guest" | "property";
+  paymentStatus: "pending" | "paid" | "waived";
+  paymentReference: string;
+  shippingStatus?: CourierStatus;
+  pickupDate?: ISODate;
+  expectedDelivery?: ISODate;
+  deliveredAt?: ISODateTime;
+}
+
+/** A guest's own window onto their case — the `guest_lost_items` view.
+ *  No storage, no finder, no distinguishing detail: those columns do not
+ *  exist in the view, so they cannot leak through it. */
+export interface GuestLostItem {
+  id: ID;
+  reference: string;
+  title: string;
+  category: LostItemCategory;
+  description: string;
+  brand: string;
+  colour: string;
+  photoPaths: string[];
+  location: LostItemLocation;
+  villaId?: ID;
+  roomId?: ID;
+  foundAt: ISODateTime;
+  status: LostItemStatus;
+  bookingId?: ID;
+  companionId?: ID;
+  claimStatus?: "pending" | "verified" | "rejected";
+  claimNote?: string;
+  returnMethod?: "pickup" | "courier";
+  courierProvider?: string;
+  trackingNumber?: string;
+  shippingStatus?: CourierStatus;
+  shippingCost?: number;
+  paidBy?: "guest" | "property";
+  shippingPaymentStatus?: "pending" | "paid" | "waived";
+  expectedDelivery?: ISODate;
+  deliveredAt?: ISODateTime;
+  pickupAt?: ISODateTime;
+  recipientName?: string;
+  deliveryCity?: string;
+  /** False for the holder looking at a companion's item: they may see it,
+   *  but the companion is the one who answers for it. */
+  isMineToAnswer: boolean;
+  updatedAt: ISODateTime;
+}
+
+export interface LostReport {
+  id: ID;
+  reference: string;
+  customerId?: ID;
+  companionId?: ID;
+  bookingId?: ID;
+  title: string;
+  category: LostItemCategory;
+  description: string;
+  colour: string;
+  brand: string;
+  locationNote: string;
+  lostAt?: ISODateTime;
+  photoPath?: string;
+  contactPref: "portal" | "phone" | "whatsapp" | "email";
+  status: "open" | "matched" | "closed";
+  matchedItemId?: ID;
+  createdAt: ISODateTime;
+}
+
 /* ------------------------------------------------------------ preferences */
 
 export type DietaryPreference =
@@ -443,6 +609,7 @@ export interface Feedback {
 export type ActivityKind =
   | "booking"
   | "waitlist"
+  | "lost_found"
   | "payment"
   | "food"
   | "request"

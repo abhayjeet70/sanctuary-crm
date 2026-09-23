@@ -1,4 +1,10 @@
-import { GUEST_IDS_BUCKET, RECEIPTS_BUCKET, VILLA_PHOTOS_BUCKET, supabase } from "./client";
+import {
+  GUEST_IDS_BUCKET,
+  LOST_FOUND_BUCKET,
+  RECEIPTS_BUCKET,
+  VILLA_PHOTOS_BUCKET,
+  supabase,
+} from "./client";
 
 /**
  * The private buckets: payment receipts, and guest ID scans.
@@ -159,3 +165,37 @@ export async function uploadVillaPhoto(
   const { data } = supabase.storage.from(VILLA_PHOTOS_BUCKET).getPublicUrl(path);
   return { url: data.publicUrl, error: null };
 }
+
+/* ------------------------------------------------------------- lost & found */
+
+/**
+ * Upload a photograph of a found item, or of something a guest reports lost.
+ *
+ * `items/{item_id}/…` or `reports/{report_id}/…` — that first segment is what
+ * the storage policy reads, so staff can write items and a guest can write a
+ * report, and neither can write the other. Returns a path, never a URL: the
+ * bucket is private, and a path only becomes something an <img> can show
+ * through a short-lived signature.
+ */
+export async function uploadLostFoundPhoto(
+  kind: "items" | "reports",
+  ownerId: string,
+  file: File,
+): Promise<{ path: string | null; error: string | null }> {
+  if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+    return { path: null, error: "Send a JPG, PNG or WebP." };
+  }
+  if (file.size > MAX_RECEIPT_BYTES) {
+    return { path: null, error: "That photograph is larger than 5 MB." };
+  }
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `${kind}/${ownerId}/${Date.now()}.${extension}`;
+  const { error } = await supabase.storage
+    .from(LOST_FOUND_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) return { path: null, error: error.message };
+  return { path, error: null };
+}
+
+export const resolveLostFoundUrl = (path: string | undefined, ttlSeconds = 600) =>
+  resolveSignedUrl(LOST_FOUND_BUCKET, path, { ttlSeconds });

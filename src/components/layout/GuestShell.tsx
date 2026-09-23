@@ -13,6 +13,7 @@ import {
   Hourglass,
   Receipt,
   Users,
+  PackageSearch,
   Ticket,
   Sparkles,
   Wallet,
@@ -45,6 +46,7 @@ const SECONDARY = [
   { to: "/guest/waitlist", label: "Waiting list", icon: Hourglass },
   { to: "/guest/invoice", label: "Invoice", icon: Receipt },
   { to: "/guest/feedback", label: "Feedback", icon: MessageSquareQuote },
+  { to: "/guest/lost-found", label: "Lost & Found", icon: PackageSearch },
 ] as const;
 
 /**
@@ -67,6 +69,7 @@ const HOLDER_ONLY = new Set([
 
 /** Where a guest notification takes you. */
 function guestDestinationFor(item: AppNotification): string {
+  if (item.kind === "lost_found") return "/guest/lost-found";
   if (item.kind === "invoice") return "/guest/invoice";
   if (item.kind === "payment") return "/guest/payment";
   return "/guest/dashboard";
@@ -77,7 +80,7 @@ function GuestNotificationTray() {
   const { markNotificationsRead } = useMockData();
   // Guests only see invoice & payment notifications
   const guestNotifs = notifications.filter((n) =>
-    ["invoice", "payment"].includes(n.kind),
+    ["invoice", "payment", "lost_found"].includes(n.kind),
   );
   const unread = guestNotifs.filter((n) => !n.read).length;
   const [open, setOpen] = useState(false);

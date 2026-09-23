@@ -15,12 +15,14 @@ import { useMockData } from "@/hooks/useData";
 import { formatDateTime, initials } from "@/lib/format";
 import { titleCase, type Tone } from "@/lib/status";
 import type { ActivityKind } from "@/types";
+import { toISODate } from "@/services/domain";
 
 const ALL = "all";
 
 const KIND: Record<ActivityKind, { tone: Tone; section: string }> = {
   booking: { tone: "confirmed", section: "/admin/bookings" },
   waitlist: { tone: "pending", section: "/admin/waitlist" },
+  lost_found: { tone: "uploaded", section: "/admin/lost-found" },
   payment: { tone: "uploaded", section: "/admin/payments" },
   food: { tone: "inhouse", section: "/admin/food" },
   request: { tone: "pending", section: "/admin/requests" },
@@ -56,7 +58,7 @@ export default function ActivityLogPage() {
 
   const actors = new Set(activity.map((event) => event.actor));
   const todayCount = rows.filter(
-    (event) => event.at.slice(0, 10) === new Date().toISOString().slice(0, 10),
+    (event) => toISODate(new Date(event.at)) === toISODate(new Date()),
   ).length;
 
   return (

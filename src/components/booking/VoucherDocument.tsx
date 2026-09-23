@@ -2,7 +2,7 @@ import { logo } from "@/lib/assets";
 import { usePreferencesForBooking, useSettings } from "@/hooks/useData";
 import { formatDate, money, nightsBetween } from "@/lib/format";
 import { bookingSource, bookingStatus, paymentStatus } from "@/lib/status";
-import { stayTimes } from "@/services/domain";
+import { stayTimes, toISODate } from "@/services/domain";
 import { CUISINES, DIETARY, MEALS, OCCASIONS, label } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import type { BookingView } from "@/hooks/useData";
@@ -81,7 +81,7 @@ export function VoucherDocument({
           <p className="label-caps text-gold-700">Booking voucher</p>
           <p className="mt-2 font-display text-3xl">{booking.reference}</p>
           <p className="mt-2 text-sm text-stone-600">
-            Issued {formatDate(new Date().toISOString().slice(0, 10))}
+            Issued {formatDate(toISODate(new Date()))}
           </p>
           <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-sand-200 px-3 py-1 text-xs font-medium">
             <span aria-hidden className="size-1.5 rounded-full bg-current opacity-70" />

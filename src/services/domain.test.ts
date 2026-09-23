@@ -1,7 +1,8 @@
 /* Self-check for the money and inventory-conflict rules — the only two pieces
  * of real logic in this UI-only phase. Run with: npx tsx src/services/domain.test.ts */
 import assert from "node:assert/strict";
-import type { Booking, BookingCompanion } from "../types";
+import type { Booking, BookingCompanion, LostItemStatus } from "../types";
+import { isDueSoon, isOverdue } from "../lib/lostFound";
 import { companionAccess } from "../lib/companions";
 import { cleanPhone, isPhone } from "../lib/format";
 import { csvField, toCsv } from "../lib/csv";
@@ -487,6 +488,38 @@ assert.equal(
   companionAccess(companion, { ...companionStay, status: "cancelled" }, new Date("2026-08-21T10:00:00+05:30")),
   "expired",
   "cancelling the booking ends access before the dates arrive",
+);
+
+// ------------------------------------------------- lost & found retention
+//
+// Overdue means still waiting on a shelf past the property's retention date.
+// An item somebody has claimed is waiting on the guest, not overdue; one that
+// has gone home is not waiting at all.
+
+const shelf = (status: LostItemStatus, retentionUntil?: string) => ({ status, retentionUntil });
+
+assert.equal(isOverdue(shelf("found", "2026-09-20"), "2026-09-23"), true);
+assert.equal(isOverdue(shelf("unclaimed", "2026-09-20"), "2026-09-23"), true);
+assert.equal(
+  isOverdue(shelf("found", "2026-09-23"), "2026-09-23"),
+  false,
+  "the last day of retention is still inside it",
+);
+assert.equal(
+  isOverdue(shelf("claim_pending", "2026-09-01"), "2026-09-23"),
+  false,
+  "a claimed item waits on the guest, not the shelf",
+);
+assert.equal(isOverdue(shelf("in_transit", "2026-09-01"), "2026-09-23"), false);
+assert.equal(isOverdue(shelf("returned", "2026-09-01"), "2026-09-23"), false);
+assert.equal(isOverdue(shelf("found"), "2026-09-23"), false, "no date, no deadline");
+
+assert.equal(isDueSoon(shelf("found", "2026-09-30"), "2026-09-23"), true, "a week out");
+assert.equal(isDueSoon(shelf("found", "2026-10-01"), "2026-09-23"), false, "eight days out");
+assert.equal(
+  isDueSoon(shelf("found", "2026-09-20"), "2026-09-23"),
+  false,
+  "already overdue is not 'due soon' — it is counted once, as overdue",
 );
 
 console.log("domain.ts — all checks passed");

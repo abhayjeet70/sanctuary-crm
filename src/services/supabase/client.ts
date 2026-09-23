@@ -54,3 +54,7 @@ export const GUEST_IDS_BUCKET = "guest-ids";
  *  by the guest portal and the marketing site, where a signed URL would
  *  expire. See the villa-photos migration. */
 export const VILLA_PHOTOS_BUCKET = "villa-photos";
+
+/** Private. Found items and guest reports; staff upload, and an owner may see
+ *  the photograph of their own item and nothing else. */
+export const LOST_FOUND_BUCKET = "lost-found";

@@ -24,8 +24,12 @@ import { formatDateRange, formatTime, money } from "@/lib/format";
 import { hasPreferences, kitchenLine } from "@/lib/preferences";
 import { useSession } from "@/services/session";
 import FrontDeskPage from "@/pages/admin/FrontDeskPage";
+import LostFoundPage from "@/pages/admin/LostFoundPage";
+import { LogFoundItemDialog } from "@/components/lostfound/LogFoundItemDialog";
+import { STATUS as LOST_STATUS } from "@/lib/lostFound";
 import { cn } from "@/lib/utils";
 import type { GuestRequest, RequestStatus } from "@/types";
+import { toISODate } from "@/services/domain";
 
 const ADVANCE: Partial<Record<RequestStatus, { to: RequestStatus; label: string }>> = {
   pending: { to: "in_progress", label: "Start" },
@@ -50,6 +54,8 @@ export default function StaffQueuePage() {
   // RLS hands a department only the preference rows it may act on, so this is
   // already their list — no booking or customer table needed to read it.
   const preferences = useStayPreferences();
+  // RLS hands a logger only what they logged themselves.
+  const { lostItems: myLogged } = useMockData();
   const { updateRequest, setFoodOrderStatus } = useMockData();
   const [busy, setBusy] = useState<string | null>(null);
   const [finishing, setFinishing] = useState<GuestRequest | null>(null);
@@ -81,7 +87,7 @@ export default function StaffQueuePage() {
       (prefs) =>
         prefs.bookingId &&
         hasPreferences(prefs) &&
-        (!prefs.checkOut || prefs.checkOut >= new Date().toISOString().slice(0, 10)),
+        (!prefs.checkOut || prefs.checkOut >= toISODate(new Date())),
     )
     .sort((a, b) => (a.checkIn ?? "").localeCompare(b.checkIn ?? ""))
     .slice(0, 8);
@@ -122,8 +128,11 @@ export default function StaffQueuePage() {
           from them that they could act on: the desk page itself declines to
           offer check-in to anyone RLS would refuse. */}
       {isFrontDesk ? (
-        <main className="mx-auto max-w-6xl space-y-6 p-5">
+        <main className="mx-auto max-w-6xl space-y-10 p-5">
           <FrontDeskPage />
+          {/* The desk runs Lost & Found: identifying, contacting, verifying,
+              returning. RLS still keeps the valuable items to management. */}
+          {may("lostfound.manage") && <LostFoundPage />}
         </main>
       ) : (
       <main className="mx-auto max-w-3xl space-y-6 p-5">
@@ -217,6 +226,40 @@ export default function StaffQueuePage() {
             outcome="completed"
             onClose={() => setFinishing(null)}
           />
+        )}
+
+        {/* ------------------------------------------------ found something */}
+        {may("lostfound.log") && (
+          <section className="rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.06]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <Eyebrow className="text-gold-700">Found something?</Eyebrow>
+                <p className="mt-1 text-sm text-stone-600">
+                  Photograph it, say where it was and where you put it.
+                </p>
+              </div>
+              <LogFoundItemDialog />
+            </div>
+            {myLogged.length > 0 && (
+              <ul className="mt-4 divide-y divide-ink/8">
+                {myLogged.slice(0, 5).map((item) => (
+                  <li key={item.id} className="flex items-center gap-3 py-2.5 text-sm">
+                    <span className="min-w-0 flex-1">
+                      <span className="text-ink">{item.title}</span>
+                      <span className="block text-xs text-stone-600">
+                        {item.reference} · {item.storageLocation}
+                        {item.storageRef && ` ${item.storageRef}`}
+                      </span>
+                    </span>
+                    <StatusBadge
+                      label={LOST_STATUS[item.status].label}
+                      tone={LOST_STATUS[item.status].tone}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         )}
 
         {/* --------------------------------------- what is coming, and for whom */}

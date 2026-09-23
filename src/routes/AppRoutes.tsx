@@ -33,12 +33,14 @@ import ActivityLogPage from "@/pages/admin/ActivityLogPage";
 import RolesPage from "@/pages/admin/RolesPage";
 import ExpensesPage from "@/pages/admin/ExpensesPage";
 import WaitlistPage from "@/pages/admin/WaitlistPage";
+import LostFoundPage from "@/pages/admin/LostFoundPage";
 import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
 import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
 import GuestVoucherPage from "@/pages/guest/GuestVoucherPage";
 import GuestPeoplePage from "@/pages/guest/GuestPeoplePage";
+import GuestLostFoundPage from "@/pages/guest/GuestLostFoundPage";
 import GuestBookingPage from "@/pages/guest/GuestBookingPage";
 import GuestPaymentPage from "@/pages/guest/GuestPaymentPage";
 import GuestInvoicePage from "@/pages/guest/GuestInvoicePage";
@@ -160,6 +162,7 @@ export function AppRoutes() {
         <Route path="food" element={<KitchenPage />} />
         <Route path="requests" element={<RequestsPage />} />
         <Route path="housekeeping" element={<HousekeepingPage />} />
+        <Route path="lost-found" element={<LostFoundPage />} />
         <Route path="maintenance" element={<MaintenancePage />} />
         <Route path="amenities" element={<AmenitiesPage />} />
         <Route path="enquiries" element={<EnquiriesPage />} />
@@ -233,6 +236,7 @@ export function AppRoutes() {
         <Route path="payment" element={<RequireHolder><GuestPaymentPage /></RequireHolder>} />
         <Route path="voucher" element={<RequireHolder><GuestVoucherPage /></RequireHolder>} />
         <Route path="people" element={<RequireHolder><GuestPeoplePage /></RequireHolder>} />
+        <Route path="lost-found" element={<GuestLostFoundPage />} />
         <Route path="invoice" element={<RequireHolder><GuestInvoicePage /></RequireHolder>} />
         <Route path="amenities" element={<GuestAmenitiesPage />} />
         <Route path="food" element={<GuestFoodPage />} />

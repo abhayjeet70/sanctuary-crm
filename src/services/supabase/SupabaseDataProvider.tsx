@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "./client";
+import { uploadLostFoundPhoto } from "./receipts";
 import { MockDataContext, type MockData } from "@/services/mock/MockDataProvider";
 import { settingsColumns, toSettings, withDerivedRoomStatus } from "./mappers";
 import {
@@ -22,6 +23,11 @@ import {
   toStayPreferences,
   toCompanion,
   toCompanionStay,
+  toLostItem,
+  toLostItemClaim,
+  toLostItemReturn,
+  toGuestLostItem,
+  toLostReport,
   toVilla,
   toWaitlistEntry,
 } from "./mappers";
@@ -45,9 +51,15 @@ import type {
   Expense,
   StayPreferences,
   BookingCompanion,
+  LostItem,
+  LostItemClaim,
+  LostItemReturn,
+  GuestLostItem,
+  LostReport,
   Villa,
   WaitlistEntry,
 } from "@/types";
+import { toISODate } from "@/services/domain";
 
 /**
  * The Supabase implementation of the data layer.
@@ -83,6 +95,11 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [preferences, setPreferences] = useState<StayPreferences[]>([]);
   const [companions, setCompanions] = useState<BookingCompanion[]>([]);
+  const [lostItems, setLostItems] = useState<LostItem[]>([]);
+  const [lostClaims, setLostClaims] = useState<LostItemClaim[]>([]);
+  const [lostReturns, setLostReturns] = useState<LostItemReturn[]>([]);
+  const [lostReports, setLostReports] = useState<LostReport[]>([]);
+  const [guestLostItems, setGuestLostItems] = useState<GuestLostItem[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeePay, setEmployeePay] = useState<EmployeePay[]>([]);
@@ -198,6 +215,21 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       );
     }
     setBookings([...(b.data ?? []).map(toBooking), ...stayBookings]);
+
+    // Lost & Found. Every one of these is empty for whoever RLS says should
+    // not see it, so there is no role branching here: the database decided.
+    const [li, lc, lr, lp, gl] = await Promise.all([
+      supabase.from("lost_items").select("*").order("found_at", { ascending: false }),
+      supabase.from("lost_item_claims").select("*").order("created_at", { ascending: false }),
+      supabase.from("lost_item_returns").select("*"),
+      supabase.from("lost_reports").select("*").order("created_at", { ascending: false }),
+      supabase.from("guest_lost_items").select("*").order("updated_at", { ascending: false }),
+    ]);
+    setLostItems((li.data ?? []).map(toLostItem));
+    setLostClaims((lc.data ?? []).map(toLostItemClaim));
+    setLostReturns((lr.data ?? []).map(toLostItemReturn));
+    setLostReports((lp.data ?? []).map(toLostReport));
+    setGuestLostItems((gl.data ?? []).map(toGuestLostItem));
     setWaitlist((wl.data ?? []).map(toWaitlistEntry));
     setPayments((p.data ?? []).map(toPayment));
     setInvoices((i.data ?? []).map(toInvoice));
@@ -288,7 +320,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<MockData>(() => {
     // "Today" is the real clock now, not the fixture date.
-    const today = new Date().toISOString().slice(0, 10);
+    // The calendar date where the property is, not in UTC: toISOString() made
+    // it yesterday for the first five and a half hours of every IST day.
+    const today = toISODate(new Date());
 
     // ----------------------------------------------------------------
     // When the demo-data toggle is OFF, derive filtered views so that
@@ -332,6 +366,11 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       expenses,
       preferences,
       companions,
+      lostItems,
+      lostClaims,
+      lostReturns,
+      lostReports,
+      guestLostItems,
       departments,
       employees,
       employeePay,
@@ -570,6 +609,229 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           },
           error: null,
         };
+      },
+
+      /* ------------------------------------------------- lost & found */
+
+      logFoundItem: async (input, photos) => {
+        const { data, error } = await supabase.rpc("log_found_item", {
+          p_title: input.title,
+          p_category: input.category,
+          p_location: input.location,
+          p_villa_id: input.villaId ?? null,
+          p_room_id: input.roomId ?? null,
+          p_location_note: input.locationNote ?? "",
+          p_description: input.description ?? "",
+          p_brand: input.brand ?? "",
+          p_colour: input.colour ?? "",
+          p_distinguishing: input.distinguishing ?? "",
+          p_quantity: input.quantity ?? 1,
+          p_sensitivity: input.sensitivity ?? "normal",
+          p_found_at: input.foundAt ?? new Date().toISOString(),
+          p_found_by_name: input.foundByName ?? "",
+          p_storage: input.storageLocation ?? "",
+          p_storage_ref: input.storageRef ?? "",
+          p_secured: input.secured ?? false,
+          p_booking_id: input.bookingId ?? null,
+        });
+        if (error) return { item: null, error: error.message };
+        const item = toLostItem(data);
+
+        // The photographs need the item's id for their path, so they follow
+        // the row rather than travelling with it. A failed upload is reported
+        // but does not undo the record: an item logged without a photo is
+        // still a found item, and losing the record would be worse.
+        const paths: string[] = [];
+        let photoError: string | null = null;
+        for (const file of photos) {
+          const uploaded = await uploadLostFoundPhoto("items", item.id, file);
+          if (uploaded.path) paths.push(uploaded.path);
+          else photoError = uploaded.error;
+        }
+        if (paths.length) {
+          const attached = await supabase.rpc("add_lost_item_photos", {
+            p_item_id: item.id,
+            p_paths: paths,
+          });
+          if (attached.error) photoError = attached.error.message;
+        }
+        await refetch();
+        return {
+          item,
+          error: photoError ? `Logged, but a photograph did not upload: ${photoError}` : null,
+        };
+      },
+
+      suggestLostItemOwners: async (itemId) => {
+        const { data, error } = await supabase.rpc("suggest_lost_item_owners", {
+          p_item_id: itemId,
+        });
+        if (error) return [];
+        return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+          bookingId: row.booking_id as string,
+          reference: row.reference as string,
+          customerId: row.customer_id as string,
+          guestName: row.guest_name as string,
+          checkIn: row.check_in as string,
+          checkOut: row.check_out as string,
+          sameRoom: Boolean(row.same_room),
+          companionNames: (row.companion_names as string[]) ?? [],
+        }));
+      },
+
+      identifyLostItemOwner: async (itemId, bookingId, companionId) => {
+        const { error } = await supabase.rpc("identify_lost_item_owner", {
+          p_item_id: itemId,
+          p_booking_id: bookingId,
+          p_companion_id: companionId ?? null,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      contactLostItemOwner: async (itemId) => {
+        const { data, error } = await supabase.rpc("contact_lost_item_owner", {
+          p_item_id: itemId,
+        });
+        if (error) return { sent: 0, error: error.message };
+        await refetch();
+        return { sent: Number(data ?? 0), error: null };
+      },
+
+      respondToLostItem: async (itemId, isMine, statement) => {
+        const { error } = await supabase.rpc("respond_to_lost_item", {
+          p_item_id: itemId,
+          p_is_mine: isMine,
+          p_statement: statement,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      decideLostItemClaim: async (claimId, approve, note) => {
+        const { error } = await supabase.rpc("decide_lost_item_claim", {
+          p_claim_id: claimId,
+          p_approve: approve,
+          p_note: note,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      chooseLostItemReturn: async (itemId, input) => {
+        const { error } = await supabase.rpc("choose_lost_item_return", {
+          p_item_id: itemId,
+          p_method: input.method,
+          p_pickup_at: input.pickupAt ?? null,
+          p_collected_by: input.collectedBy ?? "",
+          p_recipient_name: input.recipientName ?? "",
+          p_recipient_phone: input.recipientPhone ?? "",
+          p_address_line1: input.addressLine1 ?? "",
+          p_address_line2: input.addressLine2 ?? "",
+          p_city: input.city ?? "",
+          p_state: input.state ?? "",
+          p_country: input.country ?? "India",
+          p_postal_code: input.postalCode ?? "",
+          p_delivery_notes: input.deliveryNotes ?? "",
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      arrangeLostItemReturn: async (itemId, input) => {
+        const { error } = await supabase.rpc("arrange_lost_item_return", {
+          p_item_id: itemId,
+          p_courier_provider: input.courierProvider ?? null,
+          p_tracking_number: input.trackingNumber ?? null,
+          p_shipping_cost: input.shippingCost ?? null,
+          p_paid_by: input.paidBy ?? null,
+          p_payment_status: input.paymentStatus ?? null,
+          p_payment_reference: input.paymentReference ?? null,
+          p_shipping_status: input.shippingStatus ?? null,
+          p_pickup_date: input.pickupDate ?? null,
+          p_expected_delivery: input.expectedDelivery ?? null,
+          p_pickup_at: input.pickupAt ?? null,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      releaseLostItem: async (itemId, collectedBy, idChecked) => {
+        const { error } = await supabase.rpc("release_lost_item", {
+          p_item_id: itemId,
+          p_collected_by: collectedBy,
+          p_id_checked: idChecked,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      disposeLostItem: async (itemId, disposition, note) => {
+        const { error } = await supabase.rpc("dispose_lost_item", {
+          p_item_id: itemId,
+          p_disposition: disposition,
+          p_note: note,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      setLostItemStatus: async (itemId, status, note) => {
+        const { error } = await supabase.rpc("set_lost_item_status", {
+          p_item_id: itemId,
+          p_status: status,
+          p_note: note ?? "",
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      moveLostItem: async (itemId, storageLocation, storageRef) => {
+        // A plain update: the desk may correct where it is kept, and the
+        // status trigger writes the move onto the custody trail itself.
+        const { error } = await supabase
+          .from("lost_items")
+          .update({ storage_location: storageLocation, storage_ref: storageRef })
+          .eq("id", itemId);
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      reportLostItem: async (input, photo) => {
+        const { data, error } = await supabase.rpc("report_lost_item", {
+          p_title: input.title,
+          p_category: input.category,
+          p_description: input.description ?? "",
+          p_colour: input.colour ?? "",
+          p_brand: input.brand ?? "",
+          p_location_note: input.locationNote ?? "",
+          p_lost_at: input.lostAt ?? null,
+          p_contact_pref: input.contactPref ?? "portal",
+        });
+        if (error) return { report: null, error: error.message };
+        const report = toLostReport(data);
+        if (photo) await uploadLostFoundPhoto("reports", report.id, photo);
+        await refetch();
+        return { report, error: null };
+      },
+
+      linkLostReport: async (reportId, itemId) => {
+        const { error } = await supabase
+          .from("lost_reports")
+          .update({ matched_item_id: itemId, status: "matched" })
+          .eq("id", reportId);
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
       },
 
       convertWaitlistEntry: async (waitlistId, bookingId) => {
@@ -1128,7 +1390,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     };
 
   }, [
-    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, preferences, companions, departments, employees, employeePay, menuItems,
+    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, preferences, companions, lostItems, lostClaims, lostReturns, lostReports, guestLostItems, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
     demoDataVisible, setDemoDataVisible,
   ]);

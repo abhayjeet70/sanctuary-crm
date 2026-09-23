@@ -26,6 +26,7 @@ import {
   ConciergeBell,
   FileText,
   Hourglass,
+  PackageSearch,
   MessageCircle,
   Wrench,
   Banknote,
@@ -60,6 +61,7 @@ const NAV = [
       { to: "/admin/customers", label: "Guests", icon: Users },
       { to: "/admin/requests", label: "Requests", icon: ClipboardList },
       { to: "/admin/housekeeping", label: "Housekeeping", icon: Brush },
+      { to: "/admin/lost-found", label: "Lost & Found", icon: PackageSearch },
       { to: "/admin/food", label: "Kitchen", icon: ChefHat },
       { to: "/admin/feedback", label: "Feedback", icon: MessageSquareQuote },
     ],
@@ -200,6 +202,7 @@ function destinationFor(item: AppNotification) {
     invoice: "/admin/invoices",
     note: "/admin/bookings",
     waitlist: "/admin/waitlist",
+    lost_found: "/admin/lost-found",
   }[item.kind];
 
   if (!item.entityId) return section;

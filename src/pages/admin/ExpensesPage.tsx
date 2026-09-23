@@ -25,6 +25,7 @@ import { useExpenses, useMockData, useVillas } from "@/hooks/useData";
 import { formatDate, money } from "@/lib/format";
 import { titleCase } from "@/lib/status";
 import type { Expense, ExpenseCategory } from "@/types";
+import { toISODate } from "@/services/domain";
 
 const CATEGORIES: ExpenseCategory[] = [
   "salaries",
@@ -45,7 +46,7 @@ const SHARED = "shared";
 const ALL = "all";
 
 const BLANK = {
-  spentOn: new Date().toISOString().slice(0, 10),
+  spentOn: toISODate(new Date()),
   category: "supplies" as ExpenseCategory,
   amount: "",
   payee: "",
@@ -72,7 +73,7 @@ export default function ExpensesPage() {
   const [category, setCategory] = useState(ALL);
   const [removing, setRemoving] = useState<Expense | null>(null);
 
-  const month = new Date().toISOString().slice(0, 7);
+  const month = toISODate(new Date()).slice(0, 7);
   const thisMonth = expenses.filter((e) => e.spentOn.slice(0, 7) === month);
 
   const byCategory = useMemo(() => {

@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Hourglass,
+  PackageSearch,
   ChefHat,
   ClipboardList,
   MessageSquareQuote,
@@ -16,6 +17,7 @@ import { EmptyState } from "@/components/common";
 const ICONS: Record<ActivityKind, typeof BookOpen> = {
   booking: BookOpen,
   waitlist: Hourglass,
+  lost_found: PackageSearch,
   payment: Wallet,
   food: ChefHat,
   request: ClipboardList,

@@ -19,6 +19,7 @@ do $$
 declare
   admin_id uuid; guest_u uuid; guest_c uuid; v uuid; m uuid;
   bk public.bookings%rowtype;
+  rooms uuid[];
   pay public.payments%rowtype;
   ord public.food_orders%rowtype;
   inv public.invoices%rowtype;
@@ -28,7 +29,34 @@ begin
   select p.id, p.customer_id into guest_u, guest_c
     from public.profiles p join public.customers c on c.id = p.customer_id
     where c.email = 'abhayjeet9988@gmail.com';
-  select id into v from public.villas where mode = 'whole' order by name limit 1;
+  -- A villa that is actually free tonight. The sweep books a stay *today*
+  -- because the food steps need one in progress, and it used to take the
+  -- first whole villa by name for three nights — so it failed whenever a real
+  -- guest was staying there, with an error about a null booking that pointed
+  -- nowhere near the cause. One night, any villa; for one sold room by room,
+  -- all of its rooms, which is what the booking form would send.
+  select vv.id into v
+  from public.villas vv
+  where vv.status = 'active'
+    and not exists (
+      select 1 from public.bookings b
+      where b.villa_id = vv.id
+        and b.status not in ('cancelled', 'rejected', 'no_show')
+        and b.check_in < current_date + 1
+        and b.check_out > current_date
+    )
+  order by (vv.mode = 'whole') desc, vv.name
+  limit 1;
+
+  select case when vv.mode = 'split'
+              then array(select r.id from public.rooms r where r.villa_id = vv.id)
+         end
+    into rooms
+  from public.villas vv where vv.id = v;
+
+  if v is null then
+    raise exception 'rpc_sweep needs one villa free tonight, and every one is booked. Run it on a quieter day, or in a scratch project.';
+  end if;
   select id into m from public.menu_items where available limit 1;
 
   perform set_config('request.jwt.claims',
@@ -37,7 +65,7 @@ begin
 
   -- create_booking
   begin
-    bk := public.create_booking(guest_c, v, null, current_date, current_date + 3,
+    bk := public.create_booking(guest_c, v, rooms, current_date, current_date + 1,
                                 2, 0, 'phone', 20000, 0, 0.180, 0, null);
     insert into res values ('create_booking', 'ok ' || bk.reference);
   exception when others then
@@ -46,7 +74,7 @@ begin
 
   -- update_booking
   begin
-    perform public.update_booking(bk.id, bk.villa_id, null, bk.check_in, bk.check_out,
+    perform public.update_booking(bk.id, bk.villa_id, rooms, bk.check_in, bk.check_out,
                                   3, 0, 'phone'::public.booking_source, 22000,
                                   0, 0, 0, 0, 0, 0.180, 'a note');
     insert into res values ('update_booking', 'ok');

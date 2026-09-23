@@ -60,23 +60,46 @@ export default function GuestDashboardPage() {
               Welcome, {session?.name?.split(" ")[0]}
             </h1>
             <hr className="rule-gold mt-6 w-40" />
-            <p className="mt-5 max-w-lg text-sand/80">
-              You have no stay booked yet. Three houses sit above the escarpment — pick
-              your dates and we will hold one for you.
-            </p>
-            <Button
-              asChild
-              className="mt-6 bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
-            >
-              <Link to="/guest/book">
-                Book a stay
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-            <p className="mt-4 text-xs text-sand/55">
-              Already booked with us over the phone? Ask us to link your booking to this
-              email address.
-            </p>
+            {isCompanion ? (
+              // A companion whose stay has ended. The stay is closed to them —
+              // the kitchen, requests, the villa — but not what they left
+              // behind: that is the one thing a guest needs after they go.
+              <>
+                <p className="mt-5 max-w-lg text-sand/80">
+                  Your stay has ended — thank you for coming. If our team finds anything
+                  you left behind, it will be waiting for you in Lost &amp; Found.
+                </p>
+                <Button
+                  asChild
+                  className="mt-6 bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
+                >
+                  <Link to="/guest/lost-found">
+                    Lost &amp; Found
+                    <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="mt-5 max-w-lg text-sand/80">
+                  You have no stay booked yet. Three houses sit above the escarpment — pick
+                  your dates and we will hold one for you.
+                </p>
+                <Button
+                  asChild
+                  className="mt-6 bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
+                >
+                  <Link to="/guest/book">
+                    Book a stay
+                    <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+                <p className="mt-4 text-xs text-sand/55">
+                  Already booked with us over the phone? Ask us to link your booking to this
+                  email address.
+                </p>
+              </>
+            )}
           </div>
         </section>
 

@@ -45,6 +45,7 @@ const ROUTES = [
   "/admin/reports",
   "/admin/employees",
   "/admin/housekeeping",
+  "/admin/lost-found",
   "/admin/maintenance",
   "/admin/amenities",
   "/admin/enquiries",
@@ -60,6 +61,7 @@ const ROUTES = [
   "/guest/book",
   "/guest/waitlist",
   "/guest/voucher",
+  "/guest/lost-found",
   "/guest/booking",
   "/guest/payment",
   "/guest/invoice",
@@ -410,6 +412,51 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
   } else {
     failed++;
     console.error("  FAIL a companion's portal links to a holder-only page");
+  }
+
+  // Lost & Found is not holder-only: a companion needs it most after they go.
+  const lostFound = asCompanion("/guest/lost-found");
+  if (lostFound.includes("Left something behind?")) {
+    console.log("  ok   a companion can reach Lost & Found");
+  } else {
+    failed++;
+    console.error("  FAIL a companion was kept off Lost & Found");
+  }
+
+  // After checkout the stay is gone — RLS returns no booking — and the portal
+  // becomes a recovery screen: Lost & Found, and nothing to order or ask for.
+  const afterStay = renderToString(
+    <SessionContext.Provider
+      value={{
+        session: {
+          role: "guest",
+          name: "Rahul Sharma",
+          companionId: "comp-1",
+          companionBookingId: "b-no-longer-visible",
+        },
+        loading: false,
+        signIn: async () => ({ error: null }),
+        signOut: () => {},
+      } as never}
+    >
+      <TooltipProvider>
+        <MockDataProvider>
+          <MemoryRouter initialEntries={["/guest/dashboard"]}>
+            <AppRoutes />
+          </MemoryRouter>
+        </MockDataProvider>
+      </TooltipProvider>
+    </SessionContext.Provider>,
+  );
+  const recovery =
+    afterStay.includes("Your stay has ended") &&
+    afterStay.includes('href="/guest/lost-found"') &&
+    !afterStay.includes("Book a stay");
+  if (recovery) {
+    console.log("  ok   after checkout a companion lands on recovery, not a booking prompt");
+  } else {
+    failed++;
+    console.error("  FAIL a companion's post-stay screen is wrong");
   }
 
   // The holder, by contrast, is offered the guest list.

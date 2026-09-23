@@ -41,6 +41,19 @@ import type {
   BookingCompanion,
   CompanionCredentials,
   CompanionRelationship,
+  LostItem,
+  LostItemClaim,
+  LostItemReturn,
+  GuestLostItem,
+  LostReport,
+  LostItemCategory,
+  LostItemLocation,
+  LostItemSensitivity,
+  LostItemStatus,
+  LostItemDisposition,
+  CourierStatus,
+  ISODate,
+  ISODateTime,
   Villa,
   VillaMode,
   WaitlistEntry,
@@ -55,6 +68,77 @@ import type {
  * query and each mutator a `supabase.from(...)` write; the hooks in
  * `src/hooks/` keep their signatures, so no page component changes.
  */
+export interface FoundItemInput {
+  title: string;
+  category: LostItemCategory;
+  location: LostItemLocation;
+  villaId?: ID;
+  roomId?: ID;
+  locationNote?: string;
+  description?: string;
+  brand?: string;
+  colour?: string;
+  distinguishing?: string;
+  quantity?: number;
+  sensitivity?: LostItemSensitivity;
+  foundAt?: ISODateTime;
+  foundByName?: string;
+  storageLocation?: string;
+  storageRef?: string;
+  secured?: boolean;
+  bookingId?: ID;
+}
+
+export interface OwnerSuggestion {
+  bookingId: ID;
+  reference: string;
+  customerId: ID;
+  guestName: string;
+  checkIn: ISODate;
+  checkOut: ISODate;
+  sameRoom: boolean;
+  companionNames: string[];
+}
+
+export interface ReturnChoice {
+  method: "pickup" | "courier";
+  pickupAt?: ISODateTime;
+  collectedBy?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  deliveryNotes?: string;
+}
+
+export interface ReturnArrangement {
+  courierProvider?: string;
+  trackingNumber?: string;
+  shippingCost?: number;
+  paidBy?: "guest" | "property";
+  paymentStatus?: "pending" | "paid" | "waived";
+  paymentReference?: string;
+  shippingStatus?: CourierStatus;
+  pickupDate?: ISODate;
+  expectedDelivery?: ISODate;
+  pickupAt?: ISODateTime;
+}
+
+export interface LostReportInput {
+  title: string;
+  category: LostItemCategory;
+  description?: string;
+  colour?: string;
+  brand?: string;
+  locationNote?: string;
+  lostAt?: ISODateTime;
+  contactPref?: "portal" | "phone" | "whatsapp" | "email";
+}
+
 export interface MockData {
   today: string;
   villas: Villa[];
@@ -86,6 +170,67 @@ export interface MockData {
     isChild: boolean;
   }) => Promise<{ credentials: CompanionCredentials | null; error: string | null }>;
   revokeCompanion: (companionId: ID) => Promise<{ error: string | null }>;
+  /* ------------------------------------------------------ lost & found */
+  /** Staff-side rows. RLS narrows them: the desk sees ordinary items,
+   *  management sees everything, a logger sees what they logged. */
+  lostItems: LostItem[];
+  lostClaims: LostItemClaim[];
+  lostReturns: LostItemReturn[];
+  lostReports: LostReport[];
+  /** A guest's own cases, through the view that carries no staff detail. */
+  guestLostItems: GuestLostItem[];
+
+  logFoundItem: (
+    input: FoundItemInput,
+    photos: File[],
+  ) => Promise<{ item: LostItem | null; error: string | null }>;
+  suggestLostItemOwners: (itemId: ID) => Promise<OwnerSuggestion[]>;
+  identifyLostItemOwner: (
+    itemId: ID,
+    bookingId: ID,
+    companionId?: ID,
+  ) => Promise<{ error: string | null }>;
+  /** Resolves with how many portal notifications actually went out, so the
+   *  page never claims to have reached somebody it did not. */
+  contactLostItemOwner: (itemId: ID) => Promise<{ sent: number; error: string | null }>;
+  respondToLostItem: (
+    itemId: ID,
+    isMine: boolean,
+    statement: string,
+  ) => Promise<{ error: string | null }>;
+  decideLostItemClaim: (
+    claimId: ID,
+    approve: boolean,
+    note: string,
+  ) => Promise<{ error: string | null }>;
+  chooseLostItemReturn: (itemId: ID, input: ReturnChoice) => Promise<{ error: string | null }>;
+  arrangeLostItemReturn: (itemId: ID, input: ReturnArrangement) => Promise<{ error: string | null }>;
+  releaseLostItem: (
+    itemId: ID,
+    collectedBy: string,
+    idChecked: boolean,
+  ) => Promise<{ error: string | null }>;
+  disposeLostItem: (
+    itemId: ID,
+    disposition: LostItemDisposition,
+    note: string,
+  ) => Promise<{ error: string | null }>;
+  setLostItemStatus: (
+    itemId: ID,
+    status: LostItemStatus,
+    note?: string,
+  ) => Promise<{ error: string | null }>;
+  moveLostItem: (
+    itemId: ID,
+    storageLocation: string,
+    storageRef: string,
+  ) => Promise<{ error: string | null }>;
+  reportLostItem: (
+    input: LostReportInput,
+    photo?: File | null,
+  ) => Promise<{ report: LostReport | null; error: string | null }>;
+  linkLostReport: (reportId: ID, itemId: ID) => Promise<{ error: string | null }>;
+
   /** A fresh password for somebody who lost theirs. Also lifts a revoke. */
   resetCompanionPassword: (
     companionId: ID,
@@ -311,6 +456,25 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       expenses: [],
       preferences: [],
       companions: [],
+      lostItems: [],
+      lostClaims: [],
+      lostReturns: [],
+      lostReports: [],
+      guestLostItems: [],
+      logFoundItem: async () => ({ item: null, error: "Not available in the fixtures" }),
+      suggestLostItemOwners: async () => [],
+      identifyLostItemOwner: async () => ({ error: "Not available in the fixtures" }),
+      contactLostItemOwner: async () => ({ sent: 0, error: "Not available in the fixtures" }),
+      respondToLostItem: async () => ({ error: "Not available in the fixtures" }),
+      decideLostItemClaim: async () => ({ error: "Not available in the fixtures" }),
+      chooseLostItemReturn: async () => ({ error: "Not available in the fixtures" }),
+      arrangeLostItemReturn: async () => ({ error: "Not available in the fixtures" }),
+      releaseLostItem: async () => ({ error: "Not available in the fixtures" }),
+      disposeLostItem: async () => ({ error: "Not available in the fixtures" }),
+      setLostItemStatus: async () => ({ error: "Not available in the fixtures" }),
+      moveLostItem: async () => ({ error: "Not available in the fixtures" }),
+      reportLostItem: async () => ({ report: null, error: "Not available in the fixtures" }),
+      linkLostReport: async () => ({ error: "Not available in the fixtures" }),
       addCompanion: async () => ({ credentials: null, error: "Not available in the fixtures" }),
       revokeCompanion: async () => ({ error: "Not available in the fixtures" }),
       resetCompanionPassword: async () => ({

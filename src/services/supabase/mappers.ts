@@ -24,6 +24,11 @@ import type {
   Expense,
   StayPreferences,
   BookingCompanion,
+  LostItem,
+  LostItemClaim,
+  LostItemReturn,
+  GuestLostItem,
+  LostReport,
   Room,
   Villa,
   WaitlistEntry,
@@ -539,6 +544,156 @@ export const toCompanion = (row: unknown): BookingCompanion => {
     guestCode: x.guest_code,
     profileId: x.profile_id ?? undefined,
     revokedAt: x.revoked_at ?? undefined,
+    createdAt: x.created_at,
+  };
+};
+
+/* -------------------------------------------------------- lost & found */
+
+const orUndefined = <T>(value: T | null | undefined) => value ?? undefined;
+
+export const toLostItem = (row: unknown): LostItem => {
+  const x = r(row);
+  return {
+    id: x.id,
+    reference: x.reference,
+    title: x.title,
+    category: x.category,
+    sensitivity: x.sensitivity,
+    description: x.description ?? "",
+    brand: x.brand ?? "",
+    colour: x.colour ?? "",
+    distinguishing: x.distinguishing ?? "",
+    quantity: x.quantity ?? 1,
+    photoPaths: x.photo_paths ?? [],
+    location: x.location,
+    villaId: orUndefined(x.villa_id),
+    roomId: orUndefined(x.room_id),
+    locationNote: x.location_note ?? "",
+    foundAt: x.found_at,
+    foundByName: x.found_by_name ?? "",
+    departmentId: orUndefined(x.department_id),
+    bookingId: orUndefined(x.booking_id),
+    customerId: orUndefined(x.customer_id),
+    companionId: orUndefined(x.companion_id),
+    storageLocation: x.storage_location ?? "",
+    storageRef: x.storage_ref ?? "",
+    secured: Boolean(x.secured),
+    status: x.status,
+    retentionUntil: orUndefined(x.retention_until),
+    disposition: orUndefined(x.disposition),
+    dispositionNote: x.disposition_note ?? "",
+    closedAt: orUndefined(x.closed_at),
+    createdBy: orUndefined(x.created_by),
+    createdAt: x.created_at,
+    updatedAt: x.updated_at,
+  };
+};
+
+export const toLostItemClaim = (row: unknown): LostItemClaim => {
+  const x = r(row);
+  return {
+    id: x.id,
+    itemId: x.item_id,
+    customerId: orUndefined(x.customer_id),
+    companionId: orUndefined(x.companion_id),
+    statement: x.statement ?? "",
+    status: x.status,
+    verifiedBy: orUndefined(x.verified_by),
+    verifiedAt: orUndefined(x.verified_at),
+    rejectionNote: x.rejection_note ?? "",
+    createdAt: x.created_at,
+  };
+};
+
+export const toLostItemReturn = (row: unknown): LostItemReturn => {
+  const x = r(row);
+  return {
+    id: x.id,
+    itemId: x.item_id,
+    method: x.method,
+    pickupAt: orUndefined(x.pickup_at),
+    collectedBy: x.collected_by ?? "",
+    idChecked: Boolean(x.id_checked),
+    releasedAt: orUndefined(x.released_at),
+    recipientName: x.recipient_name ?? "",
+    recipientPhone: x.recipient_phone ?? "",
+    addressLine1: x.address_line1 ?? "",
+    addressLine2: x.address_line2 ?? "",
+    city: x.city ?? "",
+    state: x.state ?? "",
+    country: x.country ?? "India",
+    postalCode: x.postal_code ?? "",
+    deliveryNotes: x.delivery_notes ?? "",
+    courierProvider: x.courier_provider ?? "",
+    trackingNumber: x.tracking_number ?? "",
+    shippingCost: orUndefined(x.shipping_cost),
+    paidBy: orUndefined(x.paid_by),
+    paymentStatus: x.payment_status ?? "pending",
+    paymentReference: x.payment_reference ?? "",
+    shippingStatus: orUndefined(x.shipping_status),
+    pickupDate: orUndefined(x.pickup_date),
+    expectedDelivery: orUndefined(x.expected_delivery),
+    deliveredAt: orUndefined(x.delivered_at),
+  };
+};
+
+export const toGuestLostItem = (row: unknown): GuestLostItem => {
+  const x = r(row);
+  return {
+    id: x.id,
+    reference: x.reference,
+    title: x.title,
+    category: x.category,
+    description: x.description ?? "",
+    brand: x.brand ?? "",
+    colour: x.colour ?? "",
+    photoPaths: x.photo_paths ?? [],
+    location: x.location,
+    villaId: orUndefined(x.villa_id),
+    roomId: orUndefined(x.room_id),
+    foundAt: x.found_at,
+    status: x.status,
+    bookingId: orUndefined(x.booking_id),
+    companionId: orUndefined(x.companion_id),
+    claimStatus: orUndefined(x.claim_status),
+    claimNote: orUndefined(x.claim_note),
+    returnMethod: orUndefined(x.return_method),
+    courierProvider: orUndefined(x.courier_provider),
+    trackingNumber: orUndefined(x.tracking_number),
+    shippingStatus: orUndefined(x.shipping_status),
+    shippingCost: orUndefined(x.shipping_cost),
+    paidBy: orUndefined(x.paid_by),
+    shippingPaymentStatus: orUndefined(x.shipping_payment_status),
+    expectedDelivery: orUndefined(x.expected_delivery),
+    deliveredAt: orUndefined(x.delivered_at),
+    pickupAt: orUndefined(x.pickup_at),
+    recipientName: orUndefined(x.recipient_name),
+    deliveryCity: orUndefined(x.delivery_city),
+    isMineToAnswer: Boolean(x.is_mine_to_answer),
+    updatedAt: x.updated_at,
+  };
+};
+
+export const toLostReport = (row: unknown): LostReport => {
+  const x = r(row);
+  return {
+    id: x.id,
+    reference: x.reference,
+    customerId: orUndefined(x.customer_id),
+    companionId: orUndefined(x.companion_id),
+    bookingId: orUndefined(x.booking_id),
+    title: x.title,
+    category: x.category,
+    description: x.description ?? "",
+    colour: x.colour ?? "",
+    brand: x.brand ?? "",
+    locationNote: x.location_note ?? "",
+    lostAt: orUndefined(x.lost_at),
+    photoPath: orUndefined(x.photo_path),
+    contactPref: x.contact_pref ?? "portal",
+    status: x.status,
+    matchedItemId: orUndefined(x.matched_item_id),
     createdAt: x.created_at,
   };
 };
