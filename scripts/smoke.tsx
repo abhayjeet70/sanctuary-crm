@@ -340,5 +340,104 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
   }
 }
 
+/* A companion is on somebody else's booking. The money, the booking itself
+ * and the guest list are the holder's: those routes send them to their stay,
+ * and the shell does not offer the doors. RLS is the actual wall — this checks
+ * they are never walked into an empty room. */
+{
+  const asCompanion = (route: string) =>
+    renderToString(
+      <SessionContext.Provider
+        value={{
+          session: {
+            role: "guest",
+            name: "Rahul Sharma",
+            companionId: "comp-1",
+            companionBookingId: "b-1001",
+          },
+          loading: false,
+          signIn: async () => ({ error: null }),
+          signOut: () => {},
+        } as never}
+      >
+        <TooltipProvider>
+          <MockDataProvider>
+            <MemoryRouter initialEntries={[route]}>
+              <AppRoutes />
+            </MemoryRouter>
+          </MockDataProvider>
+        </TooltipProvider>
+      </SessionContext.Provider>,
+    );
+
+  const holderOnly = [
+    "/guest/payment",
+    "/guest/invoice",
+    "/guest/voucher",
+    "/guest/booking",
+    "/guest/book",
+    "/guest/waitlist",
+    "/guest/people",
+  ];
+
+  for (const route of holderOnly) {
+    // Redirected by RequireHolder: a <Navigate> renders nothing server-side,
+    // so the page's own heading must be absent.
+    const html = asCompanion(route);
+    const heading = {
+      "/guest/payment": "Settle your stay",
+      "/guest/invoice": ">Invoice<",
+      "/guest/voucher": "Your voucher",
+      "/guest/booking": "Special requests",
+      "/guest/book": "Plan your stay",
+      "/guest/waitlist": "You are on the list",
+      "/guest/people": "People with you",
+    }[route] as string;
+    if (!html.includes(heading)) {
+      console.log("  ok   a companion is kept off " + route);
+    } else {
+      failed++;
+      console.error("  FAIL a companion reached " + route);
+    }
+  }
+
+  const dashboard = asCompanion("/guest/dashboard");
+  const offersMoney = ['href="/guest/payment"', 'href="/guest/invoice"', 'href="/guest/people"'].some(
+    (link) => dashboard.includes(link),
+  );
+  if (!offersMoney) {
+    console.log("  ok   a companion's portal offers no money or guest-list doors");
+  } else {
+    failed++;
+    console.error("  FAIL a companion's portal links to a holder-only page");
+  }
+
+  // The holder, by contrast, is offered the guest list.
+  const holderShell = renderToString(
+    <SessionContext.Provider
+      value={{
+        session: { role: "guest", name: "Pooja Bothra", customerId: "c-pooja" },
+        loading: false,
+        signIn: async () => ({ error: null }),
+        signOut: () => {},
+      } as never}
+    >
+      <TooltipProvider>
+        <MockDataProvider>
+          <MemoryRouter initialEntries={["/guest/dashboard"]}>
+            <AppRoutes />
+          </MemoryRouter>
+        </MockDataProvider>
+      </TooltipProvider>
+    </SessionContext.Provider>,
+  );
+  if (holderShell.includes('href="/guest/people"')) {
+    console.log("  ok   the booking holder is offered People with you");
+  } else {
+    failed++;
+    console.error("  FAIL the booking holder cannot reach People with you");
+  }
+}
+
 const exitCode = failed ? 1 : 0;
 process.exit(exitCode);

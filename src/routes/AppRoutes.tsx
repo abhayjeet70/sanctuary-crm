@@ -38,6 +38,7 @@ import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
 import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
 import GuestVoucherPage from "@/pages/guest/GuestVoucherPage";
+import GuestPeoplePage from "@/pages/guest/GuestPeoplePage";
 import GuestBookingPage from "@/pages/guest/GuestBookingPage";
 import GuestPaymentPage from "@/pages/guest/GuestPaymentPage";
 import GuestInvoicePage from "@/pages/guest/GuestInvoicePage";
@@ -81,6 +82,20 @@ function RequireOwner({ children }: { children: ReactNode }) {
   const { session, loading } = useSession();
   if (loading) return <AuthPending />;
   if (session?.role !== "admin") return <Navigate to="/admin/dashboard" replace />;
+  return <>{children}</>;
+}
+
+/**
+ * The booking holder's pages: money, the booking itself, and who else is on it.
+ *
+ * A companion is sent to their stay instead. RLS already returns nothing
+ * behind these to them — this is so they land somewhere useful rather than on
+ * an empty page that reads as a fault.
+ */
+function RequireHolder({ children }: { children: ReactNode }) {
+  const { session, loading } = useSession();
+  if (loading) return <AuthPending />;
+  if (session?.companionId) return <Navigate to="/guest/dashboard" replace />;
   return <>{children}</>;
 }
 
@@ -212,12 +227,13 @@ export function AppRoutes() {
       >
         <Route index element={<Navigate to="/guest/dashboard" replace />} />
         <Route path="dashboard" element={<GuestDashboardPage />} />
-        <Route path="book" element={<GuestBookPage />} />
-        <Route path="waitlist" element={<GuestWaitlistPage />} />
-        <Route path="booking" element={<GuestBookingPage />} />
-        <Route path="payment" element={<GuestPaymentPage />} />
-        <Route path="voucher" element={<GuestVoucherPage />} />
-        <Route path="invoice" element={<GuestInvoicePage />} />
+        <Route path="book" element={<RequireHolder><GuestBookPage /></RequireHolder>} />
+        <Route path="waitlist" element={<RequireHolder><GuestWaitlistPage /></RequireHolder>} />
+        <Route path="booking" element={<RequireHolder><GuestBookingPage /></RequireHolder>} />
+        <Route path="payment" element={<RequireHolder><GuestPaymentPage /></RequireHolder>} />
+        <Route path="voucher" element={<RequireHolder><GuestVoucherPage /></RequireHolder>} />
+        <Route path="people" element={<RequireHolder><GuestPeoplePage /></RequireHolder>} />
+        <Route path="invoice" element={<RequireHolder><GuestInvoicePage /></RequireHolder>} />
         <Route path="amenities" element={<GuestAmenitiesPage />} />
         <Route path="food" element={<GuestFoodPage />} />
         <Route path="requests" element={<GuestRequestsPage />} />

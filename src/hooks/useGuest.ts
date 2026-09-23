@@ -18,7 +18,13 @@ export function useGuestStay() {
 
   return useMemo(() => {
     const customerId = session?.customerId ?? "";
-    const own = views.filter((v) => v.booking.customerId === customerId);
+    const companionId = session?.companionId;
+
+    // A companion owns nothing; they are *on* one booking. RLS has already
+    // narrowed `views` to that booking, and this is the same answer by id.
+    const own = companionId
+      ? views.filter((v) => v.booking.id === session?.companionBookingId)
+      : views.filter((v) => v.booking.customerId === customerId);
 
     // The stay to show: the one in progress, else the next one coming up,
     // else the most recent past stay.
@@ -45,15 +51,18 @@ export function useGuestStay() {
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       invoice: invoices.find((i) => i.bookingId === bookingId),
       orders: foodOrders
-        .filter((o) => o.customerId === customerId)
+        .filter((o) => (companionId ? o.companionId === companionId : o.customerId === customerId))
         .sort((a, b) => b.placedAt.localeCompare(a.placedAt)),
       requests: requests
-        .filter((r) => r.customerId === customerId)
+        .filter((r) => (companionId ? r.companionId === companionId : r.customerId === customerId))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       feedback: feedback
-        .filter((f) => f.customerId === customerId)
+        .filter((f) => (companionId ? f.companionId === companionId : f.customerId === customerId))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       today,
+      /** True for somebody on another person's booking. The shell uses it to
+       *  leave out doors RLS would slam anyway. */
+      isCompanion: Boolean(companionId),
     };
   }, [session, views, customers, payments, foodOrders, requests, feedback, invoices, today]);
 }

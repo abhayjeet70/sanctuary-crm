@@ -46,6 +46,21 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
         permissions = (grants ?? []).map((g) => g.permission as PermissionKey);
       }
 
+      // A guest profile with no customer record is either somebody who signed
+      // up and never stayed, or a companion on another person's booking. Only
+      // the second has a row here — and RLS lets them read their own row.
+      let companionId: string | undefined;
+      let companionBookingId: string | undefined;
+      if (data?.role === "guest" && !data?.customer_id) {
+        const { data: companion } = await supabase
+          .from("booking_companions")
+          .select("id, booking_id")
+          .eq("profile_id", userId)
+          .maybeSingle();
+        companionId = companion?.id ?? undefined;
+        companionBookingId = companion?.booking_id ?? undefined;
+      }
+
       if (!active) return;
       setSession({
         role: (data?.role as Role) ?? "guest",
@@ -55,6 +70,8 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
         departmentId: data?.department_id ?? undefined,
         permissions,
         team: data?.team ?? undefined,
+        companionId,
+        companionBookingId,
       });
       setLoading(false);
     };
@@ -77,7 +94,15 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    // A companion signs in with the Guest ID they were given rather than an
+    // address. The account behind it is an ordinary Supabase login whose
+    // address is derived from the code — see add_companion — so this is a
+    // translation of what they typed, not a second way of authenticating.
+    const typed = email.trim();
+    const address = /^HOS-G[A-Z0-9]{5}$/i.test(typed)
+      ? `${typed.slice(4).toLowerCase()}@guest.homesofsanctuary.in`
+      : typed;
+    const { error } = await supabase.auth.signInWithPassword({ email: address, password });
     if (error) {
       setLoading(false);
       // GoTrue says "Invalid login credentials" for both a wrong password and a

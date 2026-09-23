@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, ErrorState, Eyebrow } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
+import { useSession } from "@/services/session";
 import { useMockData } from "@/hooks/useData";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,8 @@ import type { Feedback } from "@/types";
 const RATING_WORDS = ["", "Poor", "Fair", "Good", "Very good", "Exceptional"];
 
 export default function GuestFeedbackPage() {
-  const { view, customer, feedback } = useGuestStay();
+  const { view, feedback } = useGuestStay();
+  const { session } = useSession();
   const { createFeedback } = useMockData();
 
   const [rating, setRating] = useState(0);
@@ -43,7 +45,9 @@ export default function GuestFeedbackPage() {
     const entry: Feedback = {
       id: `fb-${Date.now()}`,
       bookingId: view.booking.id,
-      customerId: customer?.id ?? "",
+      // Filed against the booking holder, whoever is holding the phone.
+      customerId: view.booking.customerId,
+      companionId: session?.companionId,
       villaId: view.booking.villaId,
       rating,
       comment: comment.trim(),

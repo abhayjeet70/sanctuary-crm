@@ -12,6 +12,7 @@ import {
   MessageSquareQuote,
   Hourglass,
   Receipt,
+  Users,
   Ticket,
   Sparkles,
   Wallet,
@@ -37,6 +38,7 @@ const PRIMARY = [
 ] as const;
 
 const SECONDARY = [
+  { to: "/guest/people", label: "People with you", icon: Users },
   { to: "/guest/book", label: "Book a stay", icon: CalendarPlus },
   { to: "/guest/booking", label: "Booking details", icon: CalendarCheck },
   { to: "/guest/voucher", label: "Voucher", icon: Ticket },
@@ -44,6 +46,24 @@ const SECONDARY = [
   { to: "/guest/invoice", label: "Invoice", icon: Receipt },
   { to: "/guest/feedback", label: "Feedback", icon: MessageSquareQuote },
 ] as const;
+
+/**
+ * The doors a companion is not offered.
+ *
+ * Not the security — RLS returns nothing behind any of these to a companion,
+ * and the routes redirect them. This is so the portal does not walk them into
+ * an empty room: a companion who taps "Payment" and finds a blank page learns
+ * the app is broken, not that the payment is someone else's business.
+ */
+const HOLDER_ONLY = new Set([
+  "/guest/payment",
+  "/guest/invoice",
+  "/guest/voucher",
+  "/guest/booking",
+  "/guest/book",
+  "/guest/waitlist",
+  "/guest/people",
+]);
 
 /** Where a guest notification takes you. */
 function guestDestinationFor(item: AppNotification): string {
@@ -180,6 +200,9 @@ function GuestNotificationTray() {
 
 export function GuestShell() {
   const { session, signOut } = useSession();
+  const isCompanion = Boolean(session?.companionId);
+  const primary = PRIMARY.filter((item) => !isCompanion || !HOLDER_ONLY.has(item.to));
+  const secondary = SECONDARY.filter((item) => !isCompanion || !HOLDER_ONLY.has(item.to));
   const navigate = useNavigate();
 
   const leave = () => {
@@ -225,7 +248,7 @@ export function GuestShell() {
               aria-label="Guest portal"
               className="hidden justify-end gap-0.5 lg:flex"
             >
-              {[...PRIMARY, ...SECONDARY].map(({ to, label, icon: Icon }) => (
+              {[...primary, ...secondary].map(({ to, label, icon: Icon }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -257,7 +280,7 @@ export function GuestShell() {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-gold/20 bg-white/95 backdrop-blur lg:hidden"
       >
         <ul className="mx-auto flex max-w-md">
-          {PRIMARY.map(({ to, label, icon: Icon }) => (
+          {primary.map(({ to, label, icon: Icon }) => (
             <li key={to} className="flex-1">
               <NavLink
                 to={to}

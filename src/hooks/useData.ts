@@ -205,11 +205,13 @@ export function useMenuForVilla(villaId: ID | undefined) {
 export const useFoodOrders = () => useMockData().foodOrders;
 
 export function useFoodOrderViews() {
-  const { foodOrders, villas, customers } = useMockData();
+  const { foodOrders, villas, customers, companions } = useMockData();
   return useMemo(
     () =>
       foodOrders.map((order) => ({
         order,
+        /** Who ordered, when it was not the booking holder. */
+        companion: companions.find((c) => c.id === order.companionId),
         villa: villas.find((v) => v.id === order.villaId),
         customer: customers.find((c) => c.id === order.customerId),
         roomName: villas
@@ -217,7 +219,7 @@ export function useFoodOrderViews() {
           ?.rooms.find((r) => r.id === order.roomId)?.name,
         total: orderTotal(order.lines),
       })),
-    [foodOrders, villas, customers],
+    [foodOrders, villas, customers, companions],
   );
 }
 
@@ -226,15 +228,17 @@ export function useFoodOrderViews() {
 export const useRequests = () => useMockData().requests;
 
 export function useRequestViews() {
-  const { requests, villas, customers } = useMockData();
+  const { requests, villas, customers, companions } = useMockData();
   return useMemo(
     () =>
       requests.map((request) => ({
         request,
+        /** Who asked, when it was not the booking holder. */
+        companion: companions.find((c) => c.id === request.companionId),
         villa: villas.find((v) => v.id === request.villaId),
         customer: customers.find((c) => c.id === request.customerId),
       })),
-    [requests, villas, customers],
+    [requests, villas, customers, companions],
   );
 }
 

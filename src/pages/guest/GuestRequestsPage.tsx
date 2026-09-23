@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, ErrorState, Eyebrow, StatusBadge } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
+import { useSession } from "@/services/session";
 import { useMockData } from "@/hooks/useData";
 import { requestStatus, titleCase } from "@/lib/status";
 import { formatDateTime } from "@/lib/format";
@@ -24,7 +25,8 @@ const CATEGORIES: { value: RequestCategory; label: string; hint: string }[] = [
 ];
 
 export default function GuestRequestsPage() {
-  const { view, customer, requests } = useGuestStay();
+  const { view, requests } = useGuestStay();
+  const { session } = useSession();
   const { createRequest } = useMockData();
 
   const [category, setCategory] = useState<RequestCategory | null>(null);
@@ -53,7 +55,9 @@ export default function GuestRequestsPage() {
       id: `q-${Date.now()}`,
       reference: `REQ-${String(Date.now()).slice(-4)}`,
       bookingId: view.booking.id,
-      customerId: customer?.id ?? "",
+      // Filed against the booking holder, whoever is holding the phone.
+      customerId: view.booking.customerId,
+      companionId: session?.companionId,
       villaId: view.booking.villaId,
       category,
       description: description.trim(),

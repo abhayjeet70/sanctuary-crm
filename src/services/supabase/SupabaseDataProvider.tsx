@@ -20,6 +20,8 @@ import {
   toTax,
   toExpense,
   toStayPreferences,
+  toCompanion,
+  toCompanionStay,
   toVilla,
   toWaitlistEntry,
 } from "./mappers";
@@ -42,6 +44,7 @@ import type {
   Tax,
   Expense,
   StayPreferences,
+  BookingCompanion,
   Villa,
   WaitlistEntry,
 } from "@/types";
@@ -79,6 +82,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [taxes, setTaxes] = useState<Tax[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [preferences, setPreferences] = useState<StayPreferences[]>([]);
+  const [companions, setCompanions] = useState<BookingCompanion[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeePay, setEmployeePay] = useState<EmployeePay[]>([]);
@@ -132,7 +136,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const refetch = useCallback(async () => {
     if (!session) return;
 
-    const [v, ra, c, b, wl, p, i, tx, ex, pref, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
+    const [v, ra, c, b, wl, p, i, tx, ex, pref, comp, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
       supabase.from("villas").select(SELECTS.villas).order("name"),
       supabase.from("room_availability").select("*"),
       supabase.from("customers").select("*").order("name"),
@@ -148,6 +152,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       // Readable by management, by the departments that act on them, and by
       // the guest they belong to. Everyone else gets an empty array from RLS.
       supabase.from("stay_preferences").select("*").order("created_at", { ascending: false }),
+      supabase.from("booking_companions").select("*").order("created_at"),
       supabase.from("departments").select("*").order("sort_order"),
       supabase.from("department_permissions").select("*"),
       supabase.from("employees").select("*").order("employee_code"),
@@ -163,7 +168,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     // A guest legitimately gets empty arrays for admin-only tables — that is RLS
     // working, not a failure, so only real errors are surfaced.
-    const firstError = [v, ra, c, b, wl, p, i, tx, ex, pref, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
+    const firstError = [v, ra, c, b, wl, p, i, tx, ex, pref, comp, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
       (res) => res.error,
     )?.error;
     if (firstError && firstError.code !== "PGRST116") {
@@ -172,13 +177,34 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     setVillas(withDerivedRoomStatus((v.data ?? []).map(toVilla), ra.data ?? []));
     setCustomers((c.data ?? []).map(toCustomer));
-    setBookings((b.data ?? []).map(toBooking));
+    // A companion cannot read `bookings` at all — the row carries the rate
+    // and the internal notes. Their stay comes from a view with neither, and
+    // for everybody else that view is simply empty.
+    const stays = await supabase.from("companion_stays").select("*");
+    let stayBookings: Booking[] = [];
+    if (stays.data?.length) {
+      const ids = stays.data.map((row) => (row as { id: string }).id);
+      const { data: held } = await supabase
+        .from("booking_rooms")
+        .select("booking_id, room_id")
+        .in("booking_id", ids);
+      stayBookings = stays.data.map((row) =>
+        toCompanionStay(
+          row,
+          ((held ?? []) as { booking_id: string; room_id: string }[])
+            .filter((h) => h.booking_id === (row as { id: string }).id)
+            .map((h) => h.room_id),
+        ),
+      );
+    }
+    setBookings([...(b.data ?? []).map(toBooking), ...stayBookings]);
     setWaitlist((wl.data ?? []).map(toWaitlistEntry));
     setPayments((p.data ?? []).map(toPayment));
     setInvoices((i.data ?? []).map(toInvoice));
     setTaxes((tx.data ?? []).map(toTax));
     setExpenses((ex.data ?? []).map(toExpense));
     setPreferences((pref.data ?? []).map(toStayPreferences));
+    setCompanions((comp.data ?? []).map(toCompanion));
     // Permissions arrive as their own rows; stitched on here so a component
     // asking "what may this department do" never has to join by hand.
     const grants = (dperm.data ?? []) as { department_id: string; permission: string }[];
@@ -305,6 +331,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       taxes,
       expenses,
       preferences,
+      companions,
       departments,
       employees,
       employeePay,
@@ -489,6 +516,60 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         if (error) return { error: error.message };
         await refetch();
         return { error: null };
+      },
+
+      addCompanion: async (input) => {
+        const { data, error } = await supabase.rpc("add_companion", {
+          p_booking_id: input.bookingId,
+          p_full_name: input.fullName,
+          p_phone: input.phone ?? "",
+          p_email: input.email ?? "",
+          p_relationship: input.relationship,
+          p_is_child: input.isChild,
+        });
+        if (error) return { credentials: null, error: error.message };
+        const row = (Array.isArray(data) ? data[0] : data) as
+          | { companion_id: string; guest_code: string; temporary_password: string }
+          | undefined;
+        await refetch();
+        if (!row) return { credentials: null, error: "No login came back" };
+        return {
+          credentials: {
+            companionId: row.companion_id,
+            guestCode: row.guest_code,
+            temporaryPassword: row.temporary_password,
+          },
+          error: null,
+        };
+      },
+
+      revokeCompanion: async (companionId) => {
+        const { error } = await supabase.rpc("revoke_companion", {
+          p_companion_id: companionId,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      resetCompanionPassword: async (companionId) => {
+        const { data, error } = await supabase.rpc("reset_companion_password", {
+          p_companion_id: companionId,
+        });
+        if (error) return { credentials: null, error: error.message };
+        const row = (Array.isArray(data) ? data[0] : data) as
+          | { guest_code: string; temporary_password: string }
+          | undefined;
+        await refetch();
+        if (!row) return { credentials: null, error: "No login came back" };
+        return {
+          credentials: {
+            companionId,
+            guestCode: row.guest_code,
+            temporaryPassword: row.temporary_password,
+          },
+          error: null,
+        };
       },
 
       convertWaitlistEntry: async (waitlistId, bookingId) => {
@@ -729,6 +810,10 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           // Guests may only open at normal priority; RLS enforces it too.
           priority: "normal",
           status: "pending",
+          // Who asked, when it was not the booking holder. The companion
+          // insert policy checks this is the caller's own id, so it cannot be
+          // used to file a request in somebody else's name.
+          companion_id: request.companionId ?? null,
           // Left null on purpose: a trigger routes it to the right team after
           // the insert is checked. A guest choosing their own team is exactly
           // what the insert policy refuses.
@@ -764,6 +849,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           rating: entry.rating,
           comment: entry.comment,
           reviewed: false,
+          companion_id: entry.companionId ?? null,
         });
         if (report(error, "Could not send your feedback")) {
           return { error: error?.message ?? "Could not send your feedback" };
@@ -1042,7 +1128,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     };
 
   }, [
-    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, preferences, departments, employees, employeePay, menuItems,
+    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, preferences, companions, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
     demoDataVisible, setDemoDataVisible,
   ]);

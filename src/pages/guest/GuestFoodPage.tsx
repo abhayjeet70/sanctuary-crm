@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { EmptyState, ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
+import { useSession } from "@/services/session";
 import { useMenuForVilla, useMockData } from "@/hooks/useData";
 import { foodOrderStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateTime, money } from "@/lib/format";
@@ -46,7 +47,8 @@ function DietDot({ isVeg }: { isVeg: boolean }) {
 }
 
 export default function GuestFoodPage() {
-  const { view, customer, orders, today } = useGuestStay();
+  const { view, orders, today } = useGuestStay();
+  const { session } = useSession();
   // A villa may run its own card, so the menu follows the stay.
   const menu = useMenuForVilla(view?.booking.villaId);
   const { createFoodOrder } = useMockData();
@@ -98,7 +100,9 @@ export default function GuestFoodPage() {
       id: `f-${Date.now()}`,
       reference: `KIT-${String(Date.now()).slice(-4)}`,
       bookingId: view.booking.id,
-      customerId: customer?.id ?? "",
+      // Filed against the booking holder, whoever is holding the phone.
+      customerId: view.booking.customerId,
+      companionId: session?.companionId,
       villaId: view.booking.villaId,
       roomId: view.booking.roomIds[0],
       lines,

@@ -36,7 +36,12 @@ const LINKS = [
 
 export default function GuestDashboardPage() {
   const { session } = useSession();
-  const { view, orders, requests, today } = useGuestStay();
+  const { view, orders, requests, today, isCompanion } = useGuestStay();
+  // A companion's quick links are the ones they can use. The money and the
+  // booking are the holder's — RLS returns nothing there to them anyway.
+  const links = isCompanion
+    ? LINKS.filter((link) => link.to !== "/guest/booking" && link.to !== "/guest/payment")
+    : LINKS;
 
   // No booking yet is a perfectly normal state for a new account — it is an
   // invitation to book, not an error.
@@ -205,7 +210,7 @@ export default function GuestDashboardPage() {
         </section>
 
         {/* -------------------------------------------------------- balance */}
-        {totals.balance > 0 && (
+        {!isCompanion && totals.balance > 0 && (
           <section className="rounded-2xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
             <Eyebrow className="text-gold-400">Balance due</Eyebrow>
             <p className="text-gold-gradient mt-2 font-display text-4xl tabular-nums">
@@ -324,7 +329,7 @@ export default function GuestDashboardPage() {
             </Link>
           </div>
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {LINKS.map(({ to, label, hint, icon: Icon }) => (
+            {links.map(({ to, label, hint, icon: Icon }) => (
               <li key={to}>
                 <Link
                   to={to}

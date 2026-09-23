@@ -1,7 +1,8 @@
 /* Self-check for the money and inventory-conflict rules — the only two pieces
  * of real logic in this UI-only phase. Run with: npx tsx src/services/domain.test.ts */
 import assert from "node:assert/strict";
-import type { Booking } from "../types";
+import type { Booking, BookingCompanion } from "../types";
+import { companionAccess } from "../lib/companions";
 import { cleanPhone, isPhone } from "../lib/format";
 import { csvField, toCsv } from "../lib/csv";
 import {
@@ -418,6 +419,74 @@ assert.equal(
   queuePosition(afterWithdrawal[1], afterWithdrawal),
   1,
   "second becomes first when the first withdraws",
+);
+
+// --------------------------------------------------- companion access clock
+//
+// Access ends at the stay's agreed departure plus a short grace, in IST — not
+// when somebody marks the booking checked out. Revoked and cancelled win over
+// the clock.
+
+const companion: BookingCompanion = {
+  id: "c-1",
+  bookingId: "b-1",
+  fullName: "Rahul Sharma",
+  phone: "",
+  email: "",
+  relationship: "friend",
+  isChild: false,
+  guestCode: "HOS-GABCDE",
+  createdAt: "2026-08-20T10:00:00+05:30",
+};
+const companionStay = { status: "in_house" as const, checkOut: "2026-08-25", checkOutTime: "11:00" };
+
+assert.equal(
+  companionAccess(companion, companionStay, new Date("2026-08-25T13:59:00+05:30")),
+  "active",
+  "still in the grace window after an 11:00 departure",
+);
+assert.equal(
+  companionAccess(companion, companionStay, new Date("2026-08-25T14:01:00+05:30")),
+  "expired",
+  "gone three hours after departure, though the status still says in house",
+);
+// A late departure is honoured, so a guest leaving at 18:00 is not locked
+// out of ordering lunch.
+assert.equal(
+  companionAccess(
+    companion,
+    { ...companionStay, checkOutTime: "18:00" },
+    new Date("2026-08-25T19:00:00+05:30"),
+  ),
+  "active",
+);
+// Undefined departure time falls back to the property's 11:00.
+assert.equal(
+  companionAccess(
+    companion,
+    { ...companionStay, checkOutTime: undefined },
+    new Date("2026-08-25T14:30:00+05:30"),
+  ),
+  "expired",
+);
+// The boundary is IST whatever zone the browser is in: 08:31 UTC is 14:01 IST.
+assert.equal(
+  companionAccess(companion, companionStay, new Date("2026-08-25T08:31:00Z")),
+  "expired",
+);
+assert.equal(
+  companionAccess(
+    { ...companion, revokedAt: "2026-08-23T09:00:00+05:30" },
+    companionStay,
+    new Date("2026-08-23T10:00:00+05:30"),
+  ),
+  "revoked",
+  "a revoke wins, mid-stay",
+);
+assert.equal(
+  companionAccess(companion, { ...companionStay, status: "cancelled" }, new Date("2026-08-21T10:00:00+05:30")),
+  "expired",
+  "cancelling the booking ends access before the dates arrive",
 );
 
 console.log("domain.ts — all checks passed");

@@ -38,6 +38,9 @@ import type {
   Expense,
   StayPreferences,
   StayPreferencesDraft,
+  BookingCompanion,
+  CompanionCredentials,
+  CompanionRelationship,
   Villa,
   VillaMode,
   WaitlistEntry,
@@ -69,6 +72,24 @@ export interface MockData {
   /** What guests told us when they asked. Departments see these without ever
    *  reading a booking — see the stay_preferences migration. */
   preferences: StayPreferences[];
+  /** The people on bookings the caller may see. RLS narrows it: a holder gets
+   *  their own booking's, a companion gets only themselves. */
+  companions: BookingCompanion[];
+  /** Add somebody to a booking and give them a login. The password in the
+   *  result exists nowhere else — show it, then let it go. */
+  addCompanion: (input: {
+    bookingId: ID;
+    fullName: string;
+    phone?: string;
+    email?: string;
+    relationship: CompanionRelationship;
+    isChild: boolean;
+  }) => Promise<{ credentials: CompanionCredentials | null; error: string | null }>;
+  revokeCompanion: (companionId: ID) => Promise<{ error: string | null }>;
+  /** A fresh password for somebody who lost theirs. Also lifts a revoke. */
+  resetCompanionPassword: (
+    companionId: ID,
+  ) => Promise<{ credentials: CompanionCredentials | null; error: string | null }>;
   departments: Department[];
   employees: Employee[];
   /** Owner-only; empty for everyone else because RLS returns nothing. */
@@ -289,6 +310,13 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       taxes: [],
       expenses: [],
       preferences: [],
+      companions: [],
+      addCompanion: async () => ({ credentials: null, error: "Not available in the fixtures" }),
+      revokeCompanion: async () => ({ error: "Not available in the fixtures" }),
+      resetCompanionPassword: async () => ({
+        credentials: null,
+        error: "Not available in the fixtures",
+      }),
       departments: [],
       employees: [],
       employeePay: [],

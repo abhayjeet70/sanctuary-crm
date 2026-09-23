@@ -37,6 +37,7 @@ import {
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
 import { VoucherDocument } from "@/components/booking/VoucherDocument";
+import { BookingGuestsPanel } from "@/components/booking/BookingGuestsPanel";
 import { EmailGuestButton, GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
 import { SendBookingDetails } from "@/components/booking/SendBookingDetails";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
@@ -268,6 +269,8 @@ export default function BookingDetailPage() {
                 <Detail label="Booked">{formatDate(booking.createdAt.slice(0, 10))}</Detail>
               </dl>
             </section>
+
+            <BookingGuestsPanel view={view} />
 
             {hasPreferences(preferences) && (
               <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">

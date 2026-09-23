@@ -132,7 +132,7 @@ export default function RequestsPage() {
         />
       ) : (
         <ul className="space-y-3">
-          {filtered.map(({ request, villa, customer }) => {
+          {filtered.map(({ request, villa, customer, companion }) => {
             const state = requestStatus.get(request.status);
             const level = requestPriority.get(request.priority);
             const step = ADVANCE[request.status];
@@ -170,7 +170,8 @@ export default function RequestsPage() {
                         className="underline-offset-4 hover:text-clay-600 hover:underline"
                       >
                         {customer?.name}
-                      </Link>{" "}
+                      </Link>
+                      {companion && ` · asked by ${companion.fullName}`}{" "}
                       · {villa?.name} ·{" "}
                       <Link
                         to={`/admin/bookings/${request.bookingId}`}

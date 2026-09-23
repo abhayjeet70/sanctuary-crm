@@ -229,16 +229,25 @@ export function AuthPanel() {
             </Field>
           )}
 
-          <Field id="email" label="Email" icon={<Mail className="size-4" aria-hidden />}>
+          <Field
+            id="email"
+            label={isSignup || isReset ? "Email" : "Email or Guest ID"}
+            icon={<Mail className="size-4" aria-hidden />}
+          >
+            {/* type="text" when signing in, because a Guest ID is not an
+                address and type="email" would refuse the form before it ever
+                reached us. Sign-up and reset still need a real address. */}
             <Input
               id="email"
-              type="email"
+              type={isSignup || isReset ? "email" : "text"}
               autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="border-0 bg-white/10 pl-9 text-sand placeholder:text-sand/40"
-              placeholder="you@example.com"
+              placeholder={isSignup || isReset ? "you@example.com" : "you@example.com or HOS-G…"}
             />
           </Field>
 

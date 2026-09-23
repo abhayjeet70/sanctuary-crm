@@ -185,6 +185,41 @@ export interface WaitlistEntry {
   createdAt: ISODateTime;
 }
 
+/* ------------------------------------------------------------- companions */
+
+export type CompanionRelationship = "family" | "friend" | "colleague" | "child" | "other";
+
+/**
+ * Somebody staying on another person's booking.
+ *
+ * Booking-scoped, never a customer: they carry no financial identity and are
+ * never counted in a guest's spend. See the booking_companions migration.
+ */
+export interface BookingCompanion {
+  id: ID;
+  bookingId: ID;
+  fullName: string;
+  phone: string;
+  email: string;
+  relationship: CompanionRelationship;
+  isChild: boolean;
+  /** What they type to sign in: HOS-G + five characters. */
+  guestCode: string;
+  profileId?: ID;
+  revokedAt?: ISODateTime;
+  createdAt: ISODateTime;
+}
+
+/** Access is derived, never stored: revoked is a fact, expired is a clock. */
+export type CompanionAccess = "active" | "revoked" | "expired";
+
+/** What the add RPC hands back — the only moment the password is readable. */
+export interface CompanionCredentials {
+  companionId: ID;
+  guestCode: string;
+  temporaryPassword: string;
+}
+
 /* ------------------------------------------------------------ preferences */
 
 export type DietaryPreference =
@@ -337,6 +372,9 @@ export interface FoodOrder {
   status: FoodOrderStatus;
   notes?: string;
   placedAt: ISODateTime;
+  /** Who ordered, when it was not the booking holder. Billing stays with the
+   *  booking either way (BR12). */
+  companionId?: ID;
 }
 
 /* ----------------------------------------------------------------- requests */
@@ -379,6 +417,8 @@ export interface GuestRequest {
   resolvedAt?: ISODateTime;
   /** What was actually done — sent to the guest when it is closed. */
   resolutionNote?: string;
+  /** Who asked, when it was not the booking holder. */
+  companionId?: ID;
   createdAt: ISODateTime;
 }
 
@@ -393,6 +433,8 @@ export interface Feedback {
   comment: string;
   reviewed: boolean;
   reply?: string;
+  /** Who left it, when it was not the booking holder. */
+  companionId?: ID;
   createdAt: ISODateTime;
 }
 
@@ -436,6 +478,12 @@ export interface MockSession {
   name: string;
   /** The sign-in address, used to re-authenticate before a password change. */
   email?: string;
+  /** Set when this is a companion on somebody else's booking rather than the
+   *  booking holder. A companion has no customerId at all — that absence is
+   *  what keeps every guest policy from matching them. */
+  companionId?: ID;
+  /** The one booking a companion may act on. */
+  companionBookingId?: ID;
 }
 
 /** Everything about the property that used to be hardcoded in the UI. */

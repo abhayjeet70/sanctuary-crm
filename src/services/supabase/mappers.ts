@@ -23,6 +23,7 @@ import type {
   Tax,
   Expense,
   StayPreferences,
+  BookingCompanion,
   Room,
   Villa,
   WaitlistEntry,
@@ -133,6 +134,49 @@ export const toBooking = (row: unknown): Booking => {
   };
 };
 
+/**
+ * A companion's stay, from the `companion_stays` view.
+ *
+ * The view has no money columns on purpose, so there is nothing to map them
+ * from: the charges are zero and the payment state is "pending" as a neutral
+ * placeholder. Nothing a companion is shown reads these — the shell never
+ * offers them a money screen — and a zero is honest where a guessed number
+ * would not be.
+ */
+export const toCompanionStay = (row: unknown, roomIds: string[]): Booking => {
+  const x = r(row);
+  return {
+    id: x.id,
+    reference: x.reference,
+    customerId: x.customer_id,
+    villaId: x.villa_id,
+    roomIds: x.booking_mode === "whole" ? [] : roomIds,
+    bookingMode: x.booking_mode,
+    checkIn: x.check_in,
+    checkOut: x.check_out,
+    checkInTime: x.check_in_time ? String(x.check_in_time).slice(0, 5) : undefined,
+    checkOutTime: x.check_out_time ? String(x.check_out_time).slice(0, 5) : undefined,
+    adults: x.adults,
+    children: x.children,
+    source: "other",
+    status: x.status,
+    paymentStatus: "pending",
+    charges: {
+      nightlyRate: 0,
+      nights: 0,
+      weekendSurcharge: 0,
+      seasonalSurcharge: 0,
+      extraGuestCharge: 0,
+      food: 0,
+      addOns: 0,
+      discount: 0,
+      taxRate: 0,
+    },
+    amountPaid: 0,
+    createdAt: x.created_at,
+  };
+};
+
 export const toPayment = (row: unknown): Payment => {
   const x = r(row);
   return {
@@ -204,6 +248,7 @@ export const toFoodOrder = (row: unknown): FoodOrder => {
     status: x.status,
     notes: x.notes ?? undefined,
     placedAt: x.placed_at,
+    companionId: x.companion_id ?? undefined,
   };
 };
 
@@ -225,6 +270,7 @@ export const toGuestRequest = (row: unknown): GuestRequest => {
     acknowledgedAt: x.acknowledged_at ?? undefined,
     resolvedAt: x.resolved_at ?? undefined,
     resolutionNote: x.resolution_note ?? undefined,
+    companionId: x.companion_id ?? undefined,
     createdAt: x.created_at,
   };
 };
@@ -240,6 +286,7 @@ export const toFeedback = (row: unknown): Feedback => {
     comment: x.comment,
     reviewed: x.reviewed,
     reply: x.reply ?? undefined,
+    companionId: x.companion_id ?? undefined,
     createdAt: x.created_at,
   };
 };
@@ -475,6 +522,23 @@ export const toExpense = (row: unknown): Expense => {
     note: x.note ?? "",
     method: x.method ?? "",
     reference: x.reference ?? "",
+    createdAt: x.created_at,
+  };
+};
+
+export const toCompanion = (row: unknown): BookingCompanion => {
+  const x = r(row);
+  return {
+    id: x.id,
+    bookingId: x.booking_id,
+    fullName: x.full_name,
+    phone: x.phone ?? "",
+    email: x.email ?? "",
+    relationship: x.relationship,
+    isChild: Boolean(x.is_child),
+    guestCode: x.guest_code,
+    profileId: x.profile_id ?? undefined,
+    revokedAt: x.revoked_at ?? undefined,
     createdAt: x.created_at,
   };
 };

@@ -157,7 +157,7 @@ export default function StaffQueuePage() {
             />
           ) : (
             <ul className="space-y-3">
-              {open.map(({ request, villa }) => {
+              {open.map(({ request, villa, companion }) => {
                 const level = requestPriority.get(request.priority);
                 const state = requestStatus.get(request.status);
                 const step = ADVANCE[request.status];
@@ -173,6 +173,7 @@ export default function StaffQueuePage() {
                       <StatusBadge label={level.label} tone={level.tone} />
                       <StatusBadge label={state.label} tone={state.tone} />
                       <span className="text-xs text-stone-600">
+                        {companion && `${companion.fullName} · `}
                         {titleCase(request.category)}
                       </span>
                     </div>
@@ -260,7 +261,7 @@ export default function StaffQueuePage() {
           <section>
             <Eyebrow className="mb-3 text-gold-700">Orders on the pass</Eyebrow>
             <ul className="space-y-3">
-              {liveOrders.map(({ order, villa, roomName, total }) => {
+              {liveOrders.map(({ order, villa, companion, roomName, total }) => {
                 const state = foodOrderStatus.get(order.status);
                 const next = FOOD_PIPELINE[FOOD_PIPELINE.indexOf(order.status) + 1];
                 return (
@@ -273,6 +274,7 @@ export default function StaffQueuePage() {
                       {order.lines.map((l) => `${l.quantity}× ${l.name}`).join(", ")}
                     </p>
                     <p className="mt-1 text-xs text-stone-600">
+                      {companion && `For ${companion.fullName} · `}
                       {villa?.name}
                       {roomName && ` · ${roomName}`} · {formatTime(order.placedAt)} · {money(total)}
                     </p>

@@ -112,7 +112,7 @@ export default function KitchenPage() {
                   </p>
                 ) : (
                   <ul className="space-y-3">
-                    {columnOrders.map(({ order, villa, customer, roomName, total }) => {
+                    {columnOrders.map(({ order, villa, customer, companion, roomName, total }) => {
                       const step = ADVANCE[order.status];
                       return (
                         <li
@@ -132,8 +132,15 @@ export default function KitchenPage() {
                             to={`/admin/bookings/${order.bookingId}`}
                             className="mt-1.5 block font-medium text-ink underline-offset-4 hover:text-clay-600 hover:underline"
                           >
-                            {customer?.name}
+                            {companion?.fullName ?? customer?.name}
                           </Link>
+                          {/* The kitchen cooks for a person, not a booking. When a
+                              companion ordered, say so — and whose stay it bills to. */}
+                          {companion && (
+                            <p className="text-xs text-stone-600">
+                              on {customer?.name}'s booking
+                            </p>
+                          )}
                           <p className="text-xs text-stone-600">
                             {villa?.name}
                             {roomName && ` · ${roomName}`}
