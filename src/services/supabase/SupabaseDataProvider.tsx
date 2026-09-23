@@ -19,6 +19,7 @@ import {
   toPayment,
   toTax,
   toExpense,
+  toStayPreferences,
   toVilla,
   toWaitlistEntry,
 } from "./mappers";
@@ -40,6 +41,7 @@ import type {
   PropertySettings,
   Tax,
   Expense,
+  StayPreferences,
   Villa,
   WaitlistEntry,
 } from "@/types";
@@ -76,6 +78,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [taxes, setTaxes] = useState<Tax[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [preferences, setPreferences] = useState<StayPreferences[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [employeePay, setEmployeePay] = useState<EmployeePay[]>([]);
@@ -129,7 +132,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const refetch = useCallback(async () => {
     if (!session) return;
 
-    const [v, ra, c, b, wl, p, i, tx, ex, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
+    const [v, ra, c, b, wl, p, i, tx, ex, pref, dep, dperm, em, ep, m, f, q, fb, a, n, ps] = await Promise.all([
       supabase.from("villas").select(SELECTS.villas).order("name"),
       supabase.from("room_availability").select("*"),
       supabase.from("customers").select("*").order("name"),
@@ -142,6 +145,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       // Owner-only. Everyone else gets an empty array from RLS, which is the
       // same thing the UI shows when nothing has been spent.
       supabase.from("expenses").select("*").order("spent_on", { ascending: false }),
+      // Readable by management, by the departments that act on them, and by
+      // the guest they belong to. Everyone else gets an empty array from RLS.
+      supabase.from("stay_preferences").select("*").order("created_at", { ascending: false }),
       supabase.from("departments").select("*").order("sort_order"),
       supabase.from("department_permissions").select("*"),
       supabase.from("employees").select("*").order("employee_code"),
@@ -157,7 +163,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
     // A guest legitimately gets empty arrays for admin-only tables — that is RLS
     // working, not a failure, so only real errors are surfaced.
-    const firstError = [v, ra, c, b, wl, p, i, tx, ex, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
+    const firstError = [v, ra, c, b, wl, p, i, tx, ex, pref, dep, dperm, em, ep, m, f, q, fb, a, n, ps].find(
       (res) => res.error,
     )?.error;
     if (firstError && firstError.code !== "PGRST116") {
@@ -172,6 +178,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     setInvoices((i.data ?? []).map(toInvoice));
     setTaxes((tx.data ?? []).map(toTax));
     setExpenses((ex.data ?? []).map(toExpense));
+    setPreferences((pref.data ?? []).map(toStayPreferences));
     // Permissions arrive as their own rows; stitched on here so a component
     // asking "what may this department do" never has to join by hand.
     const grants = (dperm.data ?? []) as { department_id: string; permission: string }[];
@@ -297,6 +304,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       invoices:   visibleInvoices,
       taxes,
       expenses,
+      preferences,
       departments,
       employees,
       employeePay,
@@ -386,33 +394,15 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       // stay for someone with no customer record yet. Creating the guest and
       // the booking in one RPC means a date clash rolls both back together,
       // rather than stranding a half-made customer.
-      createBooking: (booking, newGuest) => {
-        void (async () => {
-          if (newGuest) {
-            const { error: guestError } = await supabase.rpc("create_booking_with_guest", {
-              p_name: newGuest.name,
-              p_phone: newGuest.phone,
-              p_email: newGuest.email,
-              p_villa_id: booking.villaId,
-              p_room_ids: booking.roomIds,
-              p_check_in: booking.checkIn,
-              p_check_out: booking.checkOut,
-              p_adults: booking.adults,
-              p_children: booking.children,
-              p_source: booking.source,
-              p_nightly_rate: booking.charges.nightlyRate,
-              p_discount: booking.charges.discount,
-              p_tax_rate: booking.charges.taxRate,
-              p_advance: booking.amountPaid,
-              p_special_requests: booking.specialRequests ?? null,
-            });
-            if (report(guestError, "Could not create the booking")) return;
-            await refetch();
-            return;
-          }
-
-          const { error } = await supabase.rpc("create_booking", {
-            p_customer_id: booking.customerId,
+      createBooking: async (booking, newGuest) => {
+        // Returns the row rather than swallowing it: the caller has an agreed
+        // arrival to write and possibly a waiting-list entry to close out, and
+        // both need the id the database just allocated.
+        if (newGuest) {
+          const { data, error } = await supabase.rpc("create_booking_with_guest", {
+            p_name: newGuest.name,
+            p_phone: newGuest.phone,
+            p_email: newGuest.email,
             p_villa_id: booking.villaId,
             p_room_ids: booking.roomIds,
             p_check_in: booking.checkIn,
@@ -426,9 +416,33 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             p_advance: booking.amountPaid,
             p_special_requests: booking.specialRequests ?? null,
           });
-          if (report(error, "Could not create the booking")) return;
+          if (report(error, "Could not create the booking")) {
+            return { id: null, error: error?.message ?? "Could not create the booking" };
+          }
           await refetch();
-        })();
+          return { id: (data as { id?: string } | null)?.id ?? null, error: null };
+        }
+
+        const { data, error } = await supabase.rpc("create_booking", {
+          p_customer_id: booking.customerId,
+          p_villa_id: booking.villaId,
+          p_room_ids: booking.roomIds,
+          p_check_in: booking.checkIn,
+          p_check_out: booking.checkOut,
+          p_adults: booking.adults,
+          p_children: booking.children,
+          p_source: booking.source,
+          p_nightly_rate: booking.charges.nightlyRate,
+          p_discount: booking.charges.discount,
+          p_tax_rate: booking.charges.taxRate,
+          p_advance: booking.amountPaid,
+          p_special_requests: booking.specialRequests ?? null,
+        });
+        if (report(error, "Could not create the booking")) {
+          return { id: null, error: error?.message ?? "Could not create the booking" };
+        }
+        await refetch();
+        return { id: (data as { id?: string } | null)?.id ?? null, error: null };
       },
 
       // The queue for dates that are already sold.
@@ -438,7 +452,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       // If the second insert fails they are still worth having — which is the
       // opposite of a half-made booking, and why that one needs a transaction
       // and this one does not.
-      joinWaitlist: async (entry, newGuest) => {
+      joinWaitlist: async (entry, newGuest, preferences) => {
         let customerId = entry.customerId;
 
         if (newGuest) {
@@ -456,15 +470,31 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           customerId = (data as { id: string }).id;
         }
 
-        const { error } = await supabase.from("waitlist").insert({
-          customer_id: customerId,
-          villa_id: entry.villaId ?? null,
-          check_in: entry.checkIn,
-          check_out: entry.checkOut,
-          adults: entry.adults,
-          children: entry.children,
-          source: entry.source,
-          note: entry.note,
+        // One RPC rather than two inserts: an entry that exists without the
+        // preferences typed beside it is exactly the re-ask this work removes.
+        const { error } = await supabase.rpc("join_waitlist", {
+          p_villa_id: entry.villaId ?? null,
+          p_check_in: entry.checkIn,
+          p_check_out: entry.checkOut,
+          p_adults: entry.adults,
+          p_children: entry.children,
+          p_source: entry.source,
+          p_note: entry.note,
+          p_room_ids: entry.roomIds ?? [],
+          p_check_in_time: entry.checkInTime ?? null,
+          p_check_out_time: entry.checkOutTime ?? null,
+          p_prefs: preferences ?? null,
+          p_customer_id: customerId || null,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      convertWaitlistEntry: async (waitlistId, bookingId) => {
+        const { error } = await supabase.rpc("convert_waitlist_entry", {
+          p_waitlist_id: waitlistId,
+          p_booking_id: bookingId,
         });
         if (error) return { error: error.message };
         await refetch();
@@ -1012,7 +1042,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     };
 
   }, [
-    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, departments, employees, employeePay, menuItems,
+    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, preferences, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
     demoDataVisible, setDemoDataVisible,
   ]);

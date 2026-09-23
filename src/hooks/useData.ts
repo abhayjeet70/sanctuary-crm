@@ -112,7 +112,7 @@ export const useWaitlist = () => useMockData().waitlist;
 /** A waitlist entry joined to its guest and villa, with its place in the queue
  *  and whether the dates it wants have since come free. */
 export function useWaitlistViews() {
-  const { waitlist, villas, customers, bookings } = useMockData();
+  const { waitlist, villas, customers, bookings, preferences } = useMockData();
   return useMemo(() => {
     const villaIds = villas.map((v) => v.id);
     return waitlist.map((entry) => {
@@ -121,12 +121,29 @@ export function useWaitlistViews() {
         entry,
         customer: customers.find((c) => c.id === entry.customerId),
         villa: villas.find((v) => v.id === entry.villaId),
+        preferences: preferences.find((p) => p.waitlistId === entry.id),
         position: queuePosition(entry, waitlist),
         /** Villas that could take them today. Empty means still full. */
         openings: villas.filter((v) => openings.includes(v.id)),
       };
     });
-  }, [waitlist, villas, customers, bookings]);
+  }, [waitlist, villas, customers, bookings, preferences]);
+}
+
+/* -------------------------------------------------------------- preferences */
+
+/** Everything the signed-in person may see. RLS has already narrowed it: a
+ *  guest gets their own, a department gets the ones it acts on. */
+export const useStayPreferences = () => useMockData().preferences;
+
+export function usePreferencesForBooking(bookingId: ID | undefined) {
+  const { preferences } = useMockData();
+  return preferences.find((p) => p.bookingId === bookingId);
+}
+
+export function usePreferencesForWaitlist(waitlistId: ID | undefined) {
+  const { preferences } = useMockData();
+  return preferences.find((p) => p.waitlistId === waitlistId);
 }
 
 /* ----------------------------------------------------------------- payments */

@@ -32,9 +32,11 @@ import FollowUpsPage from "@/pages/admin/FollowUpsPage";
 import ActivityLogPage from "@/pages/admin/ActivityLogPage";
 import RolesPage from "@/pages/admin/RolesPage";
 import ExpensesPage from "@/pages/admin/ExpensesPage";
+import WaitlistPage from "@/pages/admin/WaitlistPage";
 import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
+import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
 import GuestBookingPage from "@/pages/guest/GuestBookingPage";
 import GuestPaymentPage from "@/pages/guest/GuestPaymentPage";
 import GuestInvoicePage from "@/pages/guest/GuestInvoicePage";
@@ -145,6 +147,7 @@ export function AppRoutes() {
         <Route path="maintenance" element={<MaintenancePage />} />
         <Route path="amenities" element={<AmenitiesPage />} />
         <Route path="enquiries" element={<EnquiriesPage />} />
+        <Route path="waitlist" element={<WaitlistPage />} />
         <Route path="quotes" element={<QuotesPage />} />
         <Route path="followups" element={<FollowUpsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
@@ -209,6 +212,7 @@ export function AppRoutes() {
         <Route index element={<Navigate to="/guest/dashboard" replace />} />
         <Route path="dashboard" element={<GuestDashboardPage />} />
         <Route path="book" element={<GuestBookPage />} />
+        <Route path="waitlist" element={<GuestWaitlistPage />} />
         <Route path="booking" element={<GuestBookingPage />} />
         <Route path="payment" element={<GuestPaymentPage />} />
         <Route path="invoice" element={<GuestInvoicePage />} />

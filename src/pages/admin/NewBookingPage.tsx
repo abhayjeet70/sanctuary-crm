@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowLeft, Check, Loader2, ListPlus } from "lucide-react";
@@ -50,7 +50,15 @@ export default function NewBookingPage() {
   const villas = useVillas();
   const customers = useCustomers();
   const bookings = useBookings();
-  const { createBooking, joinWaitlist, updateWaitlistEntry, today } = useMockData();
+  const {
+    createBooking,
+    joinWaitlist,
+    convertWaitlistEntry,
+    updateBooking,
+    waitlist,
+    preferences,
+    today,
+  } = useMockData();
   const navigate = useNavigate();
 
   // Arriving from the waiting list: everything the guest already told us,
@@ -83,6 +91,40 @@ export default function NewBookingPage() {
     advance: "0",
     specialRequests: "",
   });
+  /**
+   * Arriving from the waiting list.
+   *
+   * Everything the guest told us, seeded into the form once — `seeded` is what
+   * keeps a refetch from overwriting an edit the desk has just made. Whatever
+   * is not on the booking form itself (diet, allergies, the occasion) is
+   * carried across by `convert_waitlist_entry` when the stay is written, so it
+   * survives without needing a field here to hold it.
+   */
+  const entry = waitlist.find((row) => row.id === fromWaitlist);
+  const entryPrefs = preferences.find((p) => p.waitlistId === fromWaitlist);
+  const [seeded, setSeeded] = useState(false);
+
+  useEffect(() => {
+    if (seeded || !entry) return;
+    setSeeded(true);
+    const entryVilla = villas.find((v) => v.id === entry.villaId);
+    setForm((prev) => ({
+      ...prev,
+      source: entry.source,
+      villaId: entry.villaId ?? prev.villaId,
+      roomIds: entry.roomIds ?? [],
+      checkIn: entry.checkIn,
+      checkOut: entry.checkOut,
+      checkInTime: entry.checkInTime ?? entryVilla?.checkInTime ?? prev.checkInTime,
+      checkOutTime: entry.checkOutTime ?? entryVilla?.checkOutTime ?? prev.checkOutTime,
+      adults: String(entry.adults),
+      children: String(entry.children),
+      customerId: entry.customerId,
+      nightlyRate: String(entryVilla?.baseRate ?? prev.nightlyRate),
+      specialRequests: entry.note || entryPrefs?.specialRequests || prev.specialRequests,
+    }));
+  }, [entry, entryPrefs, seeded, villas]);
+
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [waitlisting, setWaitlisting] = useState(false);
@@ -157,7 +199,7 @@ export default function NewBookingPage() {
 
   const blocked = Object.keys(errors).length > 0 || conflicts.length > 0;
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitted(true);
     if (blocked) {
@@ -197,24 +239,39 @@ export default function NewBookingPage() {
       createdAt: new Date().toISOString(),
     };
 
-    createBooking(
+    const { id: created, error } = await createBooking(
       booking,
       isNewGuest
         ? { name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() }
         : undefined,
     );
 
-    // The entry stops being a request the moment it becomes a stay. The
-    // booking id is allocated by the database, so it is not recorded here —
-    // marking it converted is what takes them out of the queue.
-    if (fromWaitlist) updateWaitlistEntry(fromWaitlist, { status: "converted" });
+    if (error || !created) {
+      // The dates may have gone in the time it took to fill this in — the
+      // exclusion constraint is the final word, and it has just spoken. The
+      // waiting-list entry is deliberately left exactly as it was.
+      setSaving(false);
+      return;
+    }
 
-    // The reference is assigned by the database, so land on the list rather
-    // than guessing an id that does not exist yet.
+    // The agreed times travel separately: they touch no inventory and no
+    // money, and the creation RPC does not carry them.
+    if (form.checkInTime || form.checkOutTime) {
+      updateBooking(created, {
+        checkInTime: form.checkInTime || undefined,
+        checkOutTime: form.checkOutTime || undefined,
+      });
+    }
+
+    // Only now does the request stop being a request. Converting links the
+    // entry to the stay and carries the preferences across, so the kitchen
+    // reads them against the booking rather than against history.
+    if (fromWaitlist) await convertWaitlistEntry(fromWaitlist, created);
+
     toast.success("Booking created", {
       description: `${villa?.name} · ${formatDate(form.checkIn)}`,
     });
-    window.setTimeout(() => navigate("/admin/bookings"), 400);
+    window.setTimeout(() => navigate(`/admin/bookings/${created}`), 400);
   };
 
   /**
@@ -245,6 +302,9 @@ export default function NewBookingPage() {
         children: Number(form.children) || 0,
         source: form.source,
         note: form.specialRequests.trim(),
+        roomIds: isSplit ? form.roomIds : [],
+        checkInTime: form.checkInTime || undefined,
+        checkOutTime: form.checkOutTime || undefined,
       },
       isNewGuest
         ? { name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() }

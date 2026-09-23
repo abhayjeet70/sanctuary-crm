@@ -22,6 +22,7 @@ import type {
   EmployeePay,
   Tax,
   Expense,
+  StayPreferences,
   Room,
   Villa,
   WaitlistEntry,
@@ -420,6 +421,32 @@ export const toWaitlistEntry = (row: unknown): WaitlistEntry => {
     status: x.status,
     offeredAt: x.offered_at ?? undefined,
     bookingId: x.booking_id ?? undefined,
+    checkInTime: x.check_in_time ?? undefined,
+    checkOutTime: x.check_out_time ?? undefined,
+    roomIds: x.room_ids ?? [],
+    createdAt: x.created_at,
+  };
+};
+
+export const toStayPreferences = (row: unknown): StayPreferences => {
+  const x = r(row);
+  return {
+    id: x.id,
+    bookingId: x.booking_id ?? undefined,
+    waitlistId: x.waitlist_id ?? undefined,
+    villaId: x.villa_id ?? undefined,
+    guestName: x.guest_name ?? "",
+    guestPhone: x.guest_phone ?? "",
+    checkIn: x.check_in ?? undefined,
+    checkOut: x.check_out ?? undefined,
+    dietary: x.dietary ?? "none",
+    meals: x.meals ?? [],
+    cuisines: x.cuisines ?? [],
+    allergies: x.allergies ?? "",
+    dietaryNotes: x.dietary_notes ?? "",
+    foodNotes: x.food_notes ?? "",
+    occasions: x.occasions ?? [],
+    specialRequests: x.special_requests ?? "",
     createdAt: x.created_at,
   };
 };

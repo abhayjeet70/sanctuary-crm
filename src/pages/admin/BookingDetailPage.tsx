@@ -32,6 +32,7 @@ import {
   Eyebrow,
   StatusBadge,
   Photo,
+  PreferenceBadges,
 } from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { InvoiceDocument } from "@/components/booking/InvoiceDocument";
@@ -45,10 +46,12 @@ import {
   useBookingPayments,
   useBookingView,
   useMockData,
+  usePreferencesForBooking,
 } from "@/hooks/useData";
 import { bookingSource, bookingStatus, paymentStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateTime, money, nightsBetween } from "@/lib/format";
 import { stayTimes } from "@/services/domain";
+import { hasPreferences } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/services/session";
 import type { BookingStatus, PaymentRejectionReason } from "@/types";
@@ -81,6 +84,7 @@ export default function BookingDetailPage() {
   const payments = useBookingPayments(id);
   const invoice = useBookingInvoice(id);
   const activity = useActivity(id);
+  const preferences = usePreferencesForBooking(id);
   const { updateBooking, approvePayment, rejectPayment, logActivity } = useMockData();
   const isOwner = useSession().session?.role === "admin";
 
@@ -262,6 +266,33 @@ export default function BookingDetailPage() {
                 <Detail label="Booked">{formatDate(booking.createdAt.slice(0, 10))}</Detail>
               </dl>
             </section>
+
+            {hasPreferences(preferences) && (
+              <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
+                <Eyebrow className="text-gold-700">What they told us when they asked</Eyebrow>
+                <PreferenceBadges preferences={preferences} className="mt-3" />
+                <dl className="mt-4 space-y-2 text-sm">
+                  {preferences?.allergies && (
+                    <div>
+                      <dt className="label-caps text-status-cancelled">Allergies</dt>
+                      <dd className="mt-0.5 text-ink">{preferences.allergies}</dd>
+                    </div>
+                  )}
+                  {preferences?.dietaryNotes && (
+                    <div>
+                      <dt className="label-caps">Dietary</dt>
+                      <dd className="mt-0.5 text-ink">{preferences.dietaryNotes}</dd>
+                    </div>
+                  )}
+                  {preferences?.foodNotes && (
+                    <div>
+                      <dt className="label-caps">About the food</dt>
+                      <dd className="mt-0.5 text-ink">{preferences.foodNotes}</dd>
+                    </div>
+                  )}
+                </dl>
+              </section>
+            )}
 
             {booking.specialRequests && (
               <section className="rounded-xl bg-status-uploaded-bg p-6">

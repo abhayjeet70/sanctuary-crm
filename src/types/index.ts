@@ -176,8 +176,68 @@ export interface WaitlistEntry {
   offeredAt?: ISODateTime;
   /** The stay it became, once it became one. */
   bookingId?: ID;
+  /** Arrival they asked for. Undefined means the villa's standard hours —
+   *  the same rule bookings follow. */
+  checkInTime?: string;
+  checkOutTime?: string;
+  /** Rooms wanted in a split villa. A preference, not a hold. */
+  roomIds: ID[];
   createdAt: ISODateTime;
 }
+
+/* ------------------------------------------------------------ preferences */
+
+export type DietaryPreference =
+  | "none"
+  | "vegetarian"
+  | "jain"
+  | "vegan"
+  | "eggetarian"
+  | "non_vegetarian";
+
+/**
+ * What the guest told us when they asked.
+ *
+ * Belongs to exactly one of a booking or a waitlist entry, and carries its own
+ * stay context so the kitchen can read it without being handed the bookings
+ * table — see the stay_preferences migration for why that matters.
+ */
+export interface StayPreferences {
+  id: ID;
+  bookingId?: ID;
+  waitlistId?: ID;
+  villaId?: ID;
+  guestName: string;
+  guestPhone: string;
+  checkIn?: ISODate;
+  checkOut?: ISODate;
+  dietary: DietaryPreference;
+  /** breakfast · lunch · dinner · snacks */
+  meals: string[];
+  /** indian · north_indian · south_indian · continental · asian · kids */
+  cuisines: string[];
+  allergies: string;
+  dietaryNotes: string;
+  foodNotes: string;
+  /** late_arrival · early_departure · birthday · anniversary · children ·
+   *  accessibility · other */
+  occasions: string[];
+  specialRequests: string;
+  createdAt: ISODateTime;
+}
+
+/** What the forms send. The RPC lands each field in its own column. */
+export type StayPreferencesDraft = Pick<
+  StayPreferences,
+  | "dietary"
+  | "meals"
+  | "cuisines"
+  | "allergies"
+  | "dietaryNotes"
+  | "foodNotes"
+  | "occasions"
+  | "specialRequests"
+>;
 
 /* ----------------------------------------------------------------- payments */
 
@@ -340,6 +400,7 @@ export interface Feedback {
 
 export type ActivityKind =
   | "booking"
+  | "waitlist"
   | "payment"
   | "food"
   | "request"

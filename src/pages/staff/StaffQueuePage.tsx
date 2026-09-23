@@ -3,11 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ChefHat, ClipboardList, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState, Eyebrow, Logo, StatCard, StatusBadge } from "@/components/common";
+import {
+  EmptyState,
+  Eyebrow,
+  Logo,
+  PreferenceBadges,
+  StatCard,
+  StatusBadge,
+} from "@/components/common";
 import { ResolveRequestDialog } from "@/components/admin/ResolveRequestDialog";
-import { useDepartment, useFoodOrderViews, useMockData, useRequestViews } from "@/hooks/useData";
+import {
+  useDepartment,
+  useFoodOrderViews,
+  useMockData,
+  useRequestViews,
+  useStayPreferences,
+} from "@/hooks/useData";
 import { FOOD_PIPELINE, foodOrderStatus, requestPriority, requestStatus, titleCase } from "@/lib/status";
-import { formatTime, money } from "@/lib/format";
+import { formatDateRange, formatTime, money } from "@/lib/format";
+import { hasPreferences, kitchenLine } from "@/lib/preferences";
 import { useSession } from "@/services/session";
 import FrontDeskPage from "@/pages/admin/FrontDeskPage";
 import { cn } from "@/lib/utils";
@@ -33,6 +47,9 @@ export default function StaffQueuePage() {
   const navigate = useNavigate();
   const requests = useRequestViews();
   const orders = useFoodOrderViews();
+  // RLS hands a department only the preference rows it may act on, so this is
+  // already their list — no booking or customer table needed to read it.
+  const preferences = useStayPreferences();
   const { updateRequest, setFoodOrderStatus } = useMockData();
   const [busy, setBusy] = useState<string | null>(null);
   const [finishing, setFinishing] = useState<GuestRequest | null>(null);
@@ -57,6 +74,18 @@ export default function StaffQueuePage() {
     (r) => r.request.status !== "completed" && r.request.status !== "rejected",
   );
   const done = mine.filter((r) => r.request.status === "completed");
+  /** Stays that have not finished yet, so the kitchen plans rather than
+   *  reacts. Only the ones where the guest actually told us something. */
+  const upcoming = preferences
+    .filter(
+      (prefs) =>
+        prefs.bookingId &&
+        hasPreferences(prefs) &&
+        (!prefs.checkOut || prefs.checkOut >= new Date().toISOString().slice(0, 10)),
+    )
+    .sort((a, b) => (a.checkIn ?? "").localeCompare(b.checkIn ?? ""))
+    .slice(0, 8);
+
   const liveOrders = isKitchen
     ? orders.filter((o) => o.order.status !== "billed" && o.order.status !== "cancelled")
     : [];
@@ -187,6 +216,43 @@ export default function StaffQueuePage() {
             outcome="completed"
             onClose={() => setFinishing(null)}
           />
+        )}
+
+        {/* --------------------------------------- what is coming, and for whom */}
+        {(isKitchen || isFrontDesk) && upcoming.length > 0 && (
+          <section>
+            <Eyebrow className="mb-3 text-gold-700">
+              {isKitchen ? "Coming up — cook for these" : "Coming up"}
+            </Eyebrow>
+            <ul className="space-y-3">
+              {upcoming.map((prefs) => (
+                <li
+                  key={prefs.id}
+                  className="rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="font-medium text-ink">{prefs.guestName || "Guest"}</p>
+                    <p className="text-xs text-stone-600">
+                      {prefs.checkIn && prefs.checkOut
+                        ? formatDateRange(prefs.checkIn, prefs.checkOut)
+                        : ""}
+                    </p>
+                  </div>
+                  <PreferenceBadges
+                    preferences={prefs}
+                    scope={isKitchen ? "food" : "stay"}
+                    className="mt-2"
+                  />
+                  {isKitchen && kitchenLine(prefs) && (
+                    <p className="mt-2 text-sm text-stone-600">{kitchenLine(prefs)}</p>
+                  )}
+                  {isKitchen && prefs.foodNotes && (
+                    <p className="mt-1 text-sm text-ink">{prefs.foodNotes}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {/* ------------------------------------------------- kitchen only */}

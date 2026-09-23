@@ -16,7 +16,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmptyState, Eyebrow, PageHeader, StatCard, StatusBadge } from "@/components/common";
+import {
+  EmptyState,
+  Eyebrow,
+  PageHeader,
+  PreferenceBadges,
+  StatCard,
+  StatusBadge,
+} from "@/components/common";
 import { WaitlistBoard } from "@/components/admin/WaitlistBoard";
 import {
   useBookingViews,
@@ -24,6 +31,7 @@ import {
   useEmployees,
   useMockData,
   useRequestViews,
+  useStayPreferences,
   useTodayOverview,
   useVillas,
   useWaitlistViews,
@@ -32,6 +40,7 @@ import { bookingStatus, bookingSource, titleCase } from "@/lib/status";
 import { formatDate, initials, money } from "@/lib/format";
 import { bookingsOnDate, stayTimes } from "@/services/domain";
 import { useSession } from "@/services/session";
+import { hasPreferences } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import type { BookingView } from "@/hooks/useData";
 import type { Villa } from "@/types";
@@ -205,6 +214,8 @@ function MovementList({
   canAct: boolean;
   onAction: (view: BookingView) => void;
 }) {
+  const preferences = useStayPreferences();
+
   // Sorted by the time they are actually expected, which is the whole point of
   // recording an agreed time rather than assuming the villa's standard hour.
   const sorted = [...rows].sort((a, b) => {
@@ -241,6 +252,9 @@ function MovementList({
                 : view.booking.status === "checked_out";
             const owes = view.totals.balance > 0;
             const noId = !view.customer?.idImagePath && !view.customer?.idNumber;
+            // What the guest arranged before they set off — the desk is who
+            // meets the late arrival and wishes them a happy birthday.
+            const prefs = preferences.find((p) => p.bookingId === view.booking.id);
 
             return (
               <li
@@ -286,6 +300,9 @@ function MovementList({
                       </span>
                     )}
                   </div>
+                  {kind === "arrival" && hasPreferences(prefs) && (
+                    <PreferenceBadges preferences={prefs} scope="stay" className="mt-1.5" />
+                  )}
                 </div>
 
                 {done ? (

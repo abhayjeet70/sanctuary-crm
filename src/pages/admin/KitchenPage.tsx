@@ -11,8 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { EmptyState, PageHeader, StatCard } from "@/components/common";
-import { useFoodOrderViews, useMockData } from "@/hooks/useData";
+import { EmptyState, PageHeader, PreferenceBadges, StatCard } from "@/components/common";
+import { useFoodOrderViews, useMockData, useStayPreferences } from "@/hooks/useData";
+import { kitchenLine } from "@/lib/preferences";
 import { FOOD_PIPELINE, foodOrderStatus } from "@/lib/status";
 import { formatTime, money } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
@@ -31,6 +32,7 @@ const ADVANCE: Partial<Record<FoodOrderStatus, { to: FoodOrderStatus; label: str
 
 export default function KitchenPage() {
   const orders = useFoodOrderViews();
+  const preferences = useStayPreferences();
   const { setFoodOrderStatus, logActivity } = useMockData();
   const [cancelling, setCancelling] = useState<string | null>(null);
 
@@ -136,6 +138,26 @@ export default function KitchenPage() {
                             {villa?.name}
                             {roomName && ` · ${roomName}`}
                           </p>
+
+                          {/* What this guest said when they booked. A diet
+                              nobody reads until the plate goes out is a diet
+                              that gets ignored. */}
+                          {(() => {
+                            const prefs = preferences.find(
+                              (p) => p.bookingId === order.bookingId,
+                            );
+                            const line = kitchenLine(prefs);
+                            if (!line && !prefs?.meals.length) return null;
+                            return (
+                              <>
+                                <PreferenceBadges
+                                  preferences={prefs}
+                                  scope="food"
+                                  className="mt-2"
+                                />
+                              </>
+                            );
+                          })()}
 
                           <hr className="rule-gold my-3" />
 

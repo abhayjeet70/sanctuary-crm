@@ -4,9 +4,10 @@ import { Check, Copy, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow } from "@/components/common";
 import { supabase } from "@/services/supabase/client";
-import { useSettings } from "@/hooks/useData";
+import { usePreferencesForBooking, useSettings } from "@/hooks/useData";
 import { formatDate, money } from "@/lib/format";
 import { stayTimes } from "@/services/domain";
+import { CUISINES, DIETARY, MEALS, OCCASIONS, label } from "@/lib/preferences";
 import type { BookingView } from "@/hooks/useData";
 
 /**
@@ -21,6 +22,8 @@ import type { BookingView } from "@/hooks/useData";
 export function SendBookingDetails({ view }: { view: BookingView }) {
   const { booking, villa, customer, totals } = view;
   const settings = useSettings();
+  // Read back what they told us, so the confirmation shows they were heard.
+  const prefs = usePreferencesForBooking(booking.id);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -29,6 +32,15 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
   // this mistake actually reaches the guest.
   const times = stayTimes(booking, villa);
 
+  const hasSomethingNoted = Boolean(
+    prefs &&
+      (prefs.dietary !== "none" ||
+        prefs.meals.length ||
+        prefs.cuisines.length ||
+        prefs.allergies ||
+        prefs.occasions.length),
+  );
+
   const message =
     `Hello ${customer?.name ?? "there"}, here are your booking details.\n\n` +
     `Booking ${booking.reference}\n` +
@@ -36,6 +48,20 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
     `${formatDate(booking.checkIn)} to ${formatDate(booking.checkOut)}\n` +
     `Check-in from ${times.arrival}, check-out by ${times.departure}\n` +
     `${booking.adults} adults${booking.children ? `, ${booking.children} children` : ""}\n\n` +
+    // Only the lines they actually gave us. A confirmation listing "No
+    // preference" under four headings reads as a form, not a welcome.
+    (prefs && prefs.dietary !== "none" ? `Dining: ${DIETARY[prefs.dietary]}\n` : "") +
+    (prefs?.meals.length
+      ? `Meals: ${prefs.meals.map((m) => label(MEALS, m)).join(", ")}\n`
+      : "") +
+    (prefs?.cuisines.length
+      ? `Kitchen: ${prefs.cuisines.map((c) => label(CUISINES, c)).join(", ")}\n`
+      : "") +
+    (prefs?.allergies ? `Allergies noted: ${prefs.allergies}\n` : "") +
+    (prefs?.occasions.length
+      ? `We have noted: ${prefs.occasions.map((o) => label(OCCASIONS, o)).join(", ")}\n`
+      : "") +
+    (hasSomethingNoted ? "\n" : "") +
     `Total ${money(totals.total)}\n` +
     `Paid ${money(totals.paid)}\n` +
     `Balance ${money(totals.balance)}\n\n` +

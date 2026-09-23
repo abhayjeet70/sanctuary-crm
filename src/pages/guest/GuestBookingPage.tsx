@@ -1,10 +1,18 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
+import {
+  ErrorState,
+  Eyebrow,
+  Photo,
+  PreferenceBadges,
+  StatusBadge,
+} from "@/components/common";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { stayTimes } from "@/services/domain";
 import { useGuestStay } from "@/hooks/useGuest";
+import { usePreferencesForBooking } from "@/hooks/useData";
+import { hasPreferences } from "@/lib/preferences";
 import { bookingStatus, bookingSource, paymentStatus } from "@/lib/status";
 import { formatDate, formatDateRange, nightsBetween } from "@/lib/format";
 
@@ -22,6 +30,7 @@ export default function GuestBookingPage() {
 
   if (!view) return <ErrorState className="m-5" title="No stay found" />;
   const { booking, villa, roomNames, totals } = view;
+  const prefs = usePreferencesForBooking(booking.id);
 
   const status = bookingStatus.get(booking.status);
   const pay = paymentStatus.get(booking.paymentStatus);
@@ -124,6 +133,21 @@ export default function GuestBookingPage() {
               </div>
             ))}
           </dl>
+
+          {hasPreferences(prefs) && (
+            <div className="mt-5 rounded-xl bg-white p-4 ring-1 ring-gold/20">
+              <Eyebrow className="text-gold-700">What we have noted</Eyebrow>
+              <PreferenceBadges preferences={prefs} className="mt-2.5" />
+              {prefs?.allergies && (
+                <p className="mt-2.5 text-sm text-ink">
+                  The kitchen has your allergies: {prefs.allergies}.
+                </p>
+              )}
+              {prefs?.foodNotes && (
+                <p className="mt-1 text-sm text-stone-600">{prefs.foodNotes}</p>
+              )}
+            </div>
+          )}
 
           {booking.specialRequests && (
             <div className="mt-5 rounded-xl bg-sand-200/70 p-4">

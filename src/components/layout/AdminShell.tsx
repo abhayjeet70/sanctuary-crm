@@ -25,6 +25,7 @@ import {
   BookOpen,
   ConciergeBell,
   FileText,
+  Hourglass,
   MessageCircle,
   Wrench,
   Banknote,
@@ -75,6 +76,7 @@ const NAV = [
     label: "Sales",
     items: [
       { to: "/admin/enquiries", label: "Enquiries", icon: MessageCircle },
+      { to: "/admin/waitlist", label: "Waiting list", icon: Hourglass },
       { to: "/admin/quotes", label: "Quotes", icon: FileText },
       { to: "/admin/followups", label: "Follow-ups", icon: PhoneCall },
     ],
@@ -197,6 +199,7 @@ function destinationFor(item: AppNotification) {
     feedback: "/admin/feedback",
     invoice: "/admin/invoices",
     note: "/admin/bookings",
+    waitlist: "/admin/waitlist",
   }[item.kind];
 
   if (!item.entityId) return section;

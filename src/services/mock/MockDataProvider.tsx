@@ -36,6 +36,8 @@ import type {
   EmployeePay,
   Tax,
   Expense,
+  StayPreferences,
+  StayPreferencesDraft,
   Villa,
   VillaMode,
   WaitlistEntry,
@@ -64,6 +66,9 @@ export interface MockData {
   taxes: Tax[];
   /** Owner-only; empty for everyone else because RLS returns nothing. */
   expenses: Expense[];
+  /** What guests told us when they asked. Departments see these without ever
+   *  reading a booking — see the stay_preferences migration. */
+  preferences: StayPreferences[];
   departments: Department[];
   employees: Employee[];
   /** Owner-only; empty for everyone else because RLS returns nothing. */
@@ -77,12 +82,27 @@ export interface MockData {
   updateBooking: (id: ID, patch: Partial<Booking>) => void;
   /** `newGuest` is supplied when the booking is for someone with no customer
    *  record yet; the implementation creates both in one transaction. */
-  createBooking: (booking: Booking, newGuest?: NewGuest) => void;
+  /** Resolves with the new booking's id, so the caller can finish the job —
+   *  agreed times, and closing out a waiting-list entry against it. The id is
+   *  allocated by the database, so it cannot be known before this returns. */
+  createBooking: (
+    booking: Booking,
+    newGuest?: NewGuest,
+  ) => Promise<{ id: ID | null; error: string | null }>;
   /** Put someone in the queue for dates that are already held. `newGuest` is
    *  supplied when they have no customer record yet. */
+  /** Close a waitlist entry out against the booking it became, carrying the
+   *  preferences across. Never creates the booking itself. */
+  convertWaitlistEntry: (
+    waitlistId: ID,
+    bookingId: ID,
+  ) => Promise<{ error: string | null }>;
   joinWaitlist: (
     entry: Omit<WaitlistEntry, "id" | "createdAt" | "status">,
     newGuest?: NewGuest,
+    /** What they told us while filling the form in. Written in the same
+     *  transaction as the entry, so one cannot exist without the other. */
+    preferences?: StayPreferencesDraft,
   ) => Promise<{ error: string | null }>;
   /** Offer, withdraw, or mark an entry converted. */
   updateWaitlistEntry: (id: ID, patch: Partial<WaitlistEntry>) => void;
@@ -268,6 +288,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       // single "Tax" line, which is what taxBreakdown does with an empty list.
       taxes: [],
       expenses: [],
+      preferences: [],
       departments: [],
       employees: [],
       employeePay: [],
@@ -278,9 +299,10 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       notifications,
 
       updateBooking,
-      createBooking: (booking) => {
+      createBooking: async (booking) => {
         setBookings((prev) => [booking, ...prev]);
         logActivity(booking.id, "booking", "Booking created", `Source: ${booking.source}`);
+        return { id: booking.id, error: null };
       },
       joinWaitlist: async (entry) => {
         setWaitlist((prev) => [
@@ -296,6 +318,12 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       },
       updateWaitlistEntry: (id, patch) =>
         setWaitlist((prev) => patchById(prev, id, patch)),
+      convertWaitlistEntry: async (waitlistId, bookingId) => {
+        setWaitlist((prev) =>
+          patchById(prev, waitlistId, { status: "converted", bookingId }),
+        );
+        return { error: null };
+      },
       approvePayment,
       rejectPayment,
       addPayment: (payment) => {

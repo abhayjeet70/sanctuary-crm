@@ -1,18 +1,43 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { BedDouble, CalendarDays, Check, Hourglass, Search, Users, X } from "lucide-react";
+import {
+  BedDouble,
+  CalendarDays,
+  Check,
+  Hourglass,
+  Search,
+  Users,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useMockData, useVillas, useWaitlist } from "@/hooks/useData";
+import { useGuestStay } from "@/hooks/useGuest";
 import { supabase } from "@/services/supabase/client";
 import { useSession } from "@/services/session";
 import { formatDateRange, money, nightsBetween } from "@/lib/format";
 import { toISODate } from "@/services/domain";
+import {
+  CUISINES,
+  DIETARY_OPTIONS,
+  EMPTY_PREFERENCES,
+  MEALS,
+  OCCASIONS,
+  toggle,
+} from "@/lib/preferences";
 import { cn } from "@/lib/utils";
+import type { DietaryPreference } from "@/types";
 
 interface Availability {
   villa_id: string;
@@ -44,63 +69,95 @@ const dayAfter = (from: string, days: number) => {
 };
 
 /**
- * Book a stay.
+ * The enquiry.
  *
- * Availability comes from `check_availability`, which answers free/busy without
- * exposing anyone else's booking. The price is never sent from here — the
- * server reads it from the villa, so a tampered request cannot buy a villa
- * cheaply.
+ * One form, asked once. Whether it ends as a booking or as a place in the
+ * queue is decided by the availability check partway down — and either way the
+ * same answers travel on, to the desk, the kitchen and the confirmation. A
+ * guest who has told us they are vegetarian and arriving at ten should never be
+ * asked a second time because the dates happened to be sold.
+ *
+ * Availability is the existing `check_availability` RPC and the existing
+ * exclusion constraint behind it. Nothing here decides what is free.
  */
 export default function GuestBookPage() {
   const villas = useVillas();
   const navigate = useNavigate();
   const { session } = useSession();
-  const { today, joinWaitlist, updateWaitlistEntry } = useMockData();
-  // RLS means this is already only their own rows.
+  const { today, joinWaitlist, updateWaitlistEntry, saveCustomer } = useMockData();
+  const { customer } = useGuestStay();
   const waitlist = useWaitlist().filter((entry) => entry.status === "waiting");
-  const [waiting, setWaiting] = useState<string | null>(null);
 
+  /* ------------------------------------------------------- guest details */
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("India");
+
+  // Seeded from the customer record once it arrives, and only while the
+  // fields are still untouched — typing must never be overwritten by a
+  // refetch landing a moment later.
+  const [touched, setTouched] = useState(false);
+  useEffect(() => {
+    if (touched || !customer) return;
+    setName(customer.name ?? "");
+    setPhone(customer.phone ?? "");
+    setCountry(customer.country || "India");
+  }, [customer, touched]);
+
+  /* --------------------------------------------------------- stay details */
   const [checkIn, setCheckIn] = useState(tomorrow());
   const [checkOut, setCheckOut] = useState(dayAfter(tomorrow(), 2));
+  const [arrival, setArrival] = useState("");
+  const [departure, setDeparture] = useState("");
   const [adults, setAdults] = useState("2");
   const [children, setChildren] = useState("0");
-  const [requests, setRequests] = useState("");
 
+  const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<Availability[] | null>(null);
   const [rooms, setRooms] = useState<RoomAvailability[]>([]);
   const [chosenVilla, setChosenVilla] = useState<string | null>(null);
   const [chosenRooms, setChosenRooms] = useState<string[]>([]);
-  const [searching, setSearching] = useState(false);
+
+  /* --------------------------------------------------------- preferences */
+  const [prefs, setPrefs] = useState(EMPTY_PREFERENCES);
+  const [requests, setRequests] = useState("");
+
   const [booking, setBooking] = useState(false);
+  const [waiting, setWaiting] = useState<string | null>(null);
 
-  const nights = checkIn && checkOut ? nightsBetween(checkIn, checkOut) : 0;
-  const datesValid = Boolean(checkIn && checkOut && checkOut > checkIn);
+  const nights = checkOut > checkIn ? nightsBetween(checkIn, checkOut) : 0;
+  const datesValid = nights > 0;
+  const guests = Number(adults) + Number(children);
 
-  // Any change to the dates invalidates what is on screen — showing stale
-  // availability against new dates is how someone books an occupied villa.
-  useEffect(() => {
-    setResults(null);
-    setChosenVilla(null);
-    setChosenRooms([]);
-  }, [checkIn, checkOut]);
+  /* ------------------------------------------------------------ searching */
 
   const search = async () => {
-    if (!datesValid) return toast.error("Check-out must be after check-in");
+    if (!datesValid) return;
     setSearching(true);
+    setChosenVilla(null);
+    setChosenRooms([]);
     const { data, error } = await supabase.rpc("check_availability", {
       p_check_in: checkIn,
       p_check_out: checkOut,
     });
     setSearching(false);
-    if (error) return toast.error("Could not check availability", { description: error.message });
+    if (error) return toast.error("Could not check those dates", { description: error.message });
     setResults((data ?? []) as Availability[]);
   };
+
+  // The dates changing invalidates the answer we are showing. Clearing it is
+  // the honest move: a stale "available" is how somebody books a sold house.
+  useEffect(() => {
+    setResults(null);
+    setChosenVilla(null);
+    setChosenRooms([]);
+    setRooms([]);
+  }, [checkIn, checkOut]);
 
   const pickVilla = async (row: Availability) => {
     setChosenVilla(row.villa_id);
     setChosenRooms([]);
     if (row.villa_mode !== "split") return setRooms([]);
-
     const { data } = await supabase.rpc("check_room_availability", {
       p_villa_id: row.villa_id,
       p_check_in: checkIn,
@@ -111,10 +168,13 @@ export default function GuestBookPage() {
 
   const chosen = results?.find((r) => r.villa_id === chosenVilla);
   const isSplit = chosen?.villa_mode === "split";
-  const guests = Number(adults) + Number(children);
   const chosenVillaRecord = villas.find((v) => v.id === chosenVilla);
-  // What the picked rooms sleep between them, so the guest is told before they
-  // arrive rather than at the door.
+  const chosenFree = chosen
+    ? isSplit
+      ? chosen.free_rooms > 0
+      : chosen.whole_available
+    : false;
+
   const roomsSleep = rooms
     .filter((r) => chosenRooms.includes(r.room_id))
     .reduce((sum, r) => sum + r.capacity, 0);
@@ -123,57 +183,53 @@ export default function GuestBookPage() {
     ? rooms.filter((r) => chosenRooms.includes(r.room_id)).reduce((s, r) => s + r.base_rate, 0)
     : (chosen?.nightly_rate ?? 0);
 
-  /**
-   * Ask to be told when dates that are already sold come free.
-   *
-   * The guest's own row, inserted under their own session — the waitlist
-   * policy lets them join for themselves and withdraw, and nothing else. A
-   * villa id of undefined means "any house will do", which is a real answer
-   * and the one most people give.
-   */
-  const joinQueue = async (villaId?: string, villaName?: string) => {
-    if (checkOut <= checkIn) return toast.error("Set your dates first");
+  const everythingTaken = Boolean(
+    results?.length &&
+      results.every((r) => (r.villa_mode === "split" ? r.free_rooms === 0 : !r.whole_available)),
+  );
 
-    const already = waitlist.some(
-      (entry) =>
-        entry.checkIn === checkIn &&
-        entry.checkOut === checkOut &&
-        (entry.villaId ?? undefined) === villaId,
-    );
-    if (already) {
-      return toast.info("You are already on the list for those dates");
-    }
+  /* -------------------------------------------------- what we send onward */
 
-    if (!session?.customerId) {
-      return toast.error("We could not find your guest record — call us and we will add you");
-    }
+  const preferencePayload = useMemo(
+    () => ({ ...prefs, specialRequests: requests.trim() }),
+    [prefs, requests],
+  );
 
-    setWaiting(villaId ?? "any");
-    const { error } = await joinWaitlist({
-      customerId: session.customerId,
-      villaId,
-      checkIn,
-      checkOut,
-      adults: Number(adults) || 1,
-      children: Number(children) || 0,
-      source: "website",
-      note: requests.trim(),
-    });
-    setWaiting(null);
-
-    if (error) {
-      return toast.error("Could not add you to the list", { description: error });
-    }
-    toast.success("You are on the waiting list", {
-      description: `We will be in touch the moment ${villaName ?? "a house"} frees up for those dates.`,
+  /** Keep the customer record in step with what they have just told us. */
+  const saveGuestDetails = () => {
+    if (!customer) return;
+    const changed =
+      name.trim() !== customer.name ||
+      phone.trim() !== customer.phone ||
+      country.trim() !== customer.country;
+    if (!changed) return;
+    saveCustomer({
+      id: customer.id,
+      name: name.trim() || customer.name,
+      phone: phone.trim(),
+      email: customer.email,
+      country: country.trim() || "India",
+      preferences: customer.preferences,
     });
   };
 
+  const missing = (): string | null => {
+    if (!name.trim()) return "Tell us who the stay is for";
+    if (!phone.trim()) return "We need a phone number to reach you on";
+    if (!datesValid) return "Set your dates";
+    return null;
+  };
+
+  /* -------------------------------------------------------------- booking */
+
   const confirm = async () => {
     if (!chosen) return;
+    const gap = missing();
+    if (gap) return toast.error(gap);
     if (isSplit && chosenRooms.length === 0) return toast.error("Choose at least one room");
 
     setBooking(true);
+    saveGuestDetails();
     const { data, error } = await supabase.rpc("request_booking", {
       p_villa_id: chosen.villa_id,
       p_room_ids: isSplit ? chosenRooms : [],
@@ -182,6 +238,9 @@ export default function GuestBookPage() {
       p_adults: Number(adults),
       p_children: Number(children),
       p_special_requests: requests.trim() || null,
+      p_check_in_time: arrival || null,
+      p_check_out_time: departure || null,
+      p_prefs: preferencePayload,
     });
     setBooking(false);
 
@@ -194,27 +253,127 @@ export default function GuestBookPage() {
     navigate("/guest/payment");
   };
 
+  /* ------------------------------------------------------------- waitlist */
+
+  /**
+   * Ask to be told when dates that are already sold come free.
+   *
+   * Everything typed above travels with it — a villa id of undefined means
+   * "any house will do", which is a real answer and the one most people give.
+   */
+  const joinQueue = async (villaId?: string, villaName?: string) => {
+    const gap = missing();
+    if (gap) return toast.error(gap);
+    if (!session?.customerId) {
+      return toast.error("We could not find your guest record — call us and we will add you");
+    }
+
+    const already = waitlist.some(
+      (entry) =>
+        entry.checkIn === checkIn &&
+        entry.checkOut === checkOut &&
+        (entry.villaId ?? undefined) === villaId,
+    );
+    if (already) return toast.info("You are already on the list for those dates");
+
+    setWaiting(villaId ?? "any");
+    saveGuestDetails();
+    const { error } = await joinWaitlist(
+      {
+        customerId: session.customerId,
+        villaId,
+        checkIn,
+        checkOut,
+        adults: Number(adults) || 1,
+        children: Number(children) || 0,
+        source: "website",
+        note: requests.trim(),
+        roomIds: isSplit ? chosenRooms : [],
+        checkInTime: arrival || undefined,
+        checkOutTime: departure || undefined,
+      },
+      undefined,
+      preferencePayload,
+    );
+    setWaiting(null);
+
+    if (error) return toast.error("Could not add you to the list", { description: error });
+    toast.success("You are on the waiting list", {
+      description: `We will be in touch the moment ${villaName ?? "a house"} frees up for those dates.`,
+    });
+    navigate("/guest/waitlist");
+  };
+
   return (
     <div className="space-y-6 p-5 sm:p-8">
       <header>
         <Eyebrow className="text-gold-700">Three houses above the escarpment</Eyebrow>
-        <h1 className="display-caps mt-2 text-3xl text-ink sm:text-4xl">Book a stay</h1>
+        <h1 className="display-caps mt-2 text-3xl text-ink sm:text-4xl">Plan your stay</h1>
         <p className="mt-2 max-w-lg text-sm text-stone-600">
-          Pick your dates, choose a house, and pay by UPI or bank transfer. We confirm
-          your booking once we have checked the receipt.
+          Tell us once and we carry it through — the kitchen, the desk and your
+          confirmation all read the same answers.
         </p>
       </header>
 
-      {/* --------------------------------------------------------- the dates */}
-      {/* The booking window stays put while the results scroll past it —
-          changing the dates is the single thing a guest does most on this
-          page, and scrolling back up to reach it is the friction every
-          booking site removes. `z-20` clears the result cards; the guest
-          header is not sticky, so nothing sits above it to offset. */}
-      <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07] lg:sticky lg:top-4 lg:z-20">
+      {/* ------------------------------------------------------ 1. the guest */}
+      <Section step="1" title="Who is coming">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id="guest-name" label="Full name">
+            <Input
+              id="guest-name"
+              value={name}
+              onChange={(e) => {
+                setTouched(true);
+                setName(e.target.value);
+              }}
+              placeholder="Siddarth Rao"
+              autoComplete="name"
+            />
+          </Field>
+          <Field id="guest-phone" label="Phone">
+            <Input
+              id="guest-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => {
+                setTouched(true);
+                setPhone(e.target.value);
+              }}
+              placeholder="+91 98450 00000"
+              autoComplete="tel"
+            />
+          </Field>
+          <Field id="guest-email" label="Email">
+            <Input
+              id="guest-email"
+              value={customer?.email ?? ""}
+              readOnly
+              aria-describedby="email-hint"
+              className="bg-sand-200/60"
+            />
+            <p id="email-hint" className="mt-1.5 text-xs text-stone-600">
+              The address you signed in with.
+            </p>
+          </Field>
+          <Field id="guest-country" label="Country">
+            <Input
+              id="guest-country"
+              value={country}
+              onChange={(e) => {
+                setTouched(true);
+                setCountry(e.target.value);
+              }}
+              placeholder="India"
+              autoComplete="country-name"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* ------------------------------------------------------- 2. the stay */}
+      <Section step="2" title="When, and how many">
         <div className="grid gap-4 sm:grid-cols-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="check-in">Check-in</Label>
+          <Field id="check-in" label="Check-in">
             <Input
               id="check-in"
               type="date"
@@ -222,9 +381,8 @@ export default function GuestBookPage() {
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="check-out">Check-out</Label>
+          </Field>
+          <Field id="check-out" label="Check-out">
             <Input
               id="check-out"
               type="date"
@@ -232,9 +390,8 @@ export default function GuestBookPage() {
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="adults">Adults</Label>
+          </Field>
+          <Field id="adults" label="Adults">
             <Input
               id="adults"
               type="number"
@@ -242,9 +399,8 @@ export default function GuestBookPage() {
               value={adults}
               onChange={(e) => setAdults(e.target.value)}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="children">Children</Label>
+          </Field>
+          <Field id="children" label="Children">
             <Input
               id="children"
               type="number"
@@ -252,10 +408,29 @@ export default function GuestBookPage() {
               value={children}
               onChange={(e) => setChildren(e.target.value)}
             />
-          </div>
+          </Field>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field id="arrival" label="Arriving around" hint="Leave blank for the house's own hours.">
+            <Input
+              id="arrival"
+              type="time"
+              value={arrival}
+              onChange={(e) => setArrival(e.target.value)}
+            />
+          </Field>
+          <Field id="departure" label="Leaving around" hint="We will hold the room if we can.">
+            <Input
+              id="departure"
+              type="time"
+              value={departure}
+              onChange={(e) => setDeparture(e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <Button onClick={() => void search()} disabled={searching || !datesValid}>
             <Search aria-hidden />
             {searching ? "Checking…" : "Check availability"}
@@ -263,26 +438,28 @@ export default function GuestBookPage() {
           {nights > 0 && (
             <span className="text-sm text-stone-600">
               <CalendarDays className="mr-1.5 inline size-4" aria-hidden />
-              {nights} {nights === 1 ? "night" : "nights"}
+              {nights} {nights === 1 ? "night" : "nights"} · {guests}{" "}
+              {guests === 1 ? "guest" : "guests"}
             </span>
           )}
         </div>
-      </section>
+      </Section>
 
-      {/* ------------------------------------------------------- the results */}
+      {/* ---------------------------------------------------- 3. which house */}
       {results && (
-        <section>
-          <Eyebrow className="mb-3 text-gold-700">
-            {results.filter((r) => (r.villa_mode === "split" ? r.free_rooms > 0 : r.whole_available))
-              .length || "No"}{" "}
-            available for those dates
-          </Eyebrow>
-
+        <Section
+          step="3"
+          title="Which house"
+          subtitle={
+            everythingTaken
+              ? `Every house is held for ${formatDateRange(checkIn, checkOut)}.`
+              : undefined
+          }
+        >
           <ul className="grid gap-4 lg:grid-cols-3">
             {results.map((row) => {
               const villa = villas.find((v) => v.id === row.villa_id);
-              const free =
-                row.villa_mode === "split" ? row.free_rooms > 0 : row.whole_available;
+              const free = row.villa_mode === "split" ? row.free_rooms > 0 : row.whole_available;
               const picked = chosenVilla === row.villa_id;
 
               return (
@@ -310,7 +487,7 @@ export default function GuestBookPage() {
                             free
                               ? row.villa_mode === "split"
                                 ? `${row.free_rooms} of ${row.total_rooms} rooms free`
-                                : "Available"
+                                : "These dates are available"
                               : "Not available"
                           }
                           tone={free ? "confirmed" : "cancelled"}
@@ -360,7 +537,7 @@ export default function GuestBookPage() {
                       <Hourglass aria-hidden />
                       {waiting === row.villa_id
                         ? "Adding you…"
-                        : `Tell me if ${row.villa_name} frees up`}
+                        : `Wait for ${row.villa_name}`}
                     </Button>
                   )}
                 </li>
@@ -368,14 +545,13 @@ export default function GuestBookPage() {
             })}
           </ul>
 
-          {results.length > 0 &&
-            results.every((r) => (r.villa_mode === "split" ? r.free_rooms === 0 : !r.whole_available)) && (
+          {everythingTaken && (
             <div className="mt-4 rounded-2xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
               <Eyebrow className="text-gold-400">All taken</Eyebrow>
               <p className="mt-2 max-w-lg text-sm text-sand/80">
-                Every house is held for {formatDateRange(checkIn, checkOut)}. Plans change
-                more often than you would think — put your name down and we will write to
-                you the moment one is released, before it goes back on sale.
+                Plans change more often than you would think. Put your name down and we
+                will write to you the moment a house is released — everything you have
+                filled in here comes with you, so there is nothing to type again.
               </p>
               <Button
                 variant="secondary"
@@ -395,13 +571,216 @@ export default function GuestBookPage() {
               description="Try a different window — the houses book up on weekends and holidays."
             />
           )}
+
+          {/* --------------------------------------------------- the rooms */}
+          {chosen && chosenFree && (
+            <div className="mt-6 rounded-2xl bg-sand-200/50 p-5">
+              <Eyebrow className="text-gold-700">Your rooms at {chosen.villa_name}</Eyebrow>
+
+              {!isSplit ? (
+                <p className="mt-2 text-sm text-stone-600">
+                  The whole villa is yours — all {chosen.total_rooms} bedrooms, sleeping up
+                  to {chosenVillaRecord?.capacity ?? chosen.total_rooms * 2} guests. There
+                  are no other guests in the house.
+                </p>
+              ) : (
+                <>
+                  <p className="mt-2 text-sm text-stone-600">
+                    {guests} {guests === 1 ? "guest" : "guests"}:{" "}
+                    {roomsSleep >= guests && chosenRooms.length > 0
+                      ? `the ${chosenRooms.length === 1 ? "room" : "rooms"} you have picked sleep ${roomsSleep}.`
+                      : `pick rooms sleeping ${guests} between them.`}
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                    {rooms.map((room) => {
+                      const picked = chosenRooms.includes(room.room_id);
+                      return (
+                        <label
+                          key={room.room_id}
+                          className={cn(
+                            "rounded-lg p-3 text-sm transition-colors",
+                            !room.available
+                              ? "cursor-not-allowed bg-white/40 opacity-55"
+                              : picked
+                                ? "cursor-pointer bg-gold/15 ring-1 ring-gold/50"
+                                : "cursor-pointer bg-white hover:bg-white/70",
+                          )}
+                        >
+                          <span className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              disabled={!room.available}
+                              checked={picked}
+                              onChange={() =>
+                                setChosenRooms((prev) => toggle(prev, room.room_id))
+                              }
+                              className="size-4 accent-[var(--color-clay)]"
+                            />
+                            <span className="font-medium text-ink">{room.name}</span>
+                          </span>
+                          <span className="mt-1 block pl-6 text-xs text-stone-600">
+                            {room.available
+                              ? `Sleeps ${room.capacity} · ${money(room.base_rate)}`
+                              : "Taken for these dates"}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </Section>
+      )}
+
+      {/* --------------------------------------------------------- 4. food */}
+      <Section
+        step="4"
+        title="Food and dining"
+        subtitle="So the kitchen can plan before you arrive rather than after."
+      >
+        <div className="space-y-5">
+          <Field id="dietary" label="Dietary preference">
+            <Select
+              value={prefs.dietary}
+              onValueChange={(value) =>
+                setPrefs({ ...prefs, dietary: value as DietaryPreference })
+              }
+            >
+              <SelectTrigger id="dietary" className="w-full sm:w-72">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DIETARY_OPTIONS.map(([value, text]) => (
+                  <SelectItem key={value} value={value}>
+                    {text}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <ChipGroup
+            legend="Meals you would like"
+            options={MEALS}
+            selected={prefs.meals}
+            onToggle={(value) => setPrefs({ ...prefs, meals: toggle(prefs.meals, value) })}
+          />
+
+          <ChipGroup
+            legend="Kinds of food"
+            options={CUISINES}
+            selected={prefs.cuisines}
+            onToggle={(value) => setPrefs({ ...prefs, cuisines: toggle(prefs.cuisines, value) })}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              id="allergies"
+              label="Allergies"
+              hint="Anything the kitchen must never serve."
+            >
+              <Input
+                id="allergies"
+                value={prefs.allergies}
+                onChange={(e) => setPrefs({ ...prefs, allergies: e.target.value })}
+                placeholder="Peanuts, shellfish"
+              />
+            </Field>
+            <Field id="dietary-notes" label="Dietary restrictions">
+              <Input
+                id="dietary-notes"
+                value={prefs.dietaryNotes}
+                onChange={(e) => setPrefs({ ...prefs, dietaryNotes: e.target.value })}
+                placeholder="No onion or garlic"
+              />
+            </Field>
+          </div>
+
+          <Field id="food-notes" label="Anything else about the food">
+            <Textarea
+              id="food-notes"
+              rows={2}
+              value={prefs.foodNotes}
+              onChange={(e) => setPrefs({ ...prefs, foodNotes: e.target.value })}
+              placeholder="Breakfast on the verandah if the weather allows"
+            />
+          </Field>
+        </div>
+      </Section>
+
+      {/* ------------------------------------------------ 5. the stay itself */}
+      <Section step="5" title="Anything we should arrange">
+        <ChipGroup
+          legend="Tick what applies"
+          options={OCCASIONS}
+          selected={prefs.occasions}
+          onToggle={(value) => setPrefs({ ...prefs, occasions: toggle(prefs.occasions, value) })}
+        />
+
+        <Field id="guest-requests" label="In your own words" className="mt-5">
+          <Textarea
+            id="guest-requests"
+            rows={3}
+            value={requests}
+            onChange={(e) => setRequests(e.target.value)}
+            placeholder="Celebrating my mother's birthday on the second night. Travelling with a toddler."
+          />
+        </Field>
+      </Section>
+
+      {/* ------------------------------------------------------- the ending */}
+      {chosen && chosenFree && (
+        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+          {nightly > 0 && (
+            <dl className="space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-stone-600">
+                  {money(nightly)} × {nights} {nights === 1 ? "night" : "nights"}
+                </dt>
+                <dd className="tabular-nums text-ink">{money(nightly * nights)}</dd>
+              </div>
+              <div className="flex justify-between text-xs text-stone-600">
+                <dt>GST is added on the invoice</dt>
+                <dd>{nightly > 7500 ? "18%" : "12%"}</dd>
+              </div>
+            </dl>
+          )}
+
+          {isSplit && chosenRooms.length > 0 && roomsSleep < guests && (
+            <p
+              role="alert"
+              className="mt-4 rounded-xl bg-status-pending-bg p-3 text-sm text-status-pending"
+            >
+              Those rooms sleep {roomsSleep}, and you are {guests}. Add another room, or say
+              so above and we will add an extra bed.
+            </p>
+          )}
+
+          <Button
+            className="mt-5 w-full sm:w-auto"
+            onClick={() => void confirm()}
+            disabled={booking || (isSplit && chosenRooms.length === 0)}
+          >
+            {booking ? "Booking…" : "Request this stay"}
+          </Button>
+          <p className="mt-3 text-xs leading-relaxed text-stone-600">
+            We hold the dates for you straight away. The booking is confirmed once you have
+            paid and we have checked your receipt.
+          </p>
         </section>
       )}
 
-      {/* ------------------------------------------------- already waiting */}
+      {/* --------------------------------------------------- already waiting */}
       {waitlist.length > 0 && (
         <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
-          <Eyebrow className="text-gold-700">You are waiting for</Eyebrow>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Eyebrow className="text-gold-700">You are waiting for</Eyebrow>
+            <Button asChild variant="link" size="sm">
+              <a href="/guest/waitlist">See the detail</a>
+            </Button>
+          </div>
           <ul className="mt-3 divide-y divide-ink/8">
             {waitlist.map((entry) => (
               <li key={entry.id} className="flex flex-wrap items-center gap-3 py-3">
@@ -411,8 +790,8 @@ export default function GuestBookPage() {
                     {villas.find((v) => v.id === entry.villaId)?.name ?? "Any house"}
                   </p>
                   <p className="text-xs text-stone-600">
-                    {formatDateRange(entry.checkIn, entry.checkOut)} · {entry.adults + entry.children}{" "}
-                    guests
+                    {formatDateRange(entry.checkIn, entry.checkOut)} ·{" "}
+                    {entry.adults + entry.children} guests
                   </p>
                 </div>
                 <Button
@@ -431,122 +810,101 @@ export default function GuestBookPage() {
           </ul>
         </section>
       )}
-
-      {/* ---------------------------------------------------- rooms + confirm */}
-      {chosen && (
-        <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
-          <Eyebrow className="text-gold-700">Your stay at {chosen.villa_name}</Eyebrow>
-
-          {!isSplit && (
-            <p className="mt-2 text-sm text-stone-600">
-              The whole villa is yours — all {chosen.total_rooms} bedrooms, sleeping up to{" "}
-              {chosenVillaRecord?.capacity ?? chosen.total_rooms * 2} guests. There are no
-              other guests in the house.
-            </p>
-          )}
-
-          {isSplit && (
-            <fieldset className="mt-4">
-              <legend className="label-caps mb-2">
-                Choose your rooms — {chosenRooms.length} of {chosen.free_rooms} free
-              </legend>
-              <p className="mb-3 text-sm text-stone-600">
-                {guests} {guests === 1 ? "guest" : "guests"}:{" "}
-                {roomsSleep >= guests && chosenRooms.length > 0
-                  ? `the ${chosenRooms.length === 1 ? "room" : "rooms"} you have picked sleep ${roomsSleep}.`
-                  : `you will need enough beds for everyone — pick rooms sleeping ${guests} between them.`}
-              </p>
-              <div className="grid gap-2 sm:grid-cols-4">
-                {rooms.map((room) => {
-                  const picked = chosenRooms.includes(room.room_id);
-                  return (
-                    <label
-                      key={room.room_id}
-                      className={cn(
-                        "rounded-lg p-3 text-sm transition-colors",
-                        !room.available
-                          ? "cursor-not-allowed bg-sand-200/40 opacity-55"
-                          : picked
-                            ? "cursor-pointer bg-gold/15 ring-1 ring-gold/50"
-                            : "cursor-pointer bg-sand-200/70 hover:bg-sand-300/70",
-                      )}
-                    >
-                      <span className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          disabled={!room.available}
-                          checked={picked}
-                          onChange={() =>
-                            setChosenRooms((prev) =>
-                              picked
-                                ? prev.filter((r) => r !== room.room_id)
-                                : [...prev, room.room_id],
-                            )
-                          }
-                          className="size-4 accent-[var(--color-clay)]"
-                        />
-                        <span className="font-medium text-ink">{room.name}</span>
-                      </span>
-                      <span className="mt-1 block pl-6 text-xs text-stone-600">
-                        {room.available
-                          ? `Sleeps ${room.capacity} · ${money(room.base_rate)}`
-                          : "Taken for these dates"}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </fieldset>
-          )}
-
-          <div className="mt-5 space-y-1.5">
-            <Label htmlFor="guest-requests">Anything we should know? (optional)</Label>
-            <Textarea
-              id="guest-requests"
-              rows={3}
-              value={requests}
-              onChange={(e) => setRequests(e.target.value)}
-              placeholder="Vegetarian kitchen, arriving late, travelling with a toddler…"
-            />
-          </div>
-
-          {nightly > 0 && (
-            <div className="mt-5 rounded-xl bg-sand-200/60 p-4">
-              <dl className="space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-stone-600">
-                    {money(nightly)} × {nights} {nights === 1 ? "night" : "nights"}
-                  </dt>
-                  <dd className="tabular-nums text-ink">{money(nightly * nights)}</dd>
-                </div>
-                <div className="flex justify-between text-xs text-stone-600">
-                  <dt>GST is added on the invoice</dt>
-                  <dd>{nightly > 7500 ? "18%" : "12%"}</dd>
-                </div>
-              </dl>
-            </div>
-          )}
-
-          {isSplit && chosenRooms.length > 0 && roomsSleep < guests && (
-            <p role="alert" className="mt-4 rounded-xl bg-status-pending-bg p-3 text-sm text-status-pending">
-              Those rooms sleep {roomsSleep}, and you are {guests}. Add another room, or
-              tell us below and we will add an extra bed.
-            </p>
-          )}
-
-          <Button
-            className="mt-5 w-full sm:w-auto"
-            onClick={() => void confirm()}
-            disabled={booking || (isSplit && chosenRooms.length === 0)}
-          >
-            {booking ? "Booking…" : "Request this stay"}
-          </Button>
-          <p className="mt-3 text-xs leading-relaxed text-stone-600">
-            We hold the dates for you straight away. The booking is confirmed once you
-            have paid and we have checked your receipt.
-          </p>
-        </section>
-      )}
     </div>
+  );
+}
+
+/* --------------------------------------------------------------- pieces */
+
+function Section({
+  step,
+  title,
+  subtitle,
+  children,
+}: {
+  step: string;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+      <div className="mb-5 flex items-baseline gap-3">
+        <span
+          aria-hidden
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm text-gold-200"
+        >
+          {step}
+        </span>
+        <div>
+          <h2 className="font-display text-xl text-ink">{title}</h2>
+          {subtitle && <p className="mt-1 text-sm text-stone-600">{subtitle}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Field({
+  id,
+  label,
+  hint,
+  className,
+  children,
+}: {
+  id: string;
+  label: string;
+  hint?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label htmlFor={id}>{label}</Label>
+      {children}
+      {hint && <p className="text-xs text-stone-600">{hint}</p>}
+    </div>
+  );
+}
+
+/** Multi-select as chips. A row of checkboxes asks to be read; chips ask to
+ *  be tapped, which is what a phone wants. */
+function ChipGroup({
+  legend,
+  options,
+  selected,
+  onToggle,
+}: {
+  legend: string;
+  options: Record<string, string>;
+  selected: string[];
+  onToggle: (value: string) => void;
+}) {
+  return (
+    <fieldset>
+      <legend className="label-caps mb-2">{legend}</legend>
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(options).map(([value, text]) => {
+          const picked = selected.includes(value);
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={picked}
+              onClick={() => onToggle(value)}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-sm transition-colors",
+                picked
+                  ? "bg-ink text-sand"
+                  : "bg-sand-200 text-stone-600 hover:bg-sand-300 hover:text-ink",
+              )}
+            >
+              {text}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }

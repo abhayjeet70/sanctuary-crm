@@ -202,5 +202,6 @@ export function DevBadge({ className }: { className?: string }) {
 }
 export { Logo } from "./Logo";
 export { Photo } from "./Photo";
+export { PreferenceBadges, ArrangedTime } from "./PreferenceBadges";
 export { PasswordInput } from "./PasswordInput";
 export { ActivityTimeline } from "./ActivityTimeline";

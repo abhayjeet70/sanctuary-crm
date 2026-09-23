@@ -10,6 +10,7 @@ import {
   Eyebrow,
   StatCard,
   StatusBadge,
+  PreferenceBadges,
 } from "@/components/common";
 import {
   useBookingViews,
@@ -17,6 +18,7 @@ import {
   useFeedbackViews,
   useMockData,
   useRequestViews,
+  useStayPreferences,
 } from "@/hooks/useData";
 import { CustomerDialog } from "@/components/admin/CustomerDialog";
 import { GuestIdPanel } from "@/components/admin/GuestIdPanel";
@@ -34,6 +36,7 @@ export default function CustomerDetailPage() {
   const requests = useRequestViews();
   const feedback = useFeedbackViews();
   const { invoices, activity } = useMockData();
+  const allPreferences = useStayPreferences();
   const showsFinancials = useShowsFinancials();
   const [editing, setEditing] = useState(false);
 
@@ -52,6 +55,11 @@ export default function CustomerDetailPage() {
 
   const { customer, bookingCount, spend, lastStay } = stats;
   const own = views.filter((v) => v.booking.customerId === customer.id);
+  // Their most recent stay's answers, newest first.
+  const ownBookingIds = new Set(own.map((v) => v.booking.id));
+  const latestPreferences = allPreferences
+    .filter((p) => p.bookingId && ownBookingIds.has(p.bookingId))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
   const ownIds = new Set(own.map((v) => v.booking.id));
   const ownRequests = requests.filter((r) => r.request.customerId === customer.id);
   const ownFeedback = feedback.filter((f) => f.entry.customerId === customer.id);
@@ -110,6 +118,17 @@ export default function CustomerDetailPage() {
 
         {editing && (
           <CustomerDialog customer={customer} onClose={() => setEditing(false)} />
+        )}
+
+        {/* What they told us on their most recent stay. The standing
+            preferences below are the ones the desk keeps on the record; these
+            are what they asked for this time. */}
+        {latestPreferences && (
+          <>
+            <hr className="rule-gold my-5" />
+            <Eyebrow className="mb-2">Last asked for</Eyebrow>
+            <PreferenceBadges preferences={latestPreferences} />
+          </>
         )}
 
         {customer.preferences.length > 0 && (
