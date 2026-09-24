@@ -24,6 +24,7 @@ import {
 import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useMockData, useVillas, useWaitlist } from "@/hooks/useData";
 import { useGuestStay } from "@/hooks/useGuest";
+import { DiningInfo, PaymentAndPolicies } from "@/components/booking/StayInfo";
 import { supabase } from "@/services/supabase/client";
 import { useSession } from "@/services/session";
 import { formatDateRange, money, nightsBetween } from "@/lib/format";
@@ -122,6 +123,7 @@ export default function GuestBookPage() {
   const [prefs, setPrefs] = useState(EMPTY_PREFERENCES);
   const [requests, setRequests] = useState("");
 
+  const [agreed, setAgreed] = useState(false);
   const [booking, setBooking] = useState(false);
   const [waiting, setWaiting] = useState<string | null>(null);
 
@@ -640,7 +642,8 @@ export default function GuestBookPage() {
         title="Food and dining"
         subtitle="So the kitchen can plan before you arrive rather than after."
       >
-        <div className="space-y-5">
+        <DiningInfo />
+        <div className="mt-5 space-y-5">
           <Field id="dietary" label="Dietary preference">
             <Select
               value={prefs.dietary}
@@ -730,6 +733,20 @@ export default function GuestBookPage() {
         </Field>
       </Section>
 
+      {/* ------------------------------------------- 6. payment and policies */}
+      <Section step="6" title="Payment & policies" subtitle="Read before you request the stay.">
+        <PaymentAndPolicies />
+        <label className="mt-5 flex items-start gap-2 text-sm text-ink">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 size-4 accent-[var(--color-clay)]"
+          />
+          I have read the terms, booking policy and pet policy.
+        </label>
+      </Section>
+
       {/* ------------------------------------------------------- the ending */}
       {chosen && chosenFree && (
         <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
@@ -761,7 +778,7 @@ export default function GuestBookPage() {
           <Button
             className="mt-5 w-full sm:w-auto"
             onClick={() => void confirm()}
-            disabled={booking || (isSplit && chosenRooms.length === 0)}
+            disabled={booking || !agreed || (isSplit && chosenRooms.length === 0)}
           >
             {booking ? "Booking…" : "Request this stay"}
           </Button>

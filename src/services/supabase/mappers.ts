@@ -375,6 +375,15 @@ export const toSettings = (row: unknown): PropertySettings => {
     hsnCode: x.hsn_code ?? "996311",
     invoiceDeclaration: x.invoice_declaration ?? "",
     signatoryName: x.signatory_name ?? "",
+    diningMenu: x.dining_menu ?? "",
+    addons: x.addons ?? "",
+    stayTerms: x.stay_terms ?? "",
+    bookingPolicy: x.booking_policy ?? "",
+    petPolicy: x.pet_policy ?? "",
+    importantInfo: x.important_info ?? "",
+    breakfastLine: x.breakfast_line ?? "Complimentary Breakfast",
+    website: x.website ?? "",
+    instagram: x.instagram ?? "",
   };
 };
 
@@ -406,6 +415,15 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   hsnCode: "hsn_code",
   invoiceDeclaration: "invoice_declaration",
   signatoryName: "signatory_name",
+  diningMenu: "dining_menu",
+  addons: "addons",
+  stayTerms: "stay_terms",
+  bookingPolicy: "booking_policy",
+  petPolicy: "pet_policy",
+  importantInfo: "important_info",
+  breakfastLine: "breakfast_line",
+  website: "website",
+  instagram: "instagram",
 };
 
 export const toDepartment = (row: unknown): Department => {

@@ -77,7 +77,7 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
   const sendEmail = async () => {
     setBusy(true);
     const { data, error } = await supabase.functions.invoke("send-notification", {
-      body: { bookingId: booking.id, kind: "booking_confirmed", channels: ["email"] },
+      body: { bookingId: booking.id, kind: "booking_voucher", channels: ["email"] },
     });
     setBusy(false);
 
@@ -139,7 +139,7 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
           title={customer?.email ? undefined : "No email address on file"}
         >
           <Mail aria-hidden />
-          {busy ? "Sending…" : "Email"}
+          {busy ? "Sending…" : "Email voucher"}
         </Button>
 
         <Button variant="ghost" size="sm" onClick={() => void copy()}>

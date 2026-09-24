@@ -1,10 +1,12 @@
 import { logo } from "@/lib/assets";
 import { usePreferencesForBooking, useSettings } from "@/hooks/useData";
 import { formatDate, money, nightsBetween } from "@/lib/format";
-import { bookingSource, bookingStatus, paymentStatus } from "@/lib/status";
+import { bookingStatus } from "@/lib/status";
 import { stayTimes, toISODate } from "@/services/domain";
-import { CUISINES, DIETARY, MEALS, OCCASIONS, label } from "@/lib/preferences";
+import { MEALS, OCCASIONS, label } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
+import { lines } from "@/components/booking/StayInfo";
+import { CalendarDays, Coffee, Home, IndianRupee, Phone, Ticket, User, Users, UtensilsCrossed } from "lucide-react";
 import type { BookingView } from "@/hooks/useData";
 
 /**
@@ -36,13 +38,6 @@ export function VoucherDocument({
   // late arrival must not be handed a voucher contradicting it.
   const times = stayTimes(booking, villa);
   const status = bookingStatus.get(booking.status);
-  const payment = paymentStatus.get(booking.paymentStatus);
-
-  const dining = [
-    prefs && prefs.dietary !== "none" ? DIETARY[prefs.dietary] : null,
-    prefs?.meals.length ? prefs.meals.map((m) => label(MEALS, m)).join(", ") : null,
-    prefs?.cuisines.length ? prefs.cuisines.map((c) => label(CUISINES, c)).join(", ") : null,
-  ].filter(Boolean) as string[];
 
   const arrangements = [
     ...(prefs?.occasions.map((o) => label(OCCASIONS, o)) ?? []),
@@ -52,111 +47,82 @@ export function VoucherDocument({
     booking.specialRequests || null,
   ].filter(Boolean) as string[];
 
+  const meals = prefs?.meals.length
+    ? prefs.meals.map((m) => label(MEALS, m)).join(", ")
+    : "À la carte — not included";
+  const guests =
+    `${booking.adults} ${booking.adults === 1 ? "Adult" : "Adults"}` +
+    (booking.children > 0 ? ` + ${booking.children} ${booking.children === 1 ? "Child" : "Children"}` : "");
+  const important = lines(settings?.importantInfo);
+
+  const rows: [React.ElementType, string, React.ReactNode, string?][] = [
+    [User, "Guest name", customer?.name, undefined],
+    [Phone, "Phone number", customer?.phone || "—", undefined],
+    [Home, "Villa", villa?.name, booking.bookingMode === "whole" ? "Whole villa" : roomNames.join(", ")],
+    [CalendarDays, "Check-in date & time", formatDate(booking.checkIn), times.arrival],
+    [CalendarDays, "Check-out date & time", formatDate(booking.checkOut), times.departure],
+    [Users, "Number of guests", guests, `${nights} ${nights === 1 ? "night" : "nights"}`],
+    totals.balance > 0
+      ? [IndianRupee, "Total amount", money(totals.total), `Balance ${money(totals.balance)}`]
+      : [IndianRupee, "Total amount paid", money(totals.paid), undefined],
+    [UtensilsCrossed, "Meals", meals, undefined],
+    [Coffee, "Breakfast", settings?.breakfastLine || "—", undefined],
+    [Ticket, "Booking status", status.label, undefined],
+  ];
+
   return (
     <article
-      className={cn("bg-white p-8 text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-10", className)}
+      className={cn("bg-sand p-6 text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-10", className)}
       aria-label={`Booking voucher for ${booking.reference}`}
       data-print-root
     >
-      {/* ------------------------------------------------------------ head */}
-      <header className="flex flex-wrap items-start justify-between gap-6">
-        <div className="min-w-0">
-          <img src={logo.onLight} alt="Homes of Sanctuary" className="h-16 w-auto rounded-md" />
-          <p className="mt-4 font-medium">{settings?.tradingName ?? "Homes of Sanctuary"}</p>
-          <p className="mt-1 text-sm leading-relaxed text-stone-600">
-            {settings?.addressLine1 ?? "Nandi Hills"}
-            {settings?.addressLine2 ? `, ${settings.addressLine2}` : ""}
-            <br />
-            {[settings?.city, settings?.state, settings?.postcode].filter(Boolean).join(" ")}
-            {settings?.contactPhone && (
-              <>
-                <br />
-                {settings.contactPhone}
-              </>
-            )}
-          </p>
-        </div>
-
-        <div className="text-right">
-          <p className="label-caps text-gold-700">Booking voucher</p>
-          <p className="mt-2 font-display text-3xl">{booking.reference}</p>
-          <p className="mt-2 text-sm text-stone-600">
-            Issued {formatDate(toISODate(new Date()))}
-          </p>
-          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-sand-200 px-3 py-1 text-xs font-medium">
-            <span aria-hidden className="size-1.5 rounded-full bg-current opacity-70" />
-            {status.label}
-          </p>
-        </div>
+      <header className="text-center">
+        <img src={logo.onLight} alt="Homes of Sanctuary" className="mx-auto h-20 w-auto" />
+        <p className="mt-3 text-sm text-gold-700">
+          at {settings?.addressLine1 ?? "Nandi Hills"}
+        </p>
+        <h2 className="display-caps mt-4 text-2xl text-forest sm:text-3xl">
+          Booking confirmation voucher
+        </h2>
+        <hr className="rule-gold mx-auto my-4 max-w-xs" />
+        <p className="mx-auto max-w-md text-sm leading-relaxed text-stone-600">
+          Thank you for choosing {settings?.tradingName ?? "Homes of Sanctuary"}. We are
+          delighted to confirm your booking details as below.
+        </p>
+        <p className="mt-2 text-xs text-stone-600">
+          Reference {booking.reference} · Issued {formatDate(toISODate(new Date()))}
+        </p>
       </header>
 
-      <hr className="rule-gold my-8" />
-
-      {/* ----------------------------------------------------------- guest */}
-      <section aria-label="Guest">
-        <p className="label-caps text-gold-700">Reserved for</p>
-        <p className="mt-2 font-display text-2xl">{customer?.name}</p>
-        <p className="mt-1 text-sm text-stone-600">
-          {[customer?.phone, customer?.email].filter(Boolean).join(" · ")}
-          {customer?.country && customer.country !== "India" && ` · ${customer.country}`}
-        </p>
-      </section>
-
-      {/* ------------------------------------------------------------ stay */}
-      <section aria-label="Your stay" className="mt-8 rounded-xl bg-sand-200/60 p-6">
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div>
-            <p className="label-caps text-gold-700">Arrive</p>
-            <p className="mt-1.5 font-display text-xl">{formatDate(booking.checkIn)}</p>
-            <p className="text-sm text-stone-600">
-              From {times.arrival}
-              {times.arrivalArranged && " — arranged with you"}
-            </p>
+      <dl className="mt-6 overflow-hidden rounded-xl ring-1 ring-forest/30">
+        {rows.map(([Icon, name, value, extra]) => (
+          <div key={name} className="grid grid-cols-[42%_1fr] border-b border-sand/60 last:border-0">
+            <dt className="flex items-center gap-2.5 bg-forest px-3 py-3 text-[11px] font-medium tracking-[0.12em] text-sand uppercase sm:px-4">
+              <Icon className="size-4 shrink-0 text-gold-200" aria-hidden />
+              {name}
+            </dt>
+            <dd className="flex flex-wrap items-center gap-x-3 bg-white px-3 py-3 text-sm font-medium sm:px-4">
+              {name === "Booking status" ? (
+                <span className="rounded bg-forest px-2.5 py-0.5 text-xs tracking-wider text-sand uppercase">
+                  {value}
+                </span>
+              ) : (
+                value
+              )}
+              {extra && <span className="text-xs font-normal text-stone-600">{extra}</span>}
+            </dd>
           </div>
-          <div>
-            <p className="label-caps text-gold-700">Depart</p>
-            <p className="mt-1.5 font-display text-xl">{formatDate(booking.checkOut)}</p>
-            <p className="text-sm text-stone-600">
-              By {times.departure}
-              {times.departureArranged && " — arranged with you"}
-            </p>
-          </div>
-        </div>
+        ))}
+      </dl>
 
-        <hr className="my-5 border-ink/10" />
-
-        <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-4">
-          <Fact label="Villa">{villa?.name}</Fact>
-          <Fact label={booking.bookingMode === "whole" ? "Bedrooms" : "Your rooms"}>
-            {booking.bookingMode === "whole"
-              ? `All ${villa?.bedrooms ?? 0}`
-              : roomNames.join(", ") || "To be assigned"}
-          </Fact>
-          <Fact label="Nights">{nights}</Fact>
-          <Fact label="Guests">
-            {booking.adults} {booking.adults === 1 ? "adult" : "adults"}
-            {booking.children > 0 && ` · ${booking.children} children`}
-          </Fact>
-        </dl>
-      </section>
-
-      {/* ---------------------------------------------------------- dining */}
-      {dining.length > 0 && (
-        <section aria-label="Dining" className="mt-8">
-          <p className="label-caps text-gold-700">Dining</p>
-          <ul className="mt-2 space-y-1 text-sm">
-            {dining.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </section>
+      {(times.arrivalArranged || times.departureArranged) && (
+        <p className="mt-2 text-xs text-stone-600">Times shown were arranged with you.</p>
       )}
 
-      {/* ---------------------------------------------------- arrangements */}
       {arrangements.length > 0 && (
-        <section aria-label="Arrangements" className="mt-6">
+        <section aria-label="Arrangements" className="mt-5 text-sm">
           <p className="label-caps text-gold-700">We have noted</p>
-          <ul className="mt-2 space-y-1 text-sm leading-relaxed">
+          <ul className="mt-1.5 space-y-1 leading-relaxed">
             {arrangements.map((line) => (
               <li key={line}>{line}</li>
             ))}
@@ -164,87 +130,29 @@ export function VoucherDocument({
         </section>
       )}
 
-      {/* ----------------------------------------------------------- money */}
-      <section aria-label="Amount" className="mt-8 rounded-xl border border-gold/35 p-6">
-        <dl className="space-y-2 text-sm">
-          <div className="flex items-baseline justify-between">
-            <dt className="text-stone-600">Total for the stay, taxes included</dt>
-            <dd className="font-display text-xl tabular-nums">{money(totals.total)}</dd>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <dt className="text-stone-600">Received</dt>
-            <dd className="tabular-nums">{money(totals.paid)}</dd>
-          </div>
-          <div className="flex items-baseline justify-between border-t border-ink/10 pt-2">
-            <dt className="font-medium">
-              {totals.balance > 0 ? "Balance due" : "Settled in full"}
-            </dt>
-            <dd className="font-medium tabular-nums">
-              {totals.balance > 0 ? money(totals.balance) : "—"}
-            </dd>
-          </div>
-        </dl>
-        <p className="mt-3 text-xs text-stone-600">
-          Payment status: {payment.label}
-          {totals.balance > 0 && settings?.upiId && (
-            <>
-              {" · "}Pay by UPI to {settings.upiId} quoting {booking.reference}, then upload
-              the receipt in your guest portal.
-            </>
-          )}
+      <div className="mt-6 grid gap-4 sm:grid-cols-[1.3fr_1fr]">
+        <section aria-label="Important information" className="rounded-xl border border-gold/40 bg-white/60 p-4">
+          <p className="text-sm font-medium tracking-wide text-gold-700 uppercase">
+            Important information
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed">
+            <li>Standard check-in {times.arrival}, check-out {times.departure}</li>
+            {important.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+        </section>
+        <p className="flex items-center justify-center rounded-xl border border-gold/40 bg-white/60 p-4 text-center font-display text-lg leading-snug text-forest italic">
+          We look forward to hosting you for a peaceful and memorable stay.
         </p>
-        <p className="mt-2 text-xs text-stone-600">
-          A full tax invoice is issued separately. Booked via {bookingSource[booking.source]}.
-        </p>
-      </section>
+      </div>
 
-      {/* ------------------------------------------------------- practical */}
-      <section aria-label="Before you arrive" className="mt-8">
-        <p className="label-caps text-gold-700">Before you arrive</p>
-        <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-stone-600">
-          <li>
-            Please carry a government photo ID for every adult — we are required to record
-            it at check-in.
-          </li>
-          <li>
-            Check-in from {times.arrival}, check-out by {times.departure}. Tell us if your
-            plans change and we will do what we can.
-          </li>
-          {villa?.wifiNetwork && (
-            <li>Wi-Fi, amenities and the house directory are in your guest portal.</li>
-          )}
-          <li>
-            The road up the last stretch is narrow. Daylight arrival is easier if you have
-            the choice.
-          </li>
-          {settings?.contactPhone && (
-            <li>Anything at all before you set off: {settings.contactPhone}.</li>
-          )}
-        </ul>
-      </section>
-
-      <hr className="rule-gold my-8" />
-
-      <footer className="flex flex-wrap items-end justify-between gap-6 text-xs text-stone-600">
-        <p className="max-w-sm leading-relaxed">
-          This voucher confirms the reservation described above. Please bring it, or the
-          booking reference, when you arrive.
-        </p>
-        <p className="text-right">
-          {settings?.tradingName ?? "Homes of Sanctuary"}
-          <br />
-          {settings?.contactEmail}
-        </p>
+      <footer className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-1 border-t border-ink/10 pt-4 text-xs text-stone-600">
+        <span>{[settings?.city, settings?.state].filter(Boolean).join(", ")}</span>
+        {settings?.contactPhone && <span>{settings.contactPhone}</span>}
+        {settings?.website && <span>{settings.website}</span>}
+        {settings?.instagram && <span>{settings.instagram}</span>}
       </footer>
     </article>
-  );
-}
-
-function Fact({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <dt className="label-caps">{label}</dt>
-      <dd className="mt-1 text-sm">{children}</dd>
-    </div>
   );
 }

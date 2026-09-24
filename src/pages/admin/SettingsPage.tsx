@@ -85,6 +85,7 @@ export default function SettingsPage() {
         <TabsList className="h-auto flex-wrap justify-start gap-1 p-1.5">
           <TabsTrigger value="payment" className={TAB}>Payment</TabsTrigger>
           <TabsTrigger value="invoice" className={TAB}>Invoice</TabsTrigger>
+          <TabsTrigger value="guestinfo" className={TAB}>Guest info</TabsTrigger>
           <TabsTrigger value="taxes" className={TAB}>Taxes</TabsTrigger>
           <TabsTrigger value="property" className={TAB}>Property</TabsTrigger>
           <TabsTrigger value="departments" className={TAB}>Departments</TabsTrigger>
@@ -262,6 +263,64 @@ export default function SettingsPage() {
                 tax number should be.
               </p>
             )}
+          </Section>
+        </TabsContent>
+
+        {/* ---------------------------------------------------- guest info */}
+        <TabsContent value="guestinfo" className="space-y-6 pt-5">
+          <Section
+            title="What guests are told"
+            note="Shown on the guest booking form and printed on the booking voucher and its email. One bullet per line."
+          >
+            <div className="grid gap-4 lg:grid-cols-2">
+              {(
+                [
+                  ["diningMenu", "Dining & menu", 6, "BREAKFAST — …"],
+                  ["addons", "Optional add-ons", 6, "High tea — ₹350 per person"],
+                  ["stayTerms", "Stay terms", 5, "Maximum 8 adults per villa"],
+                  ["bookingPolicy", "Booking & cancellation policy", 5, "100% advance to confirm"],
+                  ["petPolicy", "Pet policy", 5, "Pets are welcome with prior approval"],
+                  ["importantInfo", "Important information (on the voucher)", 4, "Carry a government ID"],
+                ] as const
+              ).map(([key, label, rows, placeholder]) => (
+                <div key={key} className="space-y-1.5">
+                  <Label htmlFor={key}>{label}</Label>
+                  <Textarea
+                    id={key}
+                    rows={rows}
+                    value={draft[key]}
+                    placeholder={placeholder}
+                    onChange={(e) => set(key, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <Field
+                id="breakfast-line"
+                label="Breakfast line on voucher"
+                value={draft.breakfastLine}
+                onChange={(v) => set("breakfastLine", v)}
+                placeholder="Complimentary Breakfast"
+              />
+              <Field
+                id="website"
+                label="Website"
+                value={draft.website}
+                onChange={(v) => set("website", v)}
+                placeholder="www.homesofsanctuary.com"
+              />
+              <Field
+                id="instagram"
+                label="Instagram"
+                value={draft.instagram}
+                onChange={(v) => set("instagram", v)}
+                placeholder="@homesofsanctuary"
+              />
+            </div>
+            <p className="mt-4 text-xs text-stone-600">
+              Payment details are edited under the Payment tab and appear here automatically.
+            </p>
           </Section>
         </TabsContent>
 

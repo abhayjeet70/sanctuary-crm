@@ -686,6 +686,18 @@ export interface PropertySettings {
   hsnCode: string;
   invoiceDeclaration: string;
   signatoryName: string;
+
+  /** What guests are told before booking and on their voucher. Multi-line
+   *  fields hold one bullet per line. */
+  diningMenu: string;
+  addons: string;
+  stayTerms: string;
+  bookingPolicy: string;
+  petPolicy: string;
+  importantInfo: string;
+  breakfastLine: string;
+  website: string;
+  instagram: string;
 }
 
 /* ----------------------------------------------------------- departments */
