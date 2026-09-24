@@ -24,6 +24,7 @@ import { bookingStatus, foodOrderStatus, paymentStatus } from "@/lib/status";
 import { formatDate, money, nightsBetween } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
 import { useSession } from "@/services/session";
+import { GuestAttentionDialog } from "@/components/guest/GuestAttentionDialog";
 
 const LINKS = [
   { to: "/guest/booking", label: "Booking", hint: "Dates, rooms and guests", icon: Receipt },
@@ -126,6 +127,13 @@ export default function GuestDashboardPage() {
   // What was agreed for this stay, not the villa's standard hours.
   const times = stayTimes(booking, villa);
   const upcoming = booking.checkIn > today;
+  // Past, cancelled or rejected — there is nothing live to show, so this is
+  // the moment to offer another stay rather than dead-ending the dashboard.
+  // The nav no longer carries "Book a stay", so this is the only way back in
+  // for a signed-in returning guest once their stay has concluded.
+  const concluded = ["checked_out", "completed", "cancelled", "rejected", "no_show"].includes(
+    booking.status,
+  );
   const liveOrder = orders.find(
     (o) => o.status !== "billed" && o.status !== "cancelled" && o.status !== "served",
   );
@@ -144,6 +152,7 @@ export default function GuestDashboardPage() {
 
   return (
     <div className="pb-8">
+      <GuestAttentionDialog />
       {/* ------------------------------------------------------------- hero */}
       <section className="relative overflow-hidden">
         <Photo
@@ -171,9 +180,21 @@ export default function GuestDashboardPage() {
                 : roomNames.join(", ")}{" "}
               · {nights} {nights === 1 ? "night" : "nights"}
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap items-center gap-2">
               <StatusBadge variant="outline" label={status.label} tone={status.tone} />
               <StatusBadge variant="outline" label={pay.label} tone={pay.tone} />
+              {concluded && !isCompanion && (
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
+                >
+                  <Link to="/guest/book">
+                    Book another stay
+                    <ArrowRight aria-hidden />
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
           <div className="mb-8 hidden sm:block">

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, KeyRound } from "lucide-react";
+import { ArrowRight, CalendarPlus, KeyRound } from "lucide-react";
 import { Eyebrow, Logo } from "@/components/common";
 import { collage } from "@/lib/assets";
 import { useSession } from "@/services/session";
 import { AuthPanel } from "./AuthPanel";
+import { PublicBookingDialog } from "@/components/booking/PublicBookingDialog";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const HERO = "/loginbg.png";
@@ -93,7 +95,7 @@ export default function LoginPage() {
         <header className="flex items-center justify-between gap-4">
           <Logo variant="onDark" size="h-24 sm:h-32" />
           <span className="rounded-full bg-gold/15 px-3 py-1 text-[0.6875rem] font-semibold tracking-[0.14em] text-gold-200 uppercase ring-1 ring-gold/30">
-            Staff & guest sign-in
+            Sign in, or book your stay
           </span>
         </header>
         <hr className="rule-gold mt-6 opacity-70" />
@@ -139,6 +141,36 @@ export default function LoginPage() {
 
           {/* Right — the way in */}
           <div className="flex flex-col gap-4">
+            {/* New guests do not need an account before they can look — dates
+                and villas are public reading. Signing in is for owners, staff
+                and guests coming back, which is what the panel below is. */}
+            <PublicBookingDialog
+              trigger={
+                <Button
+                  type="button"
+                  className="h-auto w-full justify-between gap-3 rounded-2xl bg-gold/15 px-5 py-4 text-left text-gold-100 ring-1 ring-gold/40 hover:bg-gold/25 hover:text-white"
+                  variant="ghost"
+                >
+                  <span className="flex items-center gap-3">
+                    <CalendarPlus className="size-5 shrink-0" aria-hidden />
+                    <span>
+                      <span className="block font-display text-lg">New here? Book a stay</span>
+                      <span className="block text-xs font-normal text-sand/65">
+                        Pick your dates — no account needed to look
+                      </span>
+                    </span>
+                  </span>
+                  <ArrowRight className="size-4 shrink-0" aria-hidden />
+                </Button>
+              }
+            />
+
+            <div className="flex items-center gap-3 text-xs text-sand/45">
+              <span className="h-px flex-1 bg-gold/20" aria-hidden />
+              Owner, staff or already booked
+              <span className="h-px flex-1 bg-gold/20" aria-hidden />
+            </div>
+
             <AuthPanel />
 
             {/* One-click demo accounts — development builds only */}

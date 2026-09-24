@@ -13,6 +13,15 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +80,8 @@ export default function WaitlistPage() {
   const villas = useVillas();
   const rows = useWaitlistViews();
   const [showClosed, setShowClosed] = useState(false);
+  const [villaFilter, setVillaFilter] = useState<string>("all");
+  const [since, setSince] = useState("");
 
   const open = rows.filter((row) => row.entry.status === "waiting");
   const offered = rows.filter((row) => row.entry.status === "offered");
@@ -81,16 +92,22 @@ export default function WaitlistPage() {
   const byVilla = (() => {
     const shown = rows
       .filter((row) => showClosed || row.entry.status === "waiting" || row.entry.status === "offered")
+      .filter((row) => !since || row.entry.checkIn >= since)
       // The queue is arrival order. This sort *is* the rule, not a view of one.
       .sort((a, b) => a.entry.createdAt.localeCompare(b.entry.createdAt));
 
-    return [
+    const groups = [
       ...villas.map((villa) => ({
         villa,
         entries: shown.filter((row) => row.entry.villaId === villa.id),
       })),
+      // "Any villa" is not a fixed house the way the other three are — it only
+      // earns a card when somebody is actually in it. An always-empty group
+      // read as a bug, not a house nobody happens to want.
       { villa: undefined, entries: shown.filter((row) => !row.entry.villaId) },
-    ];
+    ].filter((group) => group.villa || group.entries.length > 0);
+
+    return villaFilter === "all" ? groups : groups.filter((g) => g.villa?.id === villaFilter);
   })();
 
   return (
@@ -105,6 +122,39 @@ export default function WaitlistPage() {
           </Button>
         }
       />
+
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="w-52 space-y-1.5">
+          <Label htmlFor="waitlist-villa">Villa</Label>
+          <Select value={villaFilter} onValueChange={setVillaFilter}>
+            <SelectTrigger id="waitlist-villa" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All villas</SelectItem>
+              {villas.map((villa) => (
+                <SelectItem key={villa.id} value={villa.id}>
+                  {villa.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44 space-y-1.5">
+          <Label htmlFor="waitlist-since">Wanted from</Label>
+          <Input
+            id="waitlist-since"
+            type="date"
+            value={since}
+            onChange={(e) => setSince(e.target.value)}
+          />
+        </div>
+        {(villaFilter !== "all" || since) && (
+          <Button variant="ghost" size="sm" onClick={() => { setVillaFilter("all"); setSince(""); }}>
+            Clear filters
+          </Button>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Waiting" value={open.length} icon={<Hourglass className="size-4" />} />
@@ -128,6 +178,12 @@ export default function WaitlistPage() {
           icon={<Hourglass className="size-5" />}
           title="Nobody is waiting"
           description="When a guest asks for dates that are already sold, they land here."
+        />
+      ) : byVilla.length === 0 ? (
+        <EmptyState
+          icon={<Hourglass className="size-5" />}
+          title="Nothing matches"
+          description="No entry fits the villa and date filters you have set."
         />
       ) : (
         <div className="space-y-8">

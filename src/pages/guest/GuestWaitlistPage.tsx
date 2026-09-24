@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Hourglass, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QuickWaitlistForm } from "@/components/guest/QuickWaitlistForm";
 import {
   EmptyState,
   Eyebrow,
@@ -75,6 +76,9 @@ export default function GuestWaitlistPage() {
             </Button>
           }
         />
+        <div className="mt-6">
+          <QuickWaitlistForm />
+        </div>
       </div>
     );
   }
@@ -92,6 +96,8 @@ export default function GuestWaitlistPage() {
           told us, so there is nothing to fill in again.
         </p>
       </header>
+
+      <QuickWaitlistForm />
 
       <ul className="space-y-4">
         {entries.map((entry) => {

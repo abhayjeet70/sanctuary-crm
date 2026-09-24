@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   Bell,
-  CalendarPlus,
   CalendarCheck,
   ChefHat,
   ChevronRight,
@@ -40,7 +39,6 @@ const PRIMARY = [
 
 const SECONDARY = [
   { to: "/guest/people", label: "People with you", icon: Users },
-  { to: "/guest/book", label: "Book a stay", icon: CalendarPlus },
   { to: "/guest/booking", label: "Booking details", icon: CalendarCheck },
   { to: "/guest/voucher", label: "Voucher", icon: Ticket },
   { to: "/guest/waitlist", label: "Waiting list", icon: Hourglass },
