@@ -21,6 +21,7 @@ const ROUTES = [
   "/login",
   "/reset-password",
   "/design-system",
+  "/wifi",
   "/admin",
   "/admin/dashboard",
   "/admin/frontdesk",
@@ -48,6 +49,8 @@ const ROUTES = [
   "/admin/lost-found",
   "/admin/maintenance",
   "/admin/amenities",
+  "/admin/wifi",
+  "/admin/cancellations",
   "/admin/enquiries",
   "/admin/waitlist",
   "/admin/quotes",
@@ -483,6 +486,42 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
   } else {
     failed++;
     console.error("  FAIL the booking holder cannot reach People with you");
+  }
+}
+
+/* Guest Wi-Fi. Effects do not run under renderToString, so these check the
+   surfaces render and say the honest thing, not live network state. */
+{
+  const render = (route: string, session: object) =>
+    renderToString(
+      <SessionContext.Provider
+        value={{ session, loading: false, signIn: async () => ({ error: null }), signOut: () => {} } as never}
+      >
+        <TooltipProvider>
+          <MockDataProvider>
+            <MemoryRouter initialEntries={[route]}>
+              <AppRoutes />
+            </MemoryRouter>
+          </MockDataProvider>
+        </TooltipProvider>
+      </SessionContext.Provider>,
+    );
+  const owner = { role: "admin", name: "Owner" };
+  const checks: [string, object | null, string, string][] = [
+    ["/admin/villas/v-maaya", owner, "Guest Wi-Fi", "the villa page carries a Wi-Fi section"],
+    ["/admin/villas/v-maaya", owner, "Controller: Mock", "the villa Wi-Fi names its controller"],
+    ["/admin/wifi", owner, "Who the CRM has let on", "the property Wi-Fi overview renders"],
+    ["/wifi", null, "Continue with guest access", "the captive portal asks a signed-out guest to sign in"],
+    ["/wifi", { role: "guest", name: "Pooja Bothra", customerId: "c-pooja" }, "Finding your stay", "the captive portal looks up a signed-in guest's stay"],
+  ];
+  for (const [route, session, needle, what] of checks) {
+    const html = render(route, session as object);
+    if (html.includes(needle) && !/Internet connected|You are online/i.test(html)) {
+      console.log("  ok   " + what);
+    } else {
+      failed++;
+      console.error("  FAIL " + what);
+    }
   }
 }
 

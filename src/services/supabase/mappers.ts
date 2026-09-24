@@ -73,6 +73,10 @@ export const toVilla = (row: unknown): Villa => {
     wifiNetwork: x.wifi_network,
     wifiPassword: x.wifi_password,
     cancellationPolicy: x.cancellation_policy ?? null,
+    wifiEnabled: x.wifi_enabled ?? true,
+    captivePortalEnabled: x.captive_portal_enabled ?? false,
+    wifiNetworkId: x.wifi_network_id ?? "",
+    wifiConfigurationNotes: x.wifi_configuration_notes ?? "",
     rooms: ((x.rooms ?? []) as unknown[])
       .map(toRoom)
       .sort((a, b) => a.name.localeCompare(b.name)),

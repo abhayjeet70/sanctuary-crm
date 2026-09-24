@@ -53,6 +53,31 @@ const PERMISSIONS: { key: PermissionKey; label: string; detail: string }[] = [
     label: "Run the waiting list",
     detail: "Add people to it, offer them freed dates, and take them off.",
   },
+  {
+    key: "wifi.view",
+    label: "See guest Wi-Fi",
+    detail: "Which devices are on, whose they are, their MAC and IP, and until when.",
+  },
+  {
+    key: "wifi.disconnect",
+    label: "Disconnect a device",
+    detail: "End a session. The guest keeps access and can reconnect.",
+  },
+  {
+    key: "wifi.revoke",
+    label: "Revoke Wi-Fi access",
+    detail: "Take a device off entirely until someone restores it. The guest is told.",
+  },
+  {
+    key: "wifi.manage",
+    label: "Extend Wi-Fi past check-out",
+    detail: "The only way access outlasts a stay. Up to seven days, logged.",
+  },
+  {
+    key: "wifi.configure",
+    label: "Configure villa Wi-Fi",
+    detail: "Switch Wi-Fi and the captive portal on or off, rename networks.",
+  },
 ];
 
 const BLANK = { name: "", description: "" };

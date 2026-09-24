@@ -1360,6 +1360,8 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      refetch,
+
       cancelBooking: async (bookingId, reason, waiveFee = false) => {
         const { error } = await supabase.rpc("cancel_booking", {
           p_booking_id: bookingId,

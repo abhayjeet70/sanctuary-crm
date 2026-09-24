@@ -38,6 +38,8 @@ import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
 import CancellationsPage from "@/pages/admin/CancellationsPage";
+import WifiPage from "@/pages/admin/WifiPage";
+import WifiPortalPage from "@/pages/wifi/WifiPortalPage";
 import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
 import GuestVoucherPage from "@/pages/guest/GuestVoucherPage";
 import GuestPeoplePage from "@/pages/guest/GuestPeoplePage";
@@ -136,6 +138,9 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/design-system" element={<DesignSystemPage />} />
+      {/* Where a network controller sends a guest who joins the Wi-Fi. Public:
+          it signs them in itself, with the same guest account as the portal. */}
+      <Route path="/wifi" element={<WifiPortalPage />} />
       {/* `/design` kept as an alias — it is the shorter name people type. */}
       <Route path="/design" element={<Navigate to="/design-system" replace />} />
 
@@ -166,6 +171,7 @@ export function AppRoutes() {
         <Route path="lost-found" element={<LostFoundPage />} />
         <Route path="maintenance" element={<MaintenancePage />} />
         <Route path="amenities" element={<AmenitiesPage />} />
+        <Route path="wifi" element={<WifiPage />} />
         <Route path="enquiries" element={<EnquiriesPage />} />
         <Route path="waitlist" element={<WaitlistPage />} />
         <Route path="quotes" element={<QuotesPage />} />

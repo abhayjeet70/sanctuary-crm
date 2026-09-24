@@ -42,6 +42,12 @@ export interface Villa {
   amenities: string[];
   wifiNetwork: string;
   wifiPassword: string;
+  /** Guest Wi-Fi. `wifiNetwork` is the SSID guests are shown. */
+  wifiEnabled?: boolean;
+  captivePortalEnabled?: boolean;
+  /** What the Wi-Fi controller calls this network. Empty until hardware is connected. */
+  wifiNetworkId?: string;
+  wifiConfigurationNotes?: string;
   /** Overrides the property-wide policy for this villa. Null means "same as all". */
   cancellationPolicy?: CancellationPolicy | null;
   rooms: Room[];
@@ -619,6 +625,7 @@ export type ActivityKind =
   | "booking"
   | "waitlist"
   | "lost_found"
+  | "wifi"
   | "payment"
   | "food"
   | "request"
@@ -768,7 +775,12 @@ export type PermissionKey =
   | "bookings.view"
   | "guests.view"
   | "frontdesk.view"
-  | "waitlist.manage";
+  | "waitlist.manage"
+  | "wifi.view"
+  | "wifi.disconnect"
+  | "wifi.revoke"
+  | "wifi.manage"
+  | "wifi.configure";
 
 export interface Department {
   id: ID;

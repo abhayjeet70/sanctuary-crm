@@ -981,3 +981,33 @@ database.
 - **TC06** needs specific complaints, per above.
 - **Guest self-joins are silent.** The waitlist row is created, but nobody is
   emailed when their dates free up — that waits on the provider keys.
+
+---
+
+## 15. Round fifteen — guest Wi-Fi (software layer)
+
+The booking is the source of truth: a login gets Wi-Fi because it holds, or is
+a live companion on, a stay in its window. Every function derives the booking
+from the caller — none accepts a booking id from the client.
+
+- **Migrations** `20260925090000_wifi_activity_kind`, `20260925091000_guest_wifi`.
+  Tables `wifi_devices`, `wifi_authorizations`, `wifi_sessions`, read-only RLS
+  (own rows, or `wifi.view`); every write is a `security definer` function.
+  View `my_wifi_devices` gives guests their devices without MAC/IP.
+- **Expiry** = check-out date + agreed check-out time, else the villa's, in IST.
+  Triggers move it when check-out moves, and end access on check-out,
+  cancellation, rejection and no-show. Only `wifi.manage` extends past it.
+- **Controller**: `WifiController` interface, `MockWifiController` (default)
+  and `EdgeWifiController` (`VITE_WIFI_CONTROLLER=edge`). Edge function
+  `wifi-controller` is written but **not deployed** — the CLI token gets 403.
+- **Screens**: villa page Wi-Fi panel, `/admin/wifi`, the guest amenities card
+  (status, expiry, QR, devices, "Wi-Fi not working?"), public `/wifi` portal.
+- **Permissions**: `wifi.view`, `wifi.disconnect`, `wifi.revoke`, `wifi.manage`,
+  `wifi.configure`. Owner has all; Management gets view + disconnect,
+  Maintenance gets view.
+- **Tests**: `node supabase/tests/wifi.e2e.mjs` — 34 live checks as owner,
+  manager, housekeeping, guest, companion and anon. Smoke covers the four
+  surfaces and fails if any says "online".
+
+Nothing here claims a device is online. Real connectivity, bandwidth, the
+"expiring soon" push (needs a scheduler) and MAC capture all wait on hardware.

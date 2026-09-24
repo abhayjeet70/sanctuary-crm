@@ -22,6 +22,7 @@ import {
   ChevronRight,
   X,
   Building2,
+  Wifi,
   BookOpen,
   ConciergeBell,
   FileText,
@@ -73,6 +74,7 @@ const NAV = [
       { to: "/admin/villas", label: "Villas / Rooms", icon: Building2 },
       { to: "/admin/maintenance", label: "Maintenance", icon: Wrench },
       { to: "/admin/amenities", label: "Amenities", icon: Sparkles },
+      { to: "/admin/wifi", label: "Guest Wi-Fi", icon: Wifi },
     ],
   },
   {
@@ -205,6 +207,7 @@ function destinationFor(item: AppNotification) {
     note: "/admin/bookings",
     waitlist: "/admin/waitlist",
     lost_found: "/admin/lost-found",
+    wifi: "/admin/wifi",
   }[item.kind];
 
   if (!item.entityId) return section;

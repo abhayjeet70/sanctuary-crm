@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { toast } from "sonner";
-import { Check, Clock, Copy, Wifi } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check, Clock } from "lucide-react";
+import { GuestWifiCard } from "@/components/wifi/GuestWifiCard";
 import { ErrorState, Eyebrow, Photo } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
 import { stayTimes } from "@/services/domain";
@@ -9,7 +7,6 @@ import { cn } from "@/lib/utils";
 
 export default function GuestAmenitiesPage() {
   const { view } = useGuestStay();
-  const [copied, setCopied] = useState(false);
 
   if (!view?.villa) return <ErrorState className="m-5" title="No stay found" />;
   const { villa, booking, roomNames } = view;
@@ -18,16 +15,6 @@ export default function GuestAmenitiesPage() {
   // page. Quoting the villa's standard hours here would contradict it.
   const times = stayTimes(booking, villa);
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(villa.wifiPassword);
-      setCopied(true);
-      toast.success("Wi-Fi password copied");
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Could not copy — the password is shown on screen");
-    }
-  };
 
   return (
     <div className="pb-8">
@@ -83,50 +70,7 @@ export default function GuestAmenitiesPage() {
         </section>
 
         {/* --------------------------------------------------------- wifi */}
-        <section className="overflow-hidden rounded-2xl bg-ink text-sand shadow-lift ring-1 ring-gold/30">
-          <div className="relative p-6 sm:p-8">
-            <div
-              aria-hidden
-              className="absolute -top-16 -right-16 size-52 rounded-full bg-gold/15 blur-3xl"
-            />
-            <div className="relative">
-              <div className="flex items-center gap-2">
-                <Wifi className="size-4 text-gold-400" aria-hidden />
-                <Eyebrow className="text-gold-400">Wi-Fi</Eyebrow>
-              </div>
-              <dl className="mt-6 grid gap-6 sm:grid-cols-2">
-                <div>
-                  <dt className="label-caps text-sand/50">Network</dt>
-                  <dd className="text-gold-gradient mt-2 font-display text-3xl">
-                    {villa.wifiNetwork}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="label-caps text-sand/50">Password</dt>
-                  <dd className="mt-2 flex flex-wrap items-center gap-3">
-                    <span className="font-mono text-2xl tracking-wide text-sand">
-                      {villa.wifiPassword}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gold-200 hover:bg-gold/15 hover:text-white"
-                      onClick={copy}
-                    >
-                      {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
-                      {copied ? "Copied" : "Copy"}
-                    </Button>
-                  </dd>
-                </div>
-              </dl>
-              <hr className="rule-gold mt-6" />
-              <p className="mt-4 text-sm text-sand/65">
-                The signal reaches the pool and the verandah. If it drops anywhere, raise a
-                request and someone will look at it.
-              </p>
-            </div>
-          </div>
-        </section>
+        <GuestWifiCard password={villa.wifiPassword} />
 
         {/* ---------------------------------------------------------- times */}
         <section className="grid gap-4 sm:grid-cols-2">

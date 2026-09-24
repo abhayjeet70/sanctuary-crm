@@ -309,6 +309,8 @@ export interface MockData {
   /** Issue a draft invoice (or void one). Only issued invoices reach the guest. */
   setInvoiceStatus: (id: ID, status: Invoice["status"]) => void;
   updateSettings: (patch: Partial<PropertySettings>) => void;
+  /** Re-read everything — after a write made outside this provider. */
+  refetch: () => Promise<void>;
   /** Cancel a booking under the property's policy; the server computes the refund. */
   cancelBooking: (
     bookingId: ID,
@@ -609,6 +611,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       deleteExpense: () => {},
       deleteTax: () => {},
       updateSettings: () => {},
+      refetch: async () => {},
       cancelBooking: async () => ({ error: "Not available offline" }),
       processRefund: async () => ({ error: "Not available offline" }),
       saveMenuItem: () => {},

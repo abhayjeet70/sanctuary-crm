@@ -8,6 +8,7 @@ import {
   Receipt,
   StickyNote,
   Wallet,
+  Wifi,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
@@ -18,6 +19,7 @@ const ICONS: Record<ActivityKind, typeof BookOpen> = {
   booking: BookOpen,
   waitlist: Hourglass,
   lost_found: PackageSearch,
+  wifi: Wifi,
   payment: Wallet,
   food: ChefHat,
   request: ClipboardList,

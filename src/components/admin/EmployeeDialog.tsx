@@ -38,6 +38,11 @@ const PERMISSION_WORDS: Record<string, string> = {
   "guests.view": "view guest records",
   "frontdesk.view": "open the front desk",
   "waitlist.manage": "run the waiting list",
+  "wifi.view": "see guest Wi-Fi",
+  "wifi.disconnect": "disconnect devices",
+  "wifi.revoke": "revoke Wi-Fi access",
+  "wifi.manage": "extend Wi-Fi access",
+  "wifi.configure": "configure villa Wi-Fi",
 };
 
 /**

@@ -23,6 +23,7 @@ const KIND: Record<ActivityKind, { tone: Tone; section: string }> = {
   booking: { tone: "confirmed", section: "/admin/bookings" },
   waitlist: { tone: "pending", section: "/admin/waitlist" },
   lost_found: { tone: "uploaded", section: "/admin/lost-found" },
+  wifi: { tone: "inhouse", section: "/admin/wifi" },
   payment: { tone: "uploaded", section: "/admin/payments" },
   food: { tone: "inhouse", section: "/admin/food" },
   request: { tone: "pending", section: "/admin/requests" },
