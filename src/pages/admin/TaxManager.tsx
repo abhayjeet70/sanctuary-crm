@@ -112,7 +112,7 @@ export function TaxManager() {
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Remove ${tax.name}`}
-                  className="text-status-cancelled hover:bg-status-cancelled-bg"
+                  className="text-danger hover:bg-danger-bg hover:text-danger-700"
                   onClick={() => {
                     deleteTax(tax.id);
                     toast.success(`${tax.name} removed`);

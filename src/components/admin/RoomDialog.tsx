@@ -135,7 +135,7 @@ export function RoomDialog({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="text-status-cancelled hover:bg-status-cancelled-bg"
+                  className="text-danger hover:bg-danger-bg hover:text-danger-700"
                   onClick={() => setConfirmingDelete(true)}
                 >
                   <Trash2 aria-hidden />

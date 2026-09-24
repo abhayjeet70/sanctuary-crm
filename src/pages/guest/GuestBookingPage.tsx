@@ -199,7 +199,7 @@ export default function GuestBookingPage() {
             <p className="mt-2 text-sm text-stone-600">{policyHeadline(policyFields(villa?.cancellationPolicy, settings), booking.checkIn)}.</p>
             <Button
               variant="outline"
-              className="mt-4 text-status-cancelled hover:bg-status-cancelled-bg"
+              className="mt-4 border-danger/50 text-danger hover:bg-danger hover:text-white"
               onClick={() => setCancelOpen(true)}
             >
               <Ban aria-hidden />

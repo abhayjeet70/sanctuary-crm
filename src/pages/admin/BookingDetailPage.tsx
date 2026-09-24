@@ -189,16 +189,16 @@ export default function BookingDetailPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-status-cancelled hover:bg-status-cancelled-bg"
+                  className="text-danger hover:bg-danger-bg hover:text-danger-700"
                   onClick={() => setConfirming("no_show")}
                 >
                   <UserX aria-hidden />
                   Mark no-show
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="text-status-cancelled hover:bg-status-cancelled-bg"
+                  className="border-danger/50 text-danger hover:bg-danger hover:text-white"
                   onClick={() => setCancelOpen(true)}
                 >
                   <Ban aria-hidden />

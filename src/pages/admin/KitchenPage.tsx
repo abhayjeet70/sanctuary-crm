@@ -212,7 +212,7 @@ export default function KitchenPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-status-cancelled hover:bg-status-cancelled-bg"
+                                className="text-danger hover:bg-danger-bg hover:text-danger-700"
                                 onClick={() => setCancelling(order.id)}
                               >
                                 <X aria-hidden />

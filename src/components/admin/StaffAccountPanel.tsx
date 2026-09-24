@@ -159,7 +159,7 @@ export function StaffAccountPanel({ employee }: { employee: Employee }) {
             ) : (
               <Button
                 variant="ghost"
-                className="text-status-cancelled hover:bg-status-cancelled-bg"
+                className="text-danger hover:bg-danger-bg hover:text-danger-700"
                 onClick={() => setConfirmRevoke(true)}
               >
                 <ShieldOff aria-hidden />

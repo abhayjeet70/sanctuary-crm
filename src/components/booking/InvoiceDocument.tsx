@@ -65,7 +65,7 @@ export function InvoiceDocument({
   const LINES = Math.max(10, items.length);
   const ledger: (Row | null)[] = Array.from({ length: LINES }, (_, i) => items[i] ?? null);
 
-  const cell = "border border-ink/70 px-2 py-1";
+  const cell = "border border-ink/70 px-2 py-1 print:px-1.5 print:py-px";
   const num = "text-right tabular-nums";
   const plain = (n: number) => money(n).replace("₹", "");
   const mode = [settings?.upiId && "UPI", settings?.accountNumber && "Bank transfer (NEFT)"]
@@ -83,13 +83,13 @@ export function InvoiceDocument({
 
   return (
     <article
-      className={cn("bg-white p-6 text-[13px] text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-8", className)}
+      className={cn("bg-white p-6 text-[13px] text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-8 print:text-[10.5px] print:leading-tight", className)}
       aria-label={`Invoice for booking ${booking.reference}`}
       data-print-root
     >
-      <header className="mb-3 flex items-center justify-center gap-4">
-        <img src={logo.onLight} alt="Homes of Sanctuary" className="h-14 w-auto rounded-md" />
-        <h2 className="font-display text-2xl font-semibold tracking-wide uppercase sm:text-3xl">
+      <header className="mb-3 flex print:mb-1.5 items-center justify-center gap-4">
+        <img src={logo.onLight} alt="Homes of Sanctuary" className="h-14 w-auto rounded-md print:h-9" />
+        <h2 className="font-display text-2xl font-semibold tracking-wide uppercase sm:text-3xl print:text-xl">
           {settings?.legalName || "Homes of Sanctuary"}
         </h2>
       </header>
@@ -105,7 +105,7 @@ export function InvoiceDocument({
             <p className="border-b border-ink/40 px-2 py-0.5 text-xs font-semibold italic underline">
               Exporter / Invoicer
             </p>
-            <div className="space-y-0.5 px-3 py-2 leading-relaxed">
+            <div className="space-y-0.5 px-3 py-2 leading-relaxed print:py-1">
               <p className="font-semibold">{settings?.legalName}</p>
               <p>
                 {[settings?.addressLine1, settings?.addressLine2].filter(Boolean).join(", ")}
@@ -120,7 +120,7 @@ export function InvoiceDocument({
             <p className="border-y border-ink/40 px-2 py-0.5 text-xs font-semibold italic underline">
               Customer / Invoicee
             </p>
-            <p className="px-3 py-2 font-semibold">{customer?.name}</p>
+            <p className="px-3 py-2 font-semibold print:py-1">{customer?.name}</p>
           </div>
 
           <div>
@@ -131,7 +131,7 @@ export function InvoiceDocument({
             />
             <Ref k="Pan card" v={settings?.pan || "—"} bold />
             <Ref k="Stay Date" v={formatDateRange(booking.checkIn, booking.checkOut)} />
-            <div className="px-3 py-2 text-right leading-relaxed">
+            <div className="px-3 py-2 text-right leading-relaxed print:py-1">
               <p>
                 <span className="mr-3">Contact Person</span>
                 <span className="text-ink-500">Name: {customer?.name}</span>
@@ -173,7 +173,7 @@ export function InvoiceDocument({
               </td>
             </tr>
             {ledger.map((row, i) => (
-              <tr key={i} className="h-6">
+              <tr key={i} className="h-6 print:h-[14px]">
                 <td className={cn(cell, "text-center text-xs")}>({String.fromCharCode(97 + i)})</td>
                 <td className={cell}>{row?.[0]}</td>
                 <td className={cn(cell, "text-right")}>{row?.[1]}</td>
@@ -209,16 +209,16 @@ export function InvoiceDocument({
             <p className="border-b border-ink/70 py-0.5 text-center text-xs font-semibold uppercase">
               Declaration
             </p>
-            <p className="p-3 text-xs leading-relaxed">
+            <p className="p-3 text-xs leading-relaxed print:p-1.5 print:text-[9.5px]">
               {settings?.invoiceDeclaration ||
                 "We declare that the accommodation services mentioned in this invoice have been provided as stated. The information contained in this invoice is true and correct to the best of my knowledge, and the charges are in accordance with the agreed terms and conditions."}
             </p>
           </div>
-          <div className="flex flex-col justify-between p-3">
+          <div className="flex flex-col justify-between p-3 print:p-1.5">
             <p className="text-xs font-semibold uppercase">
               For {settings?.legalName || "Homes of Sanctuary"}
             </p>
-            <p className="mt-10 border-t border-ink/30 pt-1.5 text-right text-xs text-stone-600">
+            <p className="mt-10 border-t print:mt-5 border-ink/30 pt-1.5 text-right text-xs text-stone-600">
               {settings?.signatoryName || "Authorised signatory"}
             </p>
           </div>
@@ -234,10 +234,10 @@ export function InvoiceDocument({
   function Total({ k, v, strong }: { k: string; v: number; strong?: boolean }) {
     return (
       <tr className={strong ? "font-semibold" : undefined}>
-        <th scope="row" colSpan={4} className="border border-ink/70 px-2 py-1 text-right font-[inherit]">
+        <th scope="row" colSpan={4} className="border border-ink/70 px-2 py-1 text-right font-[inherit] print:py-px">
           {k}
         </th>
-        <td className="border border-ink/70 px-2 py-1 text-right tabular-nums">{plain(v)}</td>
+        <td className="border border-ink/70 px-2 py-1 text-right tabular-nums print:py-px">{plain(v)}</td>
       </tr>
     );
   }
@@ -246,8 +246,8 @@ export function InvoiceDocument({
 function Ref({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
   return (
     <div className="grid grid-cols-2 items-center border-b border-ink/40">
-      <span className="bg-sand-200/70 px-3 py-2.5 text-right">{k}</span>
-      <span className={cn("px-3 py-2.5", bold && "font-semibold")}>{v}</span>
+      <span className="bg-sand-200/70 px-3 py-2.5 text-right print:py-1">{k}</span>
+      <span className={cn("px-3 py-2.5 print:py-1", bold && "font-semibold")}>{v}</span>
     </div>
   );
 }
@@ -255,8 +255,8 @@ function Ref({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
 function Pair({ k, v, small }: { k: string; v: string; small?: boolean }) {
   return (
     <div className="grid grid-cols-[38%_1fr] border-b border-ink/70 last:border-b-0">
-      <dt className="border-r border-ink/70 px-3 py-1.5 font-semibold">{k}</dt>
-      <dd className={cn("px-2 py-1.5", small && "text-xs leading-snug")}>{v}</dd>
+      <dt className="border-r border-ink/70 px-3 py-1.5 font-semibold print:py-0.5">{k}</dt>
+      <dd className={cn("px-2 py-1.5 print:py-0.5", small && "text-xs leading-snug")}>{v}</dd>
     </div>
   );
 }

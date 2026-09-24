@@ -24,6 +24,12 @@
   /* Voucher label column, after the property's printed confirmation card. */
   --color-forest: #1f4a36;
 
+  /* Actions that cannot be undone. A true red on purpose: the muted status
+     rose is for badges; a button that deletes or cancels must not look calm. */
+  --color-danger: #c62828;
+  --color-danger-700: #a61e1e;
+  --color-danger-bg: #fdeceb;
+
   --color-clay: #b5654a;
   --color-clay-600: #9c5239;
   --color-clay-200: #e5c9bd;
@@ -91,7 +97,7 @@
   --accent: #e6ded2;
   --accent-foreground: #142731;
 
-  --destructive: #a9756f;
+  --destructive: #c62828;
   --destructive-foreground: #fbf8f4;
 
   --border: #e7e0d5;

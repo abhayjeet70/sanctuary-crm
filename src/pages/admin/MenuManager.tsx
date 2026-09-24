@@ -195,7 +195,7 @@ export function MenuManager() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-status-cancelled hover:bg-status-cancelled-bg"
+                      className="text-danger hover:bg-danger-bg hover:text-danger-700"
                       onClick={() => setRemoving(item)}
                     >
                       <Trash2 aria-hidden />
