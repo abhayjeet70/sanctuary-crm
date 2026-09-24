@@ -30,6 +30,7 @@ import {
   MessageCircle,
   Wrench,
   Banknote,
+  Ban,
   PhoneCall,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,7 @@ const NAV = [
     items: [
       { to: "/admin/payments", label: "Payments", icon: Wallet, badge: true },
       { to: "/admin/invoices", label: "Invoices", icon: Receipt },
+      { to: "/admin/cancellations", label: "Cancellations & refunds", icon: Ban },
       { to: "/admin/expenses", label: "Expenses", icon: Banknote, ownerOnly: true },
       { to: "/admin/reports", label: "Reports", icon: TrendingUp, ownerOnly: true },
     ],

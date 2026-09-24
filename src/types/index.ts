@@ -42,7 +42,16 @@ export interface Villa {
   amenities: string[];
   wifiNetwork: string;
   wifiPassword: string;
+  /** Overrides the property-wide policy for this villa. Null means "same as all". */
+  cancellationPolicy?: CancellationPolicy | null;
   rooms: Room[];
+}
+
+export interface CancellationPolicy {
+  free: boolean;
+  freeDays: number;
+  tiers: CancellationTier[];
+  note: string;
 }
 
 /* ---------------------------------------------------------------- customers */
@@ -698,6 +707,55 @@ export interface PropertySettings {
   breakfastLine: string;
   website: string;
   instagram: string;
+
+  /** Free cancellation until `cancellationFreeDays` before check-in, when on.
+   *  After that — or from the start, when off — the tiers apply. */
+  cancellationFree: boolean;
+  cancellationFreeDays: number;
+  cancellationTiers: CancellationTier[];
+  cancellationNote: string;
+}
+
+/** Cancelled at least `days` before check-in earns `refundPercent` of what was paid. */
+export interface CancellationTier {
+  days: number;
+  refundPercent: number;
+}
+
+export type RefundStatus = "not_due" | "pending" | "processed";
+
+/** The money side of a cancelled booking. One per booking. */
+export interface Refund {
+  id: ID;
+  bookingId: ID;
+  customerId: ID;
+  amountPaid: number;
+  refundPercent: number;
+  refundAmount: number;
+  /** Kept by the property: paid minus refunded. */
+  retained: number;
+  daysBefore: number;
+  feeWaived: boolean;
+  status: RefundStatus;
+  reason: string;
+  cancelledByRole: "guest" | "admin";
+  cancelledAt: ISODateTime;
+  processedAt?: ISODateTime;
+  method?: string;
+  reference?: string;
+  note?: string;
+}
+
+/** What cancelling would cost the guest right now, as the server computes it. */
+export interface CancellationQuote {
+  daysBefore: number;
+  refundPercent: number;
+  amountPaid: number;
+  refundAmount: number;
+  retained: number;
+  isFree: boolean;
+  canCancel: boolean;
+  blockedReason?: string;
 }
 
 /* ----------------------------------------------------------- departments */

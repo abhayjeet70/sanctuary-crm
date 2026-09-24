@@ -37,6 +37,7 @@ import LostFoundPage from "@/pages/admin/LostFoundPage";
 import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
+import CancellationsPage from "@/pages/admin/CancellationsPage";
 import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
 import GuestVoucherPage from "@/pages/guest/GuestVoucherPage";
 import GuestPeoplePage from "@/pages/guest/GuestPeoplePage";
@@ -171,6 +172,7 @@ export function AppRoutes() {
         <Route path="followups" element={<FollowUpsPage />} />
         <Route path="feedback" element={<FeedbackPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
+        <Route path="cancellations" element={<CancellationsPage />} />
         <Route
           path="reports"
           element={

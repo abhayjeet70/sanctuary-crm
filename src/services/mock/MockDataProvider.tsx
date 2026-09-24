@@ -1,3 +1,4 @@
+import type { Refund } from "@/types";
 import { createContext, useCallback, useMemo, useState, type ReactNode } from "react";
 import { bookings as bookingSeed, MOCK_TODAY } from "@/data/mocks/bookings";
 import { customers as customerSeed } from "@/data/mocks/customers";
@@ -159,6 +160,7 @@ export interface MockData {
   /** The people on bookings the caller may see. RLS narrows it: a holder gets
    *  their own booking's, a companion gets only themselves. */
   companions: BookingCompanion[];
+  refunds: Refund[];
   /** Add somebody to a booking and give them a login. The password in the
    *  result exists nowhere else — show it, then let it go. */
   addCompanion: (input: {
@@ -307,6 +309,19 @@ export interface MockData {
   /** Issue a draft invoice (or void one). Only issued invoices reach the guest. */
   setInvoiceStatus: (id: ID, status: Invoice["status"]) => void;
   updateSettings: (patch: Partial<PropertySettings>) => void;
+  /** Cancel a booking under the property's policy; the server computes the refund. */
+  cancelBooking: (
+    bookingId: ID,
+    reason: string,
+    waiveFee?: boolean,
+  ) => Promise<{ error: string | null }>;
+  /** Record that a refund has been sent. */
+  processRefund: (
+    refundId: ID,
+    method: string,
+    reference: string,
+    note: string,
+  ) => Promise<{ error: string | null }>;
   /** Add or edit a tax. Omit `id` to add. */
   saveTax: (tax: Partial<Tax> & { id?: ID }) => void;
   /** Add or edit an employee. Omit `id` to add. */
@@ -456,6 +471,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       expenses: [],
       preferences: [],
       companions: [],
+      refunds: [],
       lostItems: [],
       lostClaims: [],
       lostReturns: [],
@@ -593,6 +609,8 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       deleteExpense: () => {},
       deleteTax: () => {},
       updateSettings: () => {},
+      cancelBooking: async () => ({ error: "Not available offline" }),
+      processRefund: async () => ({ error: "Not available offline" }),
       saveMenuItem: () => {},
       deleteMenuItem: () => {},
       // The offline harness IS demo data — the toggle is always on here.

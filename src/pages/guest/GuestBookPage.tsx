@@ -22,9 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
-import { useMockData, useVillas, useWaitlist } from "@/hooks/useData";
+import { useMockData, useSettings, useVillas, useWaitlist } from "@/hooks/useData";
 import { useGuestStay } from "@/hooks/useGuest";
-import { DiningInfo, PaymentAndPolicies } from "@/components/booking/StayInfo";
+import { ChipGroup, DiningInfo, PaymentAndPolicies } from "@/components/booking/StayInfo";
 import { supabase } from "@/services/supabase/client";
 import { useSession } from "@/services/session";
 import { formatDateRange, money, nightsBetween } from "@/lib/format";
@@ -83,6 +83,7 @@ const dayAfter = (from: string, days: number) => {
  */
 export default function GuestBookPage() {
   const villas = useVillas();
+  const settings = useSettings();
   const navigate = useNavigate();
   const { session } = useSession();
   const { today, joinWaitlist, updateWaitlistEntry, saveCustomer } = useMockData();
@@ -642,7 +643,7 @@ export default function GuestBookPage() {
         title="Food and dining"
         subtitle="So the kitchen can plan before you arrive rather than after."
       >
-        <DiningInfo />
+        <DiningInfo settings={settings} />
         <div className="mt-5 space-y-5">
           <Field id="dietary" label="Dietary preference">
             <Select
@@ -735,7 +736,7 @@ export default function GuestBookPage() {
 
       {/* ------------------------------------------- 6. payment and policies */}
       <Section step="6" title="Payment & policies" subtitle="Read before you request the stay.">
-        <PaymentAndPolicies />
+        <PaymentAndPolicies settings={settings} />
         <label className="mt-5 flex items-start gap-2 text-sm text-ink">
           <input
             type="checkbox"
@@ -882,46 +883,5 @@ function Field({
       {children}
       {hint && <p className="text-xs text-stone-600">{hint}</p>}
     </div>
-  );
-}
-
-/** Multi-select as chips. A row of checkboxes asks to be read; chips ask to
- *  be tapped, which is what a phone wants. */
-function ChipGroup({
-  legend,
-  options,
-  selected,
-  onToggle,
-}: {
-  legend: string;
-  options: Record<string, string>;
-  selected: string[];
-  onToggle: (value: string) => void;
-}) {
-  return (
-    <fieldset>
-      <legend className="label-caps mb-2">{legend}</legend>
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(options).map(([value, text]) => {
-          const picked = selected.includes(value);
-          return (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={picked}
-              onClick={() => onToggle(value)}
-              className={cn(
-                "rounded-full px-3.5 py-1.5 text-sm transition-colors",
-                picked
-                  ? "bg-ink text-sand"
-                  : "bg-sand-200 text-stone-600 hover:bg-sand-300 hover:text-ink",
-              )}
-            >
-              {text}
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
   );
 }

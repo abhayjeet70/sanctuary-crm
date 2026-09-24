@@ -41,6 +41,8 @@ import { BookingGuestsPanel } from "@/components/booking/BookingGuestsPanel";
 import { EmailGuestButton, GuestAccessPanel } from "@/components/booking/GuestAccessPanel";
 import { SendBookingDetails } from "@/components/booking/SendBookingDetails";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
+import { CancelBookingDialog } from "@/components/booking/CancelBookingDialog";
+import { RefundSummary } from "@/components/booking/RefundSummary";
 import { RejectPaymentDialog } from "@/components/payment/RejectPaymentDialog";
 import {
   useActivity,
@@ -87,7 +89,8 @@ export default function BookingDetailPage() {
   const invoice = useBookingInvoice(id);
   const activity = useActivity(id);
   const preferences = usePreferencesForBooking(id);
-  const { updateBooking, approvePayment, rejectPayment, logActivity } = useMockData();
+  const { updateBooking, approvePayment, rejectPayment, logActivity, refunds } = useMockData();
+  const [cancelOpen, setCancelOpen] = useState(false);
   const isOwner = useSession().session?.role === "admin";
 
   const [note, setNote] = useState("");
@@ -181,7 +184,7 @@ export default function BookingDetailPage() {
             <Button asChild variant="outline" size="sm">
               <Link to={`/admin/bookings/${booking.id}/edit`}>Edit booking</Link>
             </Button>
-            {booking.status !== "cancelled" && booking.status !== "no_show" && (
+            {["inquiry", "pending_payment", "payment_uploaded", "payment_approved", "confirmed"].includes(booking.status) && (
               <>
                 <Button
                   variant="ghost"
@@ -196,7 +199,7 @@ export default function BookingDetailPage() {
                   variant="ghost"
                   size="sm"
                   className="text-status-cancelled hover:bg-status-cancelled-bg"
-                  onClick={() => setConfirming("cancel")}
+                  onClick={() => setCancelOpen(true)}
                 >
                   <Ban aria-hidden />
                   Cancel booking
@@ -503,7 +506,12 @@ export default function BookingDetailPage() {
         </aside>
       </div>
 
+      {refunds.find((r) => r.bookingId === booking.id) && (
+        <RefundSummary refund={refunds.find((r) => r.bookingId === booking.id)!} audience="admin" />
+      )}
+
       {/* ------------------------------------------------------------ dialogs */}
+      <CancelBookingDialog view={view} open={cancelOpen} onOpenChange={setCancelOpen} role="admin" />
       <Dialog open={confirming !== null} onOpenChange={(open) => !open && setConfirming(null)}>
         <DialogContent>
           <DialogHeader>

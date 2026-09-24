@@ -71,6 +71,26 @@ export default function GuestPeoplePage() {
   const childrenLeft = Math.max(0, booking.children - listed.filter((c) => c.isChild).length);
   const full = adultsLeft === 0 && childrenLeft === 0;
 
+  // One tap, one login, no names. Whoever it is shared with signs in and adds
+  // their own details in their portal, so the holder never types anybody in.
+  const generateShared = async () => {
+    setBusy(true);
+    const first = session?.name?.split(" ")[0] || "the holder";
+    const { credentials, error } = await addCompanion({
+      bookingId: booking.id,
+      fullName: `Guest of ${first}`,
+      phone: "",
+      email: "",
+      relationship: "other",
+      isChild: false,
+    });
+    setBusy(false);
+    if (error || !credentials) {
+      return toast.error("Could not create the login", { description: error ?? "" });
+    }
+    setIssued({ ...credentials, name: `Guest of ${first}` });
+  };
+
   const revoke = async () => {
     if (!revoking) return;
     setBusy(true);
@@ -115,6 +135,31 @@ export default function GuestPeoplePage() {
           </div>
           <StatusBadge label="You" tone="confirmed" />
         </div>
+      </section>
+
+      {/* ------------------------------------------------- shared login */}
+      <section className="rounded-2xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
+        <Eyebrow className="text-gold-400">Share one login</Eyebrow>
+        <p className="mt-2 font-display text-xl text-white">
+          Nobody to type in — just send them a Guest ID and password
+        </p>
+        <p className="mt-2 max-w-xl text-sm text-sand/75">
+          Generate a login and share it with anyone staying with you. They sign in and add
+          their own name in their portal, then order food and ask for things as themselves.
+        </p>
+        <Button
+          className="mt-4 bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
+          disabled={full || busy}
+          onClick={() => void generateShared()}
+        >
+          <KeyRound aria-hidden />
+          {listed.length > 0 ? "Generate another login" : "Generate shared login"}
+        </Button>
+        {full && (
+          <p className="mt-2 text-xs text-sand/60">
+            Everyone the booking was sold for already has a place.
+          </p>
+        )}
       </section>
 
       {/* --------------------------------------------------------- everyone */}
@@ -219,12 +264,13 @@ export default function GuestPeoplePage() {
         )}
 
         <Button
+          variant="outline"
           className="mt-4 w-full sm:w-auto"
           disabled={full}
           onClick={() => setAdding(true)}
         >
           <Plus aria-hidden />
-          Add a guest
+          Add a named guest instead
         </Button>
       </section>
 

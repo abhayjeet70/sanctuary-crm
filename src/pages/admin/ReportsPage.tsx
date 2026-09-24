@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState, Eyebrow, PageHeader, StatCard } from "@/components/common";
 import { FinanceAnalysis } from "./reports/FinanceAnalysis";
 import { OperatingStatement } from "./reports/OperatingStatement";
+import { BookingsReport } from "./reports/BookingsReport";
 import {
   useBookingViews,
   useCustomers,
@@ -41,10 +42,10 @@ import {
   pct,
   revenueBreakdown,
   taxBreakdown,
-  toISODate,
   type RevenueRow,
 } from "@/services/domain";
 import { downloadCsv } from "@/lib/csv";
+import { periodPresets } from "@/lib/periods";
 import { money } from "@/lib/format";
 import { titleCase } from "@/lib/status";
 
@@ -54,34 +55,6 @@ const TAB =
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const monthLabel = (m: string) => `${MONTHS[Number(m.split("-")[1]) - 1]} ${m.slice(2, 4)}`;
-
-/** Ranges a property actually asks for, the financial year included. */
-function presets(today: string) {
-  const d = new Date(`${today}T00:00:00`);
-  const y = d.getFullYear();
-  const startOfMonth = new Date(y, d.getMonth(), 1);
-  const startOfLastMonth = new Date(y, d.getMonth() - 1, 1);
-  const endOfLastMonth = new Date(y, d.getMonth(), 0);
-  // India runs April to March, which is what the GST return is filed against.
-  const fyStart = new Date(d.getMonth() >= 3 ? y : y - 1, 3, 1);
-
-  return [
-    { id: "mtd", label: "This month", from: toISODate(startOfMonth), to: today },
-    {
-      id: "last",
-      label: "Last month",
-      from: toISODate(startOfLastMonth),
-      to: toISODate(endOfLastMonth),
-    },
-    { id: "fy", label: "Financial year to date", from: toISODate(fyStart), to: today },
-    {
-      id: "12m",
-      label: "Last 12 months",
-      from: toISODate(new Date(y - 1, d.getMonth(), d.getDate())),
-      to: today,
-    },
-  ];
-}
 
 /**
  * Finances and reports — the owner's page.
@@ -96,9 +69,9 @@ export default function ReportsPage() {
   const villas = useVillas();
   const customers = useCustomers();
   const taxes = useTaxes();
-  const { payments, foodOrders, settings, employeePay, today } = useMockData();
+  const { payments, foodOrders, settings, employeePay, today, refunds } = useMockData();
 
-  const ranges = presets(today);
+  const ranges = periodPresets(today);
   const [from, setFrom] = useState(ranges[2].from);
   const [to, setTo] = useState(today);
 
@@ -301,11 +274,21 @@ export default function ReportsPage() {
           <TabsList className="h-auto flex-wrap justify-start gap-1 p-1.5 print:hidden">
             <TabsTrigger value="overview" className={TAB}>Overview</TabsTrigger>
             <TabsTrigger value="analysis" className={TAB}>Analysis</TabsTrigger>
+            <TabsTrigger value="bookings" className={TAB}>Bookings &amp; refunds</TabsTrigger>
             <TabsTrigger value="statements" className={TAB}>Statements</TabsTrigger>
           </TabsList>
 
           <TabsContent value="analysis" className="print:hidden">
             <FinanceAnalysis rows={rows} names={label} />
+          </TabsContent>
+
+          <TabsContent value="bookings" className="print:hidden">
+            <BookingsReport
+              views={views.filter((v) => v.booking.checkIn >= from && v.booking.checkIn <= to)}
+              refunds={refunds}
+              from={from}
+              to={to}
+            />
           </TabsContent>
 
           <TabsContent value="statements">

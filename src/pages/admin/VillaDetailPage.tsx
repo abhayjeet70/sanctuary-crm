@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { RoomDialog } from "@/components/admin/RoomDialog";
+import { VillaCancellationPolicy } from "./VillaCancellationPolicy";
 import { useBookings, useCustomers, useMockData, useVilla } from "@/hooks/useData";
 import { bookingsOnDate } from "@/services/domain";
 import { ACCEPTED_PHOTO_TYPES, uploadVillaPhoto } from "@/services/supabase/receipts";
@@ -388,6 +389,8 @@ export default function VillaDetailPage() {
               </Button>
             </form>
           </section>
+
+          <VillaCancellationPolicy villa={villa} />
         </div>
 
         {/* --------------------------------------------------------- aside */}

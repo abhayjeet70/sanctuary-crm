@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eyebrow, LoadingState, PageHeader } from "@/components/common";
 import { MenuManager } from "./MenuManager";
+import { CancellationPolicyEditor } from "./CancellationPolicyEditor";
 import { TaxManager } from "./TaxManager";
 import { DepartmentManager } from "./DepartmentManager";
 import { AccountSettings } from "./AccountSettings";
@@ -86,6 +87,7 @@ export default function SettingsPage() {
           <TabsTrigger value="payment" className={TAB}>Payment</TabsTrigger>
           <TabsTrigger value="invoice" className={TAB}>Invoice</TabsTrigger>
           <TabsTrigger value="guestinfo" className={TAB}>Guest info</TabsTrigger>
+          <TabsTrigger value="cancellation" className={TAB}>Cancellation</TabsTrigger>
           <TabsTrigger value="taxes" className={TAB}>Taxes</TabsTrigger>
           <TabsTrigger value="property" className={TAB}>Property</TabsTrigger>
           <TabsTrigger value="departments" className={TAB}>Departments</TabsTrigger>
@@ -320,6 +322,24 @@ export default function SettingsPage() {
             </div>
             <p className="mt-4 text-xs text-stone-600">
               Payment details are edited under the Payment tab and appear here automatically.
+            </p>
+          </Section>
+        </TabsContent>
+
+        {/* --------------------------------------------------- cancellation */}
+        <TabsContent value="cancellation" className="space-y-6 pt-5">
+          <Section
+            title="Cancellation policy"
+            note="The default for every villa. Guests see this when they book and before they cancel. The refund is worked out from it by the database, so the guest's warning and the amount recorded always match."
+          >
+            <CancellationPolicyEditor draft={draft} set={(key, value) => set(key, value as never)} />
+            <p className="mt-5 text-xs text-stone-600">
+              This applies to every villa. To give one villa different terms, open it under{" "}
+              <Link to="/admin/villas" className="underline underline-offset-2">Villas</Link>{" "}
+              and choose a custom cancellation policy there
+              {villas.some((v) => v.cancellationPolicy) &&
+                ` — currently custom: ${villas.filter((v) => v.cancellationPolicy).map((v) => v.name).join(", ")}`}
+              .
             </p>
           </Section>
         </TabsContent>

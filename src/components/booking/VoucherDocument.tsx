@@ -1,3 +1,4 @@
+import { CalendarDays, Coffee, Home, IndianRupee, Phone, Ticket, User, Users, UtensilsCrossed } from "lucide-react";
 import { logo } from "@/lib/assets";
 import { usePreferencesForBooking, useSettings } from "@/hooks/useData";
 import { formatDate, money, nightsBetween } from "@/lib/format";
@@ -6,81 +7,79 @@ import { stayTimes, toISODate } from "@/services/domain";
 import { MEALS, OCCASIONS, label } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import { lines } from "@/components/booking/StayInfo";
-import { CalendarDays, Coffee, Home, IndianRupee, Phone, Ticket, User, Users, UtensilsCrossed } from "lucide-react";
 import type { BookingView } from "@/hooks/useData";
+import type { PropertySettings } from "@/types";
+
+/** Everything the card prints, already resolved — so a real booking and a
+ *  draft that does not exist yet render through the same layout. */
+export interface VoucherData {
+  guestName?: string;
+  phone?: string;
+  villa?: string;
+  /** "Whole villa", or the room names. */
+  rooms?: string;
+  checkIn: string;
+  checkOut: string;
+  arrival: string;
+  departure: string;
+  arrangedTimes?: boolean;
+  adults: number;
+  children: number;
+  total: number;
+  paid: number;
+  balance: number;
+  meals: string;
+  statusLabel: string;
+  reference?: string;
+  arrangements: string[];
+}
 
 /**
  * The booking voucher — what a guest is sent to say "yes, you are coming".
  *
- * Deliberately not the invoice. An invoice is a tax document that proves what
- * was charged; a voucher is the thing somebody shows at a gate and reads on
- * the drive up. So it leads with the villa and the hours, carries the
- * arrangements the kitchen and the desk have already been told about, and
- * keeps money to one honest line rather than a GST breakdown.
- *
- * Printing is the same machinery as the invoice: `data-print-root` is what
- * the print stylesheet reveals, which is how "Save as PDF" produces this page
- * and nothing around it.
+ * Deliberately not the invoice: it leads with the villa and the hours and keeps
+ * money to one honest line. `data-print-root` is what the print stylesheet
+ * reveals, which is how "Save as PDF" produces this page and nothing around it.
  */
-export function VoucherDocument({
-  view,
+export function VoucherCard({
+  data,
+  settings,
   className,
 }: {
-  view: BookingView;
+  data: VoucherData;
+  settings: Partial<PropertySettings> | null | undefined;
   className?: string;
 }) {
-  const { booking, villa, customer, roomNames, totals } = view;
-  const settings = useSettings();
-  const prefs = usePreferencesForBooking(booking.id);
-
-  const nights = nightsBetween(booking.checkIn, booking.checkOut);
-  // What was agreed, not the villa's standard hours — a guest who arranged a
-  // late arrival must not be handed a voucher contradicting it.
-  const times = stayTimes(booking, villa);
-  const status = bookingStatus.get(booking.status);
-
-  const arrangements = [
-    ...(prefs?.occasions.map((o) => label(OCCASIONS, o)) ?? []),
-    prefs?.allergies ? `Allergies noted: ${prefs.allergies}` : null,
-    prefs?.dietaryNotes || null,
-    prefs?.foodNotes || null,
-    booking.specialRequests || null,
-  ].filter(Boolean) as string[];
-
-  const meals = prefs?.meals.length
-    ? prefs.meals.map((m) => label(MEALS, m)).join(", ")
-    : "À la carte — not included";
+  const nights = nightsBetween(data.checkIn, data.checkOut);
   const guests =
-    `${booking.adults} ${booking.adults === 1 ? "Adult" : "Adults"}` +
-    (booking.children > 0 ? ` + ${booking.children} ${booking.children === 1 ? "Child" : "Children"}` : "");
+    `${data.adults} ${data.adults === 1 ? "Adult" : "Adults"}` +
+    (data.children > 0 ? ` + ${data.children} ${data.children === 1 ? "Child" : "Children"}` : "");
   const important = lines(settings?.importantInfo);
 
   const rows: [React.ElementType, string, React.ReactNode, string?][] = [
-    [User, "Guest name", customer?.name, undefined],
-    [Phone, "Phone number", customer?.phone || "—", undefined],
-    [Home, "Villa", villa?.name, booking.bookingMode === "whole" ? "Whole villa" : roomNames.join(", ")],
-    [CalendarDays, "Check-in date & time", formatDate(booking.checkIn), times.arrival],
-    [CalendarDays, "Check-out date & time", formatDate(booking.checkOut), times.departure],
+    [User, "Guest name", data.guestName, undefined],
+    [Phone, "Phone number", data.phone || "—", undefined],
+    [Home, "Villa", data.villa, data.rooms],
+    [CalendarDays, "Check-in date & time", formatDate(data.checkIn), data.arrival],
+    [CalendarDays, "Check-out date & time", formatDate(data.checkOut), data.departure],
     [Users, "Number of guests", guests, `${nights} ${nights === 1 ? "night" : "nights"}`],
-    totals.balance > 0
-      ? [IndianRupee, "Total amount", money(totals.total), `Balance ${money(totals.balance)}`]
-      : [IndianRupee, "Total amount paid", money(totals.paid), undefined],
-    [UtensilsCrossed, "Meals", meals, undefined],
+    data.balance > 0
+      ? [IndianRupee, "Total amount", money(data.total), `Balance ${money(data.balance)}`]
+      : [IndianRupee, "Total amount paid", money(data.paid), undefined],
+    [UtensilsCrossed, "Meals", data.meals, undefined],
     [Coffee, "Breakfast", settings?.breakfastLine || "—", undefined],
-    [Ticket, "Booking status", status.label, undefined],
+    [Ticket, "Booking status", data.statusLabel, undefined],
   ];
 
   return (
     <article
       className={cn("bg-sand p-6 text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-10", className)}
-      aria-label={`Booking voucher for ${booking.reference}`}
+      aria-label={`Booking voucher${data.reference ? ` for ${data.reference}` : " preview"}`}
       data-print-root
     >
       <header className="text-center">
         <img src={logo.onLight} alt="Homes of Sanctuary" className="mx-auto h-20 w-auto" />
-        <p className="mt-3 text-sm text-gold-700">
-          at {settings?.addressLine1 ?? "Nandi Hills"}
-        </p>
+        <p className="mt-3 text-sm text-gold-700">at {settings?.addressLine1 ?? "Nandi Hills"}</p>
         <h2 className="display-caps mt-4 text-2xl text-forest sm:text-3xl">
           Booking confirmation voucher
         </h2>
@@ -90,7 +89,7 @@ export function VoucherDocument({
           delighted to confirm your booking details as below.
         </p>
         <p className="mt-2 text-xs text-stone-600">
-          Reference {booking.reference} · Issued {formatDate(toISODate(new Date()))}
+          {data.reference ? `Reference ${data.reference} · ` : ""}Issued {formatDate(toISODate(new Date()))}
         </p>
       </header>
 
@@ -115,15 +114,15 @@ export function VoucherDocument({
         ))}
       </dl>
 
-      {(times.arrivalArranged || times.departureArranged) && (
+      {data.arrangedTimes && (
         <p className="mt-2 text-xs text-stone-600">Times shown were arranged with you.</p>
       )}
 
-      {arrangements.length > 0 && (
+      {data.arrangements.length > 0 && (
         <section aria-label="Arrangements" className="mt-5 text-sm">
           <p className="label-caps text-gold-700">We have noted</p>
           <ul className="mt-1.5 space-y-1 leading-relaxed">
-            {arrangements.map((line) => (
+            {data.arrangements.map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
@@ -136,7 +135,7 @@ export function VoucherDocument({
             Important information
           </p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed">
-            <li>Standard check-in {times.arrival}, check-out {times.departure}</li>
+            <li>Standard check-in {data.arrival}, check-out {data.departure}</li>
             {important.map((l) => (
               <li key={l}>{l}</li>
             ))}
@@ -154,5 +153,58 @@ export function VoucherDocument({
         {settings?.instagram && <span>{settings.instagram}</span>}
       </footer>
     </article>
+  );
+}
+
+/** The voucher for a booking that exists. */
+export function VoucherDocument({
+  view,
+  className,
+}: {
+  view: BookingView;
+  className?: string;
+}) {
+  const { booking, villa, customer, roomNames, totals } = view;
+  const settings = useSettings();
+  const prefs = usePreferencesForBooking(booking.id);
+  // What was agreed, not the villa's standard hours — a guest who arranged a
+  // late arrival must not be handed a voucher contradicting it.
+  const times = stayTimes(booking, villa);
+
+  const arrangements = [
+    ...(prefs?.occasions.map((o) => label(OCCASIONS, o)) ?? []),
+    prefs?.allergies ? `Allergies noted: ${prefs.allergies}` : null,
+    prefs?.dietaryNotes || null,
+    prefs?.foodNotes || null,
+    booking.specialRequests || null,
+  ].filter(Boolean) as string[];
+
+  return (
+    <VoucherCard
+      className={className}
+      settings={settings}
+      data={{
+        guestName: customer?.name,
+        phone: customer?.phone,
+        villa: villa?.name,
+        rooms: booking.bookingMode === "whole" ? "Whole villa" : roomNames.join(", "),
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        arrival: times.arrival,
+        departure: times.departure,
+        arrangedTimes: times.arrivalArranged || times.departureArranged,
+        adults: booking.adults,
+        children: booking.children,
+        total: totals.total,
+        paid: totals.paid,
+        balance: totals.balance,
+        meals: prefs?.meals.length
+          ? prefs.meals.map((m) => label(MEALS, m)).join(", ")
+          : "À la carte — not included",
+        statusLabel: bookingStatus.get(booking.status).label,
+        reference: booking.reference,
+        arrangements,
+      }}
+    />
   );
 }

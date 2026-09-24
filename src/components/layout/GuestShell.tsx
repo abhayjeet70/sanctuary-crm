@@ -223,7 +223,7 @@ export function GuestShell() {
             aria-label="Homes of Sanctuary — your stay"
             className="flex shrink-0 items-center py-3 transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
           >
-            <Logo variant="onDark" size="h-16 sm:h-20 lg:h-24" />
+            <Logo variant="onDark" size="h-16 sm:h-20" />
           </Link>
 
           {/* Centred below lg, where the nav rail is hidden and `between`
@@ -247,7 +247,7 @@ export function GuestShell() {
                 whole rail out of alignment. */}
             <nav
               aria-label="Guest portal"
-              className="hidden justify-end gap-0.5 lg:flex"
+              className="scrollbar-none hidden gap-0.5 overflow-x-auto lg:flex"
             >
               {[...primary, ...secondary].map(({ to, label, icon: Icon }) => (
                 <NavLink
@@ -255,7 +255,7 @@ export function GuestShell() {
                   to={to}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-1.5 rounded-t-lg px-2.5 py-2.5 text-[0.8125rem] whitespace-nowrap transition-colors",
+                      "flex shrink-0 items-center gap-1.5 rounded-t-lg px-2.5 py-2.5 text-[0.8125rem] whitespace-nowrap transition-colors",
                       isActive
                         ? "bg-sand text-ink"
                         : "text-sand/65 hover:bg-sand/10 hover:text-sand",

@@ -4,6 +4,14 @@ import { Plus, Sparkles, Wifi, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EmptyState, PageHeader, StatCard, Photo } from "@/components/common";
 import { useMockData, useVillas } from "@/hooks/useData";
 import type { Villa } from "@/types";
@@ -60,6 +68,7 @@ export default function AmenitiesPage() {
 function VillaAmenities({ villa }: { villa: Villa }) {
   const { updateVilla } = useMockData();
   const [draft, setDraft] = useState("");
+  const [removing, setRemoving] = useState<string | null>(null);
 
   const add = () => {
     const value = draft.trim();
@@ -105,11 +114,7 @@ function VillaAmenities({ villa }: { villa: Villa }) {
                 <button
                   type="button"
                   aria-label={`Remove ${amenity} from ${villa.name}`}
-                  onClick={() =>
-                    updateVilla(villa.id, {
-                      amenities: villa.amenities.filter((a) => a !== amenity),
-                    })
-                  }
+                  onClick={() => setRemoving(amenity)}
                   className="rounded-full p-0.5 text-stone hover:bg-ink/8 hover:text-ink"
                 >
                   <X className="size-3" aria-hidden />
@@ -143,6 +148,34 @@ function VillaAmenities({ villa }: { villa: Villa }) {
           </Button>
         </form>
       </div>
+
+      <Dialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove &ldquo;{removing}&rdquo;?</DialogTitle>
+            <DialogDescription>
+              It will no longer be listed for {villa.name} in the guest portal, on the booking
+              page or on the phone list. You can add it back at any time.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRemoving(null)}>
+              Keep it
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                updateVilla(villa.id, {
+                  amenities: villa.amenities.filter((a) => a !== removing),
+                });
+                setRemoving(null);
+              }}
+            >
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

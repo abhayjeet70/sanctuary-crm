@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   ErrorState,
@@ -11,7 +12,10 @@ import {
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { stayTimes } from "@/services/domain";
 import { useGuestStay } from "@/hooks/useGuest";
-import { usePreferencesForBooking } from "@/hooks/useData";
+import { useMockData, usePreferencesForBooking } from "@/hooks/useData";
+import { CancelBookingDialog } from "@/components/booking/CancelBookingDialog";
+import { RefundSummary } from "@/components/booking/RefundSummary";
+import { policyFields, policyHeadline } from "@/lib/cancellation";
 import { hasPreferences } from "@/lib/preferences";
 import { bookingStatus, bookingSource, paymentStatus } from "@/lib/status";
 import { formatDate, formatDateRange, nightsBetween } from "@/lib/format";
@@ -27,6 +31,8 @@ const GUEST_STEPS = [
 
 export default function GuestBookingPage() {
   const { view, bookings } = useGuestStay();
+  const { refunds, settings } = useMockData();
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   if (!view) return <ErrorState className="m-5" title="No stay found" />;
   const { booking, villa, roomNames, totals } = view;
@@ -182,6 +188,27 @@ export default function GuestBookingPage() {
           </Button>
         </div>
       </section>
+
+      {/* ------------------------------------------------- cancel / refund */}
+      {refunds.find((r) => r.bookingId === booking.id) ? (
+        <RefundSummary refund={refunds.find((r) => r.bookingId === booking.id)!} audience="guest" />
+      ) : (
+        ["inquiry", "pending_payment", "payment_uploaded", "payment_approved", "confirmed"].includes(booking.status) && (
+          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+            <Eyebrow className="text-gold-700">Change of plans?</Eyebrow>
+            <p className="mt-2 text-sm text-stone-600">{policyHeadline(policyFields(villa?.cancellationPolicy, settings), booking.checkIn)}.</p>
+            <Button
+              variant="outline"
+              className="mt-4 text-status-cancelled hover:bg-status-cancelled-bg"
+              onClick={() => setCancelOpen(true)}
+            >
+              <Ban aria-hidden />
+              Cancel this stay
+            </Button>
+            <CancelBookingDialog view={view} open={cancelOpen} onOpenChange={setCancelOpen} role="guest" />
+          </section>
+        )
+      )}
 
       {/* ------------------------------------------------------ other stays */}
       {others.length > 0 && (

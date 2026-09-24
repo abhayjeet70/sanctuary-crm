@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "./client";
 import { uploadLostFoundPhoto } from "./receipts";
 import { MockDataContext, type MockData } from "@/services/mock/MockDataProvider";
-import { settingsColumns, toSettings, withDerivedRoomStatus } from "./mappers";
+import { settingsColumns, toRefund, toSettings, withDerivedRoomStatus } from "./mappers";
 import {
   toActivityEvent,
   toBooking,
@@ -51,6 +51,7 @@ import type {
   Expense,
   StayPreferences,
   BookingCompanion,
+  Refund,
   LostItem,
   LostItemClaim,
   LostItemReturn,
@@ -95,6 +96,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [preferences, setPreferences] = useState<StayPreferences[]>([]);
   const [companions, setCompanions] = useState<BookingCompanion[]>([]);
+  const [refunds, setRefunds] = useState<Refund[]>([]);
   const [lostItems, setLostItems] = useState<LostItem[]>([]);
   const [lostClaims, setLostClaims] = useState<LostItemClaim[]>([]);
   const [lostReturns, setLostReturns] = useState<LostItemReturn[]>([]);
@@ -215,6 +217,10 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       );
     }
     setBookings([...(b.data ?? []).map(toBooking), ...stayBookings]);
+
+    // Staff see every refund, a guest only their own — RLS, not branching here.
+    const rf = await supabase.from("refunds").select("*").order("cancelled_at", { ascending: false });
+    setRefunds((rf.data ?? []).map(toRefund));
 
     // Lost & Found. Every one of these is empty for whoever RLS says should
     // not see it, so there is no role branching here: the database decided.
@@ -366,6 +372,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       expenses,
       preferences,
       companions,
+      refunds,
       lostItems,
       lostClaims,
       lostReturns,
@@ -407,10 +414,19 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
 
           // A lifecycle move.
           if (patch.status) {
-            const { error } = await supabase.rpc("set_booking_status", {
-              p_booking_id: id,
-              p_status: patch.status,
-            });
+            // Cancelling is a money event, so it never goes through the bare
+            // status setter — that would free the dates and leave no refund record.
+            const { error } =
+              patch.status === "cancelled"
+                ? await supabase.rpc("cancel_booking", {
+                    p_booking_id: id,
+                    p_reason: "",
+                    p_waive_fee: false,
+                  })
+                : await supabase.rpc("set_booking_status", {
+                    p_booking_id: id,
+                    p_status: patch.status,
+                  });
             if (report(error, "Could not update the booking")) return;
           }
 
@@ -956,6 +972,9 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           if (patch.capacity !== undefined) columns.capacity = patch.capacity;
           if (patch.amenities !== undefined) columns.amenities = patch.amenities;
           if (patch.status !== undefined) columns.status = patch.status;
+          if (patch.cancellationPolicy !== undefined) {
+            columns.cancellation_policy = patch.cancellationPolicy;
+          }
           if (patch.image !== undefined) columns.image = patch.image || null;
           if (!Object.keys(columns).length) return;
 
@@ -1341,6 +1360,29 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
         })();
       },
 
+      cancelBooking: async (bookingId, reason, waiveFee = false) => {
+        const { error } = await supabase.rpc("cancel_booking", {
+          p_booking_id: bookingId,
+          p_reason: reason,
+          p_waive_fee: waiveFee,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      processRefund: async (refundId, method, reference, note) => {
+        const { error } = await supabase.rpc("process_refund", {
+          p_refund_id: refundId,
+          p_method: method,
+          p_reference: reference,
+          p_note: note,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
       updateSettings: (patch) => {
         void (async () => {
           const columns: Record<string, unknown> = {};
@@ -1390,7 +1432,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
     };
 
   }, [
-    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, preferences, companions, lostItems, lostClaims, lostReturns, lostReports, guestLostItems, departments, employees, employeePay, menuItems,
+    villas, customers, bookings, waitlist, payments, invoices, taxes, expenses, preferences, companions, refunds, lostItems, lostClaims, lostReturns, lostReports, guestLostItems, departments, employees, employeePay, menuItems,
     foodOrders, requests, feedback, activity, notifications, settings, refetch,
     demoDataVisible, setDemoDataVisible,
   ]);

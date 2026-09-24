@@ -329,3 +329,11 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-flash-in { animation: none; }
 }
+
+/* A row that scrolls sideways without drawing a scrollbar over the header. */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

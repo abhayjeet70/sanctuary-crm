@@ -1,3 +1,4 @@
+import type { CancellationQuote, Refund } from "@/types";
 /**
  * Row -> domain mappers.
  *
@@ -71,6 +72,7 @@ export const toVilla = (row: unknown): Villa => {
     amenities: x.amenities ?? [],
     wifiNetwork: x.wifi_network,
     wifiPassword: x.wifi_password,
+    cancellationPolicy: x.cancellation_policy ?? null,
     rooms: ((x.rooms ?? []) as unknown[])
       .map(toRoom)
       .sort((a, b) => a.name.localeCompare(b.name)),
@@ -384,6 +386,13 @@ export const toSettings = (row: unknown): PropertySettings => {
     breakfastLine: x.breakfast_line ?? "Complimentary Breakfast",
     website: x.website ?? "",
     instagram: x.instagram ?? "",
+    cancellationFree: x.cancellation_free ?? false,
+    cancellationFreeDays: x.cancellation_free_days ?? 15,
+    cancellationTiers: x.cancellation_tiers ?? [
+      { days: 10, refundPercent: 50 },
+      { days: 0, refundPercent: 0 },
+    ],
+    cancellationNote: x.cancellation_note ?? "",
   };
 };
 
@@ -424,6 +433,10 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   breakfastLine: "breakfast_line",
   website: "website",
   instagram: "instagram",
+  cancellationFree: "cancellation_free",
+  cancellationFreeDays: "cancellation_free_days",
+  cancellationTiers: "cancellation_tiers",
+  cancellationNote: "cancellation_note",
 };
 
 export const toDepartment = (row: unknown): Department => {
@@ -717,3 +730,40 @@ export const toLostReport = (row: unknown): LostReport => {
 };
 
 export type { Row };
+
+export const toRefund = (row: unknown): Refund => {
+  const x = r(row);
+  return {
+    id: x.id,
+    bookingId: x.booking_id,
+    customerId: x.customer_id,
+    amountPaid: x.amount_paid,
+    refundPercent: x.refund_percent,
+    refundAmount: x.refund_amount,
+    retained: x.retained,
+    daysBefore: x.days_before,
+    feeWaived: x.fee_waived,
+    status: x.status,
+    reason: x.reason ?? "",
+    cancelledByRole: x.cancelled_by_role,
+    cancelledAt: x.cancelled_at,
+    processedAt: x.processed_at ?? undefined,
+    method: x.method ?? undefined,
+    reference: x.reference ?? undefined,
+    note: x.note ?? undefined,
+  };
+};
+
+export const toQuote = (row: unknown): CancellationQuote => {
+  const x = r(row);
+  return {
+    daysBefore: x.days_before,
+    refundPercent: x.refund_percent,
+    amountPaid: x.amount_paid,
+    refundAmount: x.refund_amount,
+    retained: x.retained,
+    isFree: x.is_free,
+    canCancel: x.can_cancel,
+    blockedReason: x.blocked_reason ?? undefined,
+  };
+};

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -10,6 +11,7 @@ import {
   MessageSquareQuote,
   Receipt,
   Sparkles,
+  Ticket,
   Users,
   Wallet,
   Wifi,
@@ -25,10 +27,13 @@ import { formatDate, money, nightsBetween } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
 import { useSession } from "@/services/session";
 import { GuestAttentionDialog } from "@/components/guest/GuestAttentionDialog";
+import { CompanionProfileCard } from "@/components/guest/CompanionProfileCard";
+import { clearDraft, loadDraft, submitDraft } from "@/lib/pendingBooking";
 
 const LINKS = [
   { to: "/guest/booking", label: "Booking", hint: "Dates, rooms and guests", icon: Receipt },
   { to: "/guest/payment", label: "Payment", hint: "Balance and receipts", icon: Wallet },
+  { to: "/guest/voucher", label: "Voucher", hint: "Your confirmation, printable", icon: Ticket },
   { to: "/guest/food", label: "Order food", hint: "In-villa dining", icon: ChefHat },
   { to: "/guest/requests", label: "Requests", hint: "Ask the team for anything", icon: ConciergeBell },
   { to: "/guest/amenities", label: "The villa", hint: "Amenities and Wi-Fi", icon: Sparkles },
@@ -41,8 +46,28 @@ export default function GuestDashboardPage() {
   // A companion's quick links are the ones they can use. The money and the
   // booking are the holder's — RLS returns nothing there to them anyway.
   const links = isCompanion
-    ? LINKS.filter((link) => link.to !== "/guest/booking" && link.to !== "/guest/payment")
+    ? LINKS.filter((link) => link.to !== "/guest/booking" && link.to !== "/guest/payment" && link.to !== "/guest/voucher")
     : LINKS;
+
+  // A booking chosen in the wizard before sign-up could not be submitted if the
+  // account needed an emailed confirmation first. It was kept on this device;
+  // send it now that there is a session, then reload so the stay appears.
+  const draftSent = useRef(false);
+  useEffect(() => {
+    if (draftSent.current || isCompanion || !session?.customerId) return;
+    const draft = loadDraft();
+    if (!draft) return;
+    draftSent.current = true;
+    void submitDraft(draft).then((result) => {
+      if (result.error) {
+        toast.error("We could not place the booking you chose", { description: result.error });
+        return;
+      }
+      clearDraft();
+      toast.success(result.waitlisted ? "You are on the waiting list" : "Booking held — payment pending");
+      window.location.assign(result.waitlisted ? "/guest/waitlist" : "/guest/payment");
+    });
+  }, [isCompanion, session?.customerId]);
 
   // No booking yet is a perfectly normal state for a new account — it is an
   // invitation to book, not an error.
@@ -254,9 +279,16 @@ export default function GuestDashboardPage() {
         </section>
 
         {/* -------------------------------------------------------- balance */}
-        {!isCompanion && totals.balance > 0 && (
+        {!isCompanion && !concluded && totals.balance > 0 && (
           <section className="rounded-2xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
-            <Eyebrow className="text-gold-400">Balance due</Eyebrow>
+            <Eyebrow className="text-gold-400">
+              {booking.status === "pending_payment" ? "Booking held — payment pending" : "Balance due"}
+            </Eyebrow>
+            {booking.status === "pending_payment" && (
+              <p className="mt-2 font-display text-xl text-white">
+                Complete your pending payment to confirm your booking
+              </p>
+            )}
             <p className="text-gold-gradient mt-2 font-display text-4xl tabular-nums">
               {money(totals.balance)}
             </p>
@@ -269,12 +301,14 @@ export default function GuestDashboardPage() {
               className="mt-5 bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
             >
               <Link to="/guest/payment">
-                Pay or upload a receipt
+                {booking.status === "pending_payment" ? "Complete pending payment" : "Pay or upload a receipt"}
                 <ArrowRight aria-hidden />
               </Link>
             </Button>
           </section>
         )}
+
+        {isCompanion && <CompanionProfileCard />}
 
         {/* ------------------------------------------------- live activity */}
         {(liveOrder || openRequests.length > 0) && (
