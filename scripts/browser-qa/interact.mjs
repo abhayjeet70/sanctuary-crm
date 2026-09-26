@@ -86,13 +86,19 @@ async function signIn(page, email) {
   const invalid = await page.evaluate(() => document.querySelector("#pb-email")?.getAttribute("aria-invalid"));
   check("…and the field is marked invalid (not colour alone)", invalid === "true");
 
-  await page.$eval("#pb-email", (el) => (el.value = ""));
+  await page.focus("#pb-email");
+  await page.keyboard.down("Control"); await page.keyboard.press("KeyA"); await page.keyboard.up("Control");
+  await page.keyboard.press("Backspace");
   await page.type("#pb-email", "sam@gmail");
   await clickText(page, "Continue"); await sleep(400);
   check("an incomplete domain is refused", /Step 3 of 5/i.test(await text(page)) && /incomplete|valid/i.test(await text(page)));
 
-  await page.$eval("#pb-email", (el) => { el.value = ""; el.dispatchEvent(new Event("input", { bubbles: true })); });
-  await page.click("#pb-email", { clickCount: 3 });
+  // Clear the field the way a person would (select all, delete). Setting .value from
+  // script and triple-clicking sometimes left the old text behind, and the new address
+  // was then typed onto the end of it.
+  await page.focus("#pb-email");
+  await page.keyboard.down("Control"); await page.keyboard.press("KeyA"); await page.keyboard.up("Control");
+  await page.keyboard.press("Backspace");
   await page.type("#pb-email", "qa.guest+test@gmail.com");
   await clickText(page, "Continue");
   // Wait for the step to change rather than guessing how long a render takes.
@@ -116,16 +122,18 @@ async function signIn(page, email) {
 
   // housekeeping: Send to clean / Cancel on an occupied or available room
   await page.goto(`${BASE}/admin/housekeeping`, { waitUntil: "networkidle0" }); await sleep(800);
-  const before = await text(page);
-  const hadQueued = /Cleaning queued/.test(before);
+  const queuedCount = () => page.evaluate(() => (document.body.innerText.match(/Cleaning queued/gi) ?? []).length);
+  const startQueued = await queuedCount();
   const clicked = await clickText(page, "Send to clean");
-  await sleep(2500);
-  const after = await text(page);
-  check("Send to clean does something visible", clicked && (/Cleaning queued/.test(after) || /queued for cleaning/i.test(after) || after !== before), "no change");
-  if (clicked && !hadQueued) {
+  // Wait for the page to show the change rather than sleeping and hoping.
+  await page.waitForFunction((n) => (document.body.innerText.match(/Cleaning queued/gi) ?? []).length > n || /Cleaning\s*$/m.test(""), { timeout: 10000 }, startQueued).catch(() => {});
+  check("Send to clean does something visible", clicked && (await queuedCount()) > startQueued, "no change");
+  if (clicked && (await queuedCount()) > startQueued) {
+    // The tag shows a beat before the button turns into "Cancel" — wait for the button.
+    await page.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => b.innerText.trim().toLowerCase() === "cancel" && !b.disabled), { timeout: 10000 }).catch(() => {});
     const undo = await clickText(page, "Cancel", "button", true);
-    await sleep(2500);
-    check("…and Cancel puts it back", undo && !/Cleaning queued/.test(await text(page)));
+    await page.waitForFunction((n) => (document.body.innerText.match(/Cleaning queued/gi) ?? []).length <= n, { timeout: 10000 }, startQueued).catch(() => {});
+    check("…and Cancel puts it back", undo && (await queuedCount()) <= startQueued);
   }
 
   // requests: the auto-assign switch, restored afterwards

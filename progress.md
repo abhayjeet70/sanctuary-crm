@@ -1139,12 +1139,12 @@ is its own kind of bug.
 Both scripts now leave the database as they found it; five consecutive runs
 confirmed it (auto-assign off, only Praana D-1 flagged).
 
-One browser-test failure I could **not** explain: the "proper address moves on
-to step 4" check failed on one run in eleven, at a time the machine was busy.
-The step itself takes about 25 ms when measured, no run showed a JS error, and
-five clean runs followed. The check now waits for the step to change rather than
-sleeping a fixed 500 ms. If it ever fails again it prints the field's value, the
-error text and the step it is on.
+One browser-test failure looked intermittent (about one run in ten). Once the
+check printed what it saw, the cause was plain: the email field held
+`sam@gmailqa.guest+test@gmail.com` — the test's attempt to clear the previous text
+sometimes failed, and the next address was typed onto the end of it. A **test**
+bug, not the app (the popup's own validation correctly refused it: "can only
+have one @"). Clearing now selects-all-and-deletes like a person would.
 
 ### Reports: PDF and print (26 September, after the QA pass)
 
