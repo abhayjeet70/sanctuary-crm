@@ -18,6 +18,7 @@ import { ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { RoomDialog } from "@/components/admin/RoomDialog";
 import { VillaCancellationPolicy } from "./VillaCancellationPolicy";
 import { VillaWifiPanel } from "@/components/wifi/VillaWifiPanel";
+import { VillaStaff } from "@/components/admin/VillaStaff";
 import { useBookings, useCustomers, useMockData, useVilla } from "@/hooks/useData";
 import { bookingsOnDate } from "@/services/domain";
 import { ACCEPTED_PHOTO_TYPES, uploadVillaPhoto } from "@/services/supabase/receipts";
@@ -390,6 +391,8 @@ export default function VillaDetailPage() {
               </Button>
             </form>
           </section>
+
+          <VillaStaff villa={villa} />
 
           <VillaWifiPanel villa={villa} />
 

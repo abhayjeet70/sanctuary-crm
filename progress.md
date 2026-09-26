@@ -1011,3 +1011,24 @@ from the caller — none accepts a booking id from the client.
 
 Nothing here claims a device is online. Real connectivity, bandwidth, the
 "expiring soon" push (needs a scheduler) and MAC capture all wait on hardware.
+
+---
+
+## 16. Round sixteen — villa staff, auto-assign, and the room buttons
+
+- **Room buttons did nothing.** "Send to clean" / "Mark clean" called `saveRoom`,
+  which never wrote `status`. They now call `set_room_status`. A room with a
+  guest in it stays "Occupied" and gains a "Cleaning queued" tag — the stay
+  outranks the flag — and turns to Cleaning once the guests leave.
+- **Staff belong to a villa** (`employees.villa_id`, null = floater). Employee
+  form asks for it; Employees filters by it; each villa page lists its staff and
+  who is free.
+- **Auto-assign** (`property_settings.auto_assign_requests`, switch on the
+  Requests page). New request → a *free* person in the handling department at
+  that villa, then floaters; idle-longest first. Nobody free → stays pending;
+  finishing a job hands that person the oldest waiting one. Switching on clears
+  the backlog. All in database triggers, so it needs no page open.
+- Manual assignment picks from the villa's own staff and refuses another
+  villa's; the request stores `assigned_employee` (roster) as well as
+  `assigned_user` (login), since most roster staff have no login.
+- Tests: `node supabase/tests/auto_assign.e2e.mjs` (20 live checks).

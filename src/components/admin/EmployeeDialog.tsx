@@ -1,3 +1,5 @@
+import { EmailInput } from "@/components/common/EmailInput";
+import { emailProblem } from "@/lib/email";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useDepartments, useEmployeePay, useMockData } from "@/hooks/useData";
+import { useDepartments, useEmployeePay, useMockData, useVillas } from "@/hooks/useData";
 import { useShowsFinancials } from "@/services/session";
 import { cleanPhone, isPhone } from "@/lib/format";
 import { titleCase } from "@/lib/status";
@@ -28,6 +30,7 @@ import type { Employee, EmployeeStatus, EmploymentType } from "@/types";
 const TYPES: EmploymentType[] = ["full_time", "part_time", "contract", "seasonal"];
 const STATUSES: EmployeeStatus[] = ["active", "on_leave", "left"];
 const NO_TEAM = "none";
+const ALL_VILLAS = "all";
 
 /** Plain words for the permission keys, for the line under the picker. */
 const PERMISSION_WORDS: Record<string, string> = {
@@ -61,6 +64,7 @@ export function EmployeeDialog({
   onClose: () => void;
 }) {
   const { saveEmployee, savePay } = useMockData();
+  const villas = useVillas();
   const departments = useDepartments().filter(
     // A retired department stays visible on whoever is already in it, so an
     // existing record does not silently change department on the next save.
@@ -73,6 +77,7 @@ export function EmployeeDialog({
     fullName: employee?.fullName ?? "",
     designation: employee?.designation ?? "",
     departmentId: employee?.departmentId ?? NO_TEAM,
+    villaId: employee?.villaId ?? ALL_VILLAS,
     phone: employee?.phone ?? "",
     email: employee?.email ?? "",
     dateOfJoining: employee?.dateOfJoining ?? "",
@@ -86,6 +91,7 @@ export function EmployeeDialog({
     salary: pay ? String(pay.monthlySalary) : "",
   });
 
+  const [submitted, setSubmitted] = useState(false);
   const chosen = departments.find((d) => d.id === form.departmentId);
 
   const set = (key: keyof typeof form, value: string) =>
@@ -93,7 +99,10 @@ export function EmployeeDialog({
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
+    setSubmitted(true);
     if (form.fullName.trim().length < 2) return toast.error("Enter their name");
+    const emailIssue = emailProblem(form.email, { required: false });
+    if (emailIssue) return toast.error(emailIssue);
     if (form.phone.trim() && !isPhone(form.phone)) {
       return toast.error("That is not a phone number we could ring");
     }
@@ -106,6 +115,7 @@ export function EmployeeDialog({
       fullName: form.fullName.trim(),
       designation: form.designation.trim(),
       departmentId: form.departmentId === NO_TEAM ? undefined : form.departmentId,
+      villaId: form.villaId === ALL_VILLAS ? undefined : form.villaId,
       phone: form.phone.trim(),
       email: form.email.trim(),
       dateOfJoining: form.dateOfJoining || undefined,
@@ -186,6 +196,25 @@ export function EmployeeDialog({
                 </Select>
               </Field>
               <Field
+                label="Villa"
+                htmlFor="emp-villa"
+                hint="Requests from a villa are offered to that villa's staff first. “All villas” covers every house."
+              >
+                <Select value={form.villaId} onValueChange={(v) => set("villaId", v)}>
+                  <SelectTrigger id="emp-villa">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_VILLAS}>All villas (floats between houses)</SelectItem>
+                    {villas.map((villa) => (
+                      <SelectItem key={villa.id} value={villa.id}>
+                        {villa.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field
                 label="Designation"
                 htmlFor="emp-designation"
                 hint={
@@ -238,11 +267,12 @@ export function EmployeeDialog({
                 />
               </Field>
               <Field label="Email" htmlFor="emp-email" hint="Needed for a portal login">
-                <Input
+                <EmailInput
                   id="emp-email"
-                  type="email"
+                  required={false}
+                  showError={submitted}
                   value={form.email}
-                  onChange={(e) => set("email", e.target.value)}
+                  onChange={(v) => set("email", v)}
                   placeholder="name@example.com"
                 />
               </Field>

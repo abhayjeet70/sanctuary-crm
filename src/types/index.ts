@@ -19,7 +19,10 @@ export interface Room {
   villaId: ID;
   name: string;
   capacity: number;
+  /** What the room is right now: a stay beats a cleaning flag beats a block. */
   status: RoomStatus;
+  /** The flag housekeeping set, which a stay can sit on top of. */
+  operational?: RoomStatus;
   baseRate: number;
 }
 
@@ -594,6 +597,10 @@ export interface GuestRequest {
   assignedTo?: Team;
   /** The person on the hook, where the department is only the team. */
   assignedUser?: ID;
+  /** The roster entry doing the job — set even for staff with no login. */
+  assignedEmployee?: ID;
+  /** True when auto-assign chose them, so the desk can tell it from a decision. */
+  autoAssigned?: boolean;
   acknowledgedAt?: ISODateTime;
   resolvedAt?: ISODateTime;
   /** What was actually done — sent to the guest when it is closed. */
@@ -721,6 +728,9 @@ export interface PropertySettings {
   cancellationFreeDays: number;
   cancellationTiers: CancellationTier[];
   cancellationNote: string;
+
+  /** New requests go straight to a free person at the villa they came from. */
+  autoAssignRequests: boolean;
 }
 
 /** Cancelled at least `days` before check-in earns `refundPercent` of what was paid. */
@@ -823,6 +833,8 @@ export interface Employee {
   photoUrl?: string;
   /** Their login, when they have one. */
   profileId?: ID;
+  /** The villa they work at. Undefined means every villa — a floater. */
+  villaId?: ID;
   createdAt: ISODateTime;
 }
 

@@ -6,6 +6,7 @@ import { isDueSoon, isOverdue } from "../lib/lostFound";
 import { companionAccess } from "../lib/companions";
 import { cleanPhone, isPhone } from "../lib/format";
 import { csvField, toCsv } from "../lib/csv";
+import { emailProblem, isValidEmail } from "../lib/email";
 import {
   addDays,
   bookingTotals,
@@ -521,5 +522,18 @@ assert.equal(
   false,
   "already overdue is not 'due soon' — it is counted once, as overdue",
 );
+
+/* ------------------------------------------------------------------ email */
+for (const good of ["pooja@gmail.com", "a.b+c@mail.example.co.uk", "sam_1@yahoo.in", "X@outlook.com", " sam@gmail.com "]) {
+  assert.equal(emailProblem(good), null, `${good} should be accepted`);
+}
+for (const bad of ["", "sam", "sam@", "@gmail.com", "sam@gmail", "sam@.com", "sam@gmail..com", "sam @gmail.com", "sam@@gmail.com", "sam@gmail.c", ".sam@gmail.com", "sam@-gmail.com"]) {
+  assert.notEqual(emailProblem(bad), null, `"${bad}" should be refused`);
+  assert.equal(isValidEmail(bad), false, `"${bad}" is not valid`);
+}
+assert.match(emailProblem("dollarsidestories@gmial.com") ?? "", /gmail\.com/, "a one-letter slip in gmail is named, not just refused");
+assert.match(emailProblem("x@yahooo.com") ?? "", /yahoo\.com/);
+assert.equal(emailProblem("", { required: false }), null, "an optional field may be empty");
+assert.notEqual(emailProblem("sam@", { required: false }), null, "but not half-filled");
 
 console.log("domain.ts — all checks passed");

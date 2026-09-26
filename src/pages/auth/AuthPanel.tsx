@@ -1,3 +1,4 @@
+import { emailProblem } from "@/lib/email";
 import { useState } from "react";
 import { ArrowRight, Lock, Mail, MailCheck, User } from "lucide-react";
 import { PasswordInput } from "@/components/common/PasswordInput";
@@ -30,6 +31,7 @@ export function AuthPanel() {
   const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -41,13 +43,20 @@ export function AuthPanel() {
 
   const switchTo = (next: Mode) => {
     setMode(next);
+    setEmailTouched(false);
     setError(null);
     setPassword("");
   };
 
+  // Sign-in also takes a Guest ID, so only sign-up and reset demand an address.
+  const needsAddress = isSignup || isReset;
+  const emailIssue = needsAddress ? emailProblem(email) : null;
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setEmailTouched(true);
+    if (emailIssue) return setError(emailIssue);
 
     if (isReset) {
       setBusy(true);
@@ -246,10 +255,19 @@ export function AuthPanel() {
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              onBlur={() => setEmailTouched(true)}
+              aria-invalid={emailTouched && emailIssue ? true : undefined}
+              aria-describedby={emailTouched && emailIssue ? "email-error" : undefined}
               className="border-0 bg-white/10 pl-9 text-sand placeholder:text-sand/40"
               placeholder={isSignup || isReset ? "you@example.com" : "you@example.com or HOS-G…"}
             />
           </Field>
+
+          {emailTouched && emailIssue && (
+            <p id="email-error" role="alert" className="-mt-2 text-xs text-clay-200">
+              {emailIssue}
+            </p>
+          )}
 
           {!isReset && (
             <Field

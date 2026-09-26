@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PasswordInput } from "@/components/common/PasswordInput";
+import { EmailInput } from "@/components/common/EmailInput";
+import { emailProblem } from "@/lib/email";
 import {
   Dialog,
   DialogContent,
@@ -185,6 +187,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("India");
+  const [emailTried, setEmailTried] = useState(false);
 
   // ------------------------------------------------------ food and wishes
   const [prefs, setPrefs] = useState(EMPTY_PREFERENCES);
@@ -205,7 +208,9 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
     if (step === 2) {
       if (name.trim().length < 2) return setError("Tell us who the stay is for.");
       if (!phone.trim()) return setError("We need a phone number to reach you on.");
-      if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError("A valid email is how you will sign back in.");
+      setEmailTried(true);
+      const emailIssue = emailProblem(email);
+      if (emailIssue) return setError(emailIssue);
     }
     setStep((s) => s + 1);
   };
@@ -640,7 +645,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                     <Input id="pb-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
                   </Field>
                   <Field label="Email" htmlFor="pb-email" hint="You will sign in with this.">
-                    <Input id="pb-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+                    <EmailInput id="pb-email" value={email} onChange={setEmail} showError={emailTried} autoComplete="email" />
                   </Field>
                   <Field label="Country" htmlFor="pb-country">
                     <Input id="pb-country" value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name" />
@@ -810,7 +815,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
               </form>
             )}
 
-            {error && step !== 4 && (
+            {error && step !== 4 && !(step === 2 && emailProblem(email) === error) && (
               <p role="alert" className="text-sm text-status-cancelled">
                 {error}
               </p>

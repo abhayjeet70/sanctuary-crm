@@ -1276,6 +1276,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             emergency_phone: employee.emergencyPhone ?? "",
             id_document: employee.idDocument ?? "",
             notes: employee.notes ?? "",
+            villa_id: employee.villaId ?? null,
           };
           // The code is allocated by the database on insert; never overwrite it.
           const { error } = employee.id
@@ -1361,6 +1362,30 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       },
 
       refetch,
+
+      setRoomStatus: async (roomId, status) => {
+        const { error } = await supabase.rpc("set_room_status", { p_room_id: roomId, p_status: status });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
+
+      setAutoAssign: async (on) => {
+        const { data, error } = await supabase.rpc("set_auto_assign", { p_on: on });
+        if (error) return { error: error.message, assigned: 0 };
+        await refetch();
+        return { error: null, assigned: Number(data ?? 0) };
+      },
+
+      assignRequest: async (requestId, employeeId) => {
+        const { error } = await supabase.rpc("assign_request_to_employee", {
+          p_request_id: requestId,
+          p_employee_id: employeeId,
+        });
+        if (error) return { error: error.message };
+        await refetch();
+        return { error: null };
+      },
 
       cancelBooking: async (bookingId, reason, waiveFee = false) => {
         const { error } = await supabase.rpc("cancel_booking", {

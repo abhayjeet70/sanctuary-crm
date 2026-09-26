@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { BedDouble, Brush, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, StatCard, StatusBadge, Photo } from "@/components/common";
@@ -23,7 +24,7 @@ const FLOOR_WORK = ["housekeeping", "extra_towels", "room_setup"];
 export default function HousekeepingPage() {
   const villas = useVillas();
   const overview = useTodayOverview();
-  const { saveRoom } = useMockData();
+  const { setRoomStatus } = useMockData();
   const [busy, setBusy] = useState<string | null>(null);
 
   const jobs = useRequestViews().filter(
@@ -131,23 +132,41 @@ export default function HousekeepingPage() {
               </div>
               <ul className="mt-4 space-y-2">
                 {villa.rooms.map((room) => {
+                  // A guest in the room hides the flag underneath, so an occupied
+                  // room that has been sent to clean says so, and offers the undo.
+                  const queued = room.status === "occupied" && room.operational === "cleaning";
                   const meta = ROOM[room.status];
+                  const next = queued ? ("available" as RoomStatus) : meta.next;
+                  const action = queued ? "Cancel" : meta.action;
                   return (
                     <li key={room.id} className="flex items-center gap-2">
                       <span className="min-w-0 flex-1 truncate text-sm text-ink">{room.name}</span>
                       <StatusBadge label={titleCase(room.status)} tone={meta.tone} />
-                      {meta.next && (
+                      {queued && <StatusBadge label="Cleaning queued" tone="pending" />}
+                      {next && (
                         <Button
                           variant="ghost"
                           size="sm"
                           disabled={busy === room.id}
-                          onClick={() => {
+                          onClick={async () => {
                             setBusy(room.id);
-                            saveRoom(villa.id, { id: room.id, status: meta.next });
+                            const { error } = await setRoomStatus(room.id, next);
                             setBusy(null);
+                            if (error) return toast.error("Could not change the room", { description: error });
+                            toast.success(
+                              room.status === "occupied" && !queued
+                                ? `${room.name} queued for cleaning`
+                                : `${room.name} is ${next === "available" ? "ready" : next}`,
+                              {
+                                description:
+                                  room.status === "occupied" && !queued
+                                    ? "It shows as Cleaning once the guests have left."
+                                    : undefined,
+                              },
+                            );
                           }}
                         >
-                          {meta.action}
+                          {busy === room.id ? "…" : action}
                         </Button>
                       )}
                     </li>

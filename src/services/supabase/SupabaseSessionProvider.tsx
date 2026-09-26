@@ -1,3 +1,4 @@
+import { emailProblem } from "@/lib/email";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "./client";
 import { SessionContext } from "@/services/session";
@@ -120,6 +121,8 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
    * because user_metadata is whatever the browser chose to send.
    */
   const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+    const problem = emailProblem(email);
+    if (problem) return { error: problem, needsConfirmation: false, alreadyRegistered: false };
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -145,6 +148,8 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
    * can call updatePassword without the old password.
    */
   const resetPassword = useCallback(async (email: string) => {
+    const problem = emailProblem(email);
+    if (problem) return { error: problem };
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });

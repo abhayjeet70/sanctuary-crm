@@ -1,3 +1,5 @@
+import { EmailInput } from "@/components/common/EmailInput";
+import { emailProblem } from "@/lib/email";
 import { useState } from "react";
 import { toast } from "sonner";
 import { KeyRound, Lock, LogOut, Mail, ShieldCheck, User } from "lucide-react";
@@ -143,9 +145,13 @@ function NameCard({ current, onSave }: { current: string; onSave: (name: string)
 function EmailCard({ current }: { current: string }) {
   const [email, setEmail] = useState(current);
   const [busy, setBusy] = useState(false);
-  const changed = email.trim().toLowerCase() !== current.toLowerCase() && email.includes("@");
+  const [tried, setTried] = useState(false);
+  const problem = emailProblem(email);
+  const changed = email.trim().toLowerCase() !== current.toLowerCase() && !problem;
 
   const save = async () => {
+    setTried(true);
+    if (problem) return toast.error(problem);
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ email: email.trim().toLowerCase() });
     setBusy(false);
@@ -164,13 +170,9 @@ function EmailCard({ current }: { current: string }) {
       note="Changing this changes how you sign in."
     >
       <div className="flex max-w-md flex-wrap gap-2">
-        <Input
-          id="account-email"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="min-w-48 flex-1"
-        />
+        <div className="min-w-48 flex-1">
+          <EmailInput id="account-email" showError={tried} value={email} onChange={setEmail} />
+        </div>
         <Button variant="outline" disabled={!changed || busy} onClick={() => void save()}>
           {busy ? "Sending…" : "Change"}
         </Button>

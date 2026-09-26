@@ -511,6 +511,10 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
     ["/admin/villas/v-maaya", owner, "Guest Wi-Fi", "the villa page carries a Wi-Fi section"],
     ["/admin/villas/v-maaya", owner, "Controller: Mock", "the villa Wi-Fi names its controller"],
     ["/admin/wifi", owner, "Who the CRM has let on", "the property Wi-Fi overview renders"],
+    ["/admin/requests", owner, "Auto-assign", "the requests page carries the auto-assign switch"],
+    ["/admin/employees", owner, "employee-villa", "the roster can be filtered by villa"],
+    ["/admin/housekeeping", owner, "Room status", "the housekeeping room board renders"],
+    ["/admin/villas/v-maaya", owner, "Staff at", "the villa page lists its staff"],
     ["/wifi", null, "Continue with guest access", "the captive portal asks a signed-out guest to sign in"],
     ["/wifi", { role: "guest", name: "Pooja Bothra", customerId: "c-pooja" }, "Finding your stay", "the captive portal looks up a signed-in guest's stay"],
   ];

@@ -14,7 +14,7 @@ import {
 import { EmptyState, PageHeader, StatCard, StatusBadge } from "@/components/common";
 import { EmployeeDialog } from "@/components/admin/EmployeeDialog";
 import { StaffAccountPanel } from "@/components/admin/StaffAccountPanel";
-import { useEmployeePay, useEmployees, useMockData } from "@/hooks/useData";
+import { useEmployeePay, useEmployees, useMockData, useVillas } from "@/hooks/useData";
 import { useSession, useShowsFinancials } from "@/services/session";
 import { titleCase } from "@/lib/status";
 import { formatDate, initials, money } from "@/lib/format";
@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import type { Employee, EmployeeStatus } from "@/types";
 
 const ALL = "all";
+const FLOATERS = "floaters";
 const TEAMS = ["housekeeping", "kitchen", "maintenance", "manager"];
 
 const STATUS_TONE: Record<EmployeeStatus, "confirmed" | "pending" | "cancelled"> = {
@@ -39,11 +40,13 @@ const STATUS_TONE: Record<EmployeeStatus, "confirmed" | "pending" | "cancelled">
  */
 export default function EmployeesPage() {
   const employees = useEmployees();
+  const villas = useVillas();
   const { session } = useSession();
   const isOwner = session?.role === "admin";
 
   const [search, setSearch] = useState("");
   const [team, setTeam] = useState(ALL);
+  const [villa, setVilla] = useState(ALL);
   const [status, setStatus] = useState("working");
   const [editing, setEditing] = useState<Employee | null>(null);
   const [adding, setAdding] = useState(false);
@@ -53,6 +56,10 @@ export default function EmployeesPage() {
     const needle = search.trim().toLowerCase();
     return employees
       .filter((e) => (team === ALL ? true : e.team === team))
+      // A villa's staff are its own people plus the floaters who cover every house.
+      .filter((e) =>
+        villa === ALL ? true : villa === FLOATERS ? !e.villaId : e.villaId === villa,
+      )
       .filter((e) =>
         status === ALL
           ? true
@@ -69,7 +76,7 @@ export default function EmployeesPage() {
           : true,
       )
       .sort((a, b) => a.employeeCode.localeCompare(b.employeeCode));
-  }, [employees, search, team, status]);
+  }, [employees, search, team, villa, status]);
 
   const working = employees.filter((e) => e.status !== "left");
 
@@ -103,7 +110,7 @@ export default function EmployeesPage() {
         />
       </div>
 
-      <div className="grid gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] sm:grid-cols-3">
+      <div className="grid gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] sm:grid-cols-4">
         <div className="space-y-1.5">
           <Label htmlFor="employee-search">Search</Label>
           <div className="relative">
@@ -133,6 +140,24 @@ export default function EmployeesPage() {
                   {titleCase(value)}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="employee-villa">Villa</Label>
+          <Select value={villa} onValueChange={setVilla}>
+            <SelectTrigger id="employee-villa">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Every villa</SelectItem>
+              {villas.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.name}
+                  {` (${employees.filter((e) => e.villaId === v.id && e.status !== "left").length})`}
+                </SelectItem>
+              ))}
+              <SelectItem value={FLOATERS}>All villas (floaters)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -204,6 +229,7 @@ function EmployeeRow({
   const pay = useEmployeePay(employee.id);
   const showsPay = useShowsFinancials();
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const villaName = useVillas().find((v) => v.id === employee.villaId)?.name;
 
   return (
     <li
@@ -235,6 +261,7 @@ function EmployeeRow({
           <p className="mt-1 text-sm text-stone-600">
             {employee.designation || "No designation"}
             {employee.team && ` · ${titleCase(employee.team)}`}
+            {` · ${villaName ?? "All villas"}`}
             {` · ${titleCase(employee.employmentType)}`}
           </p>
           <p className="mt-0.5 text-xs text-stone-600">

@@ -1,4 +1,4 @@
-import type { Refund } from "@/types";
+import type { Refund, RoomStatus } from "@/types";
 import { createContext, useCallback, useMemo, useState, type ReactNode } from "react";
 import { bookings as bookingSeed, MOCK_TODAY } from "@/data/mocks/bookings";
 import { customers as customerSeed } from "@/data/mocks/customers";
@@ -311,6 +311,12 @@ export interface MockData {
   updateSettings: (patch: Partial<PropertySettings>) => void;
   /** Re-read everything — after a write made outside this provider. */
   refetch: () => Promise<void>;
+  /** Housekeeping: flag a room for cleaning, block it, or release it. */
+  setRoomStatus: (roomId: ID, status: RoomStatus) => Promise<{ error: string | null }>;
+  /** Switch auto-assignment; switching on clears the backlog and says how many. */
+  setAutoAssign: (on: boolean) => Promise<{ error: string | null; assigned: number }>;
+  /** Put a request on a person, or pass null to take it back. */
+  assignRequest: (requestId: ID, employeeId: ID | null) => Promise<{ error: string | null }>;
   /** Cancel a booking under the property's policy; the server computes the refund. */
   cancelBooking: (
     bookingId: ID,
@@ -612,6 +618,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       deleteTax: () => {},
       updateSettings: () => {},
       refetch: async () => {},
+      setRoomStatus: async () => ({ error: "Not available offline" }),
+      setAutoAssign: async () => ({ error: "Not available offline", assigned: 0 }),
+      assignRequest: async () => ({ error: "Not available offline" }),
       cancelBooking: async () => ({ error: "Not available offline" }),
       processRefund: async () => ({ error: "Not available offline" }),
       saveMenuItem: () => {},

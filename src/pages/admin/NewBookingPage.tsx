@@ -1,3 +1,4 @@
+import { emailProblem } from "@/lib/email";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -153,8 +154,8 @@ export default function NewBookingPage() {
       if (!form.name.trim()) next.name = "The guest's name is required.";
       if (!isPhone(form.phone))
         next.phone = "Enter a reachable phone number.";
-      if (form.email && !/^\S+@\S+\.\S+$/.test(form.email))
-        next.email = "That does not look like a complete email address.";
+      const emailIssue = emailProblem(form.email, { required: false });
+      if (emailIssue) next.email = emailIssue;
     }
 
     const rate = Number(form.nightlyRate);

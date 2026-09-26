@@ -278,6 +278,8 @@ export const toGuestRequest = (row: unknown): GuestRequest => {
     departmentId: x.department_id ?? undefined,
     assignedTo: x.assigned_to ?? undefined,
     assignedUser: x.assigned_user ?? undefined,
+    assignedEmployee: x.assigned_employee ?? undefined,
+    autoAssigned: x.auto_assigned ?? false,
     acknowledgedAt: x.acknowledged_at ?? undefined,
     resolvedAt: x.resolved_at ?? undefined,
     resolutionNote: x.resolution_note ?? undefined,
@@ -347,7 +349,9 @@ export function withDerivedRoomStatus(villas: Villa[], availability: unknown[]):
     ...villa,
     rooms: villa.rooms.map((room) => {
       const derived = byRoom.get(room.id);
-      return derived ? { ...room, status: derived.effective_status } : room;
+      return derived
+        ? { ...room, status: derived.effective_status, operational: derived.operational_status }
+        : room;
     }),
   }));
 }
@@ -397,6 +401,7 @@ export const toSettings = (row: unknown): PropertySettings => {
       { days: 0, refundPercent: 0 },
     ],
     cancellationNote: x.cancellation_note ?? "",
+    autoAssignRequests: x.auto_assign_requests ?? false,
   };
 };
 
@@ -441,6 +446,7 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   cancellationFreeDays: "cancellation_free_days",
   cancellationTiers: "cancellation_tiers",
   cancellationNote: "cancellation_note",
+  autoAssignRequests: "auto_assign_requests",
 };
 
 export const toDepartment = (row: unknown): Department => {
@@ -479,6 +485,7 @@ export const toEmployee = (row: unknown): Employee => {
     notes: x.notes ?? "",
     photoUrl: x.photo_url ?? undefined,
     profileId: x.profile_id ?? undefined,
+    villaId: x.villa_id ?? undefined,
     createdAt: x.created_at,
   };
 };

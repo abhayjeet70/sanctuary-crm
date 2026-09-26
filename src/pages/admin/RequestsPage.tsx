@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState, PageHeader, StatCard, StatusBadge } from "@/components/common";
 import { ResolveRequestDialog } from "@/components/admin/ResolveRequestDialog";
-import { useMockData, useRequestViews } from "@/hooks/useData";
+import { useEmployees, useMockData, useRequestViews, useVillas } from "@/hooks/useData";
 import { requestPriority, requestStatus, titleCase } from "@/lib/status";
 import { formatDateTime, initials, relativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,11 @@ const ADVANCE: Partial<Record<RequestStatus, { to: RequestStatus; label: string 
 
 export default function RequestsPage() {
   const requests = useRequestViews();
-  const { updateRequest } = useMockData();
+  const { updateRequest, settings, setAutoAssign, assignRequest } = useMockData();
+  const employees = useEmployees();
+  const villas = useVillas();
+  const autoOn = settings?.autoAssignRequests ?? false;
+  const [switching, setSwitching] = useState(false);
   const [status, setStatus] = useState(ALL);
   const [priority, setPriority] = useState(ALL);
   const [resolving, setResolving] = useState<
@@ -63,7 +67,40 @@ export default function RequestsPage() {
     (r) => r.request.status !== "completed" && r.request.status !== "rejected",
   );
   const urgent = open.filter((r) => r.request.priority === "urgent");
-  const unassigned = open.filter((r) => !r.request.assignedTo);
+  // Every request is routed to a team on arrival, so "no team" was never the
+  // useful question. Nobody has picked it up yet is.
+  const unassigned = open.filter((r) => !r.request.assignedEmployee && !r.request.assignedUser);
+
+  /** Jobs a person is holding right now — what "free" means. */
+  const load = (employeeId: string) =>
+    open.filter(
+      (r) =>
+        r.request.assignedEmployee === employeeId &&
+        (r.request.status === "assigned" || r.request.status === "in_progress"),
+    ).length;
+
+  /** Who could take this: active, at this villa (or floating), in the department that handles it. */
+  const peopleFor = (request: GuestRequest) =>
+    employees.filter(
+      (e) =>
+        e.status === "active" &&
+        (!e.villaId || e.villaId === request.villaId) &&
+        (!request.departmentId || e.departmentId === request.departmentId),
+    );
+
+  const toggleAuto = async () => {
+    setSwitching(true);
+    const { error, assigned } = await setAutoAssign(!autoOn);
+    setSwitching(false);
+    if (error) return toast.error("Could not change auto-assign", { description: error });
+    toast.success(autoOn ? "Auto-assign is off" : "Auto-assign is on", {
+      description: autoOn
+        ? "New requests wait for someone to assign them."
+        : assigned > 0
+          ? `${assigned} waiting ${assigned === 1 ? "request was" : "requests were"} handed out straight away.`
+          : "New requests go to a free person at their villa.",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -71,6 +108,39 @@ export default function RequestsPage() {
         eyebrow="Housekeeping · kitchen · maintenance · manager"
         title="Guest requests"
         description="Everything guests have asked for, and who is dealing with it."
+        actions={
+          <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-2.5 shadow-soft ring-1 ring-ink/[0.06]">
+            <Zap className={cn("size-4", autoOn ? "text-gold-700" : "text-stone")} aria-hidden />
+            <div className="text-right leading-tight">
+              <p id="auto-assign-label" className="text-sm font-medium text-ink">
+                Auto-assign {autoOn ? "on" : "off"}
+              </p>
+              <p className="text-xs text-stone-600">
+                {autoOn ? "To a free person at the villa" : "Requests wait for you"}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autoOn}
+              aria-labelledby="auto-assign-label"
+              disabled={switching || !settings}
+              onClick={() => void toggleAuto()}
+              className={cn(
+                "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200",
+                "focus-visible:ring-2 focus-visible:ring-clay/50 focus-visible:outline-none disabled:opacity-50",
+                autoOn ? "bg-[var(--color-clay)]" : "bg-stone-300",
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none inline-block size-5 rounded-full bg-white shadow-sm transition-transform duration-200",
+                  autoOn ? "translate-x-5" : "translate-x-0",
+                )}
+              />
+            </button>
+          </div>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -225,6 +295,49 @@ export default function RequestsPage() {
                         ))}
                       </SelectContent>
                     </Select>
+
+                    {/* The person, from the villa's own staff. */}
+                    {request.status !== "completed" && request.status !== "rejected" && (
+                      <div>
+                        <Select
+                          value={request.assignedEmployee ?? "none"}
+                          onValueChange={async (value) => {
+                            const { error } = await assignRequest(
+                              request.id,
+                              value === "none" ? null : value,
+                            );
+                            if (error) return toast.error("Could not assign", { description: error });
+                            const who = employees.find((e) => e.id === value)?.fullName;
+                            toast.success(who ? `${request.reference} → ${who}` : `${request.reference} taken off them`);
+                          }}
+                        >
+                          <SelectTrigger className="w-full" aria-label={`Assign ${request.reference} to a person`}>
+                            <SelectValue placeholder="Person…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Nobody yet</SelectItem>
+                            {peopleFor(request).map((e) => (
+                              <SelectItem key={e.id} value={e.id}>
+                                {e.fullName}
+                                {" · "}
+                                {villas.find((v) => v.id === e.villaId)?.name ?? "all villas"}
+                                {" · "}
+                                {load(e.id) === 0 ? "free" : `${load(e.id)} open`}
+                              </SelectItem>
+                            ))}
+                            {peopleFor(request).length === 0 && (
+                              <p className="px-3 py-2 text-xs text-stone-600">
+                                Nobody is registered at {villa?.name ?? "this villa"} for this
+                                department. Add staff under Employees.
+                              </p>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {request.autoAssigned && request.assignedEmployee && (
+                          <p className="mt-1 text-[0.6875rem] text-stone-600">Chosen by auto-assign</p>
+                        )}
+                      </div>
+                    )}
 
                     <div className="flex gap-2">
                       {step && (

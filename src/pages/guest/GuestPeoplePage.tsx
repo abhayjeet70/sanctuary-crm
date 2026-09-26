@@ -1,3 +1,5 @@
+import { EmailInput } from "@/components/common/EmailInput";
+import { emailProblem } from "@/lib/email";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -363,10 +365,14 @@ function AddGuestDialog({
   const [isChild, setIsChild] = useState(adultsLeft === 0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [tried, setTried] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setTried(true);
     if (name.trim().length < 2) return setError("Their name, please.");
+    const emailIssue = emailProblem(email, { required: false });
+    if (emailIssue) return setError(emailIssue);
     setSaving(true);
     const failure = await onAdd({
       fullName: name.trim(),
@@ -419,12 +425,7 @@ function AddGuestDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="companion-email">Email (optional)</Label>
-              <Input
-                id="companion-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <EmailInput id="companion-email" required={false} showError={tried} value={email} onChange={setEmail} />
             </div>
           </div>
 

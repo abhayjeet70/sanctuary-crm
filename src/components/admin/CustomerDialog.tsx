@@ -1,3 +1,5 @@
+import { EmailInput } from "@/components/common/EmailInput";
+import { emailProblem } from "@/lib/email";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { FileCheck2, Loader2, ShieldCheck, Upload, X } from "lucide-react";
@@ -75,6 +77,7 @@ export function CustomerDialog({
   const [name, setName] = useState(customer?.name ?? "");
   const [phone, setPhone] = useState(customer?.phone ?? "");
   const [email, setEmail] = useState(customer?.email ?? "");
+  const [submitted, setSubmitted] = useState(false);
   const [city, setCity] = useState(customer?.city ?? "");
   const [country, setCountry] = useState(customer?.country ?? "India");
   const [preferences, setPreferences] = useState((customer?.preferences ?? []).join(", "));
@@ -120,7 +123,10 @@ export function CustomerDialog({
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
+    setSubmitted(true);
     if (name.trim().length < 2) return toast.error("Enter the guest's name");
+    const emailIssue = emailProblem(email, { required: false });
+    if (emailIssue) return toast.error(emailIssue);
     if (phone.trim() && !isPhone(phone)) {
       return toast.error("That is not a phone number we could ring");
     }
@@ -204,11 +210,12 @@ export function CustomerDialog({
                 />
               </Field>
               <Field label="Email" htmlFor="guest-email">
-                <Input
+                <EmailInput
                   id="guest-email"
-                  type="email"
+                  required={false}
+                  showError={submitted}
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={setEmail}
                   placeholder="name@example.com"
                 />
               </Field>

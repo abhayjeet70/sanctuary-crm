@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { Eyebrow } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { EmailInput } from "@/components/common/EmailInput";
+import { emailProblem } from "@/lib/email";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/services/supabase/client";
 import { useMockData } from "@/hooks/useData";
@@ -24,10 +26,14 @@ export function CompanionProfileCard() {
   const [phone, setPhone] = useState(me?.phone ?? "");
   const [email, setEmail] = useState(me?.email ?? "");
   const [saving, setSaving] = useState(false);
+  const [tried, setTried] = useState(false);
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
+    setTried(true);
     if (name.trim().length < 2) return toast.error("Tell us your name");
+    const emailIssue = emailProblem(email, { required: false });
+    if (emailIssue) return toast.error(emailIssue);
     setSaving(true);
     const { error } = await supabase.rpc("update_companion_details", {
       p_full_name: name.trim(),
@@ -60,7 +66,7 @@ export function CompanionProfileCard() {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="cp-email">Email (optional)</Label>
-          <Input id="cp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <EmailInput id="cp-email" required={false} showError={tried} value={email} onChange={setEmail} />
         </div>
         <div className="sm:col-span-3">
           <Button type="submit" disabled={saving}>
