@@ -1146,6 +1146,25 @@ five clean runs followed. The check now waits for the step to change rather than
 sleeping a fixed 500 ms. If it ever fails again it prints the field's value, the
 error text and the step it is on.
 
+### Reports: PDF and print (26 September, after the QA pass)
+
+Reported from a real print preview: the **Collected** card printed as an empty box,
+the **Analysis** and **Bookings & refunds** tabs printed as a blank sheet, the first
+page had a band of white above the title, and the Bookings table ran off the right
+edge of the page.
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Dark cards (Collected, How guests paid) printed empty | Browsers drop background colours when printing; the card kept its pale text on a white page | `print-color-adjust: exact` inside every printable report |
+| Analysis and Bookings tabs printed blank | Both were explicitly `print:hidden` | Both now print, each under the same title block (company, section, period) as Overview |
+| Blank band above the first page | Non-printing elements were hidden with `visibility`, which keeps their height | The report's page title is `display: none` on paper |
+| Bookings table cut off at the right margin | Seven no-wrap columns inside a scroll container | On paper the cells wrap and tighten and scroll containers are released, so all columns fit |
+| Cards and charts split across pages | no page-break rules | cards, sections and charts avoid breaking |
+
+`node scripts/browser-qa/print.mjs` prints every tab in real Chrome and checks:
+content present, no blank band, nothing past the right margin, dark fills kept,
+page count sane (Overview 4 pages, Analysis 2, Bookings 3, Statements 2).
+
 ### Open
 
 1. ~~Voucher email is not live.~~ **Deployed 26 Sept** with a Supabase token that has

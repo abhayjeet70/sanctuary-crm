@@ -71,7 +71,7 @@ export function BookingsReport({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 print:grid-cols-3">
         <StatCard label="Bookings" value={rows.length} hint={`${cancelledCount} cancelled or closed`} />
         <StatCard label="Billed (earned stays)" value={money(total((r) => r.billed))} />
         <StatCard label="Collected" value={money(total((r) => r.collected))} tone="accent" />
@@ -91,8 +91,10 @@ export function BookingsReport({
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
-        <Table>
+      <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] print:overflow-visible print:text-[10px] print:shadow-none">
+        {/* On paper the cells wrap and tighten, so all seven columns fit the page
+            instead of running off the right margin. */}
+        <Table className="print:table-fixed print:text-[9px] print:[&_td]:px-1 print:[&_td]:py-1 print:[&_td]:whitespace-normal print:[&_th]:px-1 print:[&_th]:whitespace-normal print:[&_th]:text-[8px]">
           <TableHeader>
             <TableRow>
               <TableHead>Booking</TableHead>

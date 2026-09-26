@@ -294,6 +294,23 @@
   [data-print-flow],
   [data-print-flow] * {
     visibility: visible;
+    /* Browsers drop background colours when printing unless told not to. The
+       report's dark cards then lost their fill and kept their pale text — the
+       "Collected" figure printed as an empty box. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* A card, a chart or a figure should not be cut in half by a page break. */
+  [data-print-flow] section,
+  [data-print-flow] [class*="shadow-soft"],
+  [data-print-flow] [class*="shadow-lift"],
+  [data-print-flow] svg {
+    break-inside: avoid;
+  }
+  /* Nothing scrolls on paper: an overflow container would clip a wide table at the margin. */
+  [data-print-flow] [class*="overflow-x-auto"],
+  [data-print-flow] [class*="overflow-auto"] {
+    overflow: visible !important;
   }
   [data-print-flow] {
     position: static;

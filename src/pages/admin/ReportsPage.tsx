@@ -46,7 +46,7 @@ import {
 } from "@/services/domain";
 import { downloadCsv } from "@/lib/csv";
 import { periodPresets } from "@/lib/periods";
-import { money } from "@/lib/format";
+import { formatDate, money } from "@/lib/format";
 import { titleCase } from "@/lib/status";
 
 /** One active style, matching Settings, so the strips do not drift apart. */
@@ -102,6 +102,17 @@ export default function ReportsPage() {
   );
 
   const days = daysBetween(from, to);
+
+  /** Only shown on paper, where the screen's date picker is gone. Every tab
+   *  prints it, so a page torn off the stack still says what and when it is. */
+  const printTitle = (section: string) => (
+    <div className="hidden print:block">
+      <h1 className="font-display text-2xl">{settings?.legalName ?? "Homes of Sanctuary"}</h1>
+      <p className="text-sm text-stone-600">
+        Financial report · {section} · {formatDate(from)} to {formatDate(to)}
+      </p>
+    </div>
+  );
   const revenue = revenueBreakdown(rows);
   const kpis = hotelKpis(rows, villas.length, days);
   const aged = agedReceivables(rows, today);
@@ -201,6 +212,9 @@ export default function ReportsPage() {
         eyebrow="The owner's view"
         title="Finances & reports"
         description="What the property billed, what it actually collected, and how it is trading."
+        // Hidden with display:none, not visibility — otherwise the title's height is left
+        // behind as a blank band at the top of the first printed page.
+        className="print:hidden"
       />
 
       {/* ------------------------------------------------------ the period */}
@@ -278,17 +292,23 @@ export default function ReportsPage() {
             <TabsTrigger value="statements" className={TAB}>Statements</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="analysis" className="print:hidden">
-            <FinanceAnalysis rows={rows} names={label} />
+          <TabsContent value="analysis">
+            <div data-print-flow className="space-y-6">
+              {printTitle("Analysis")}
+              <FinanceAnalysis rows={rows} names={label} />
+            </div>
           </TabsContent>
 
-          <TabsContent value="bookings" className="print:hidden">
-            <BookingsReport
-              views={views.filter((v) => v.booking.checkIn >= from && v.booking.checkIn <= to)}
-              refunds={refunds}
-              from={from}
-              to={to}
-            />
+          <TabsContent value="bookings">
+            <div data-print-flow className="space-y-6">
+              {printTitle("Bookings & refunds")}
+              <BookingsReport
+                views={views.filter((v) => v.booking.checkIn >= from && v.booking.checkIn <= to)}
+                refunds={refunds}
+                from={from}
+                to={to}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="statements">
@@ -310,15 +330,7 @@ export default function ReportsPage() {
 
           <TabsContent value="overview">
         <div data-print-flow className="space-y-6">
-          {/* Only shown on paper, where the screen's date picker is gone. */}
-          <div className="hidden print:block">
-            <h1 className="font-display text-2xl">
-              {settings?.legalName ?? "Homes of Sanctuary"}
-            </h1>
-            <p className="text-sm text-stone-600">
-              Financial report · {from} to {to}
-            </p>
-          </div>
+          {printTitle("Overview")}
 
           {/* ------------------------------------------------------ headline */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
