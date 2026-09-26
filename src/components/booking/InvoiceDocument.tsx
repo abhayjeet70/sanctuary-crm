@@ -4,6 +4,7 @@ import { useSettings, useTaxes } from "@/hooks/useData";
 import { amountInWords, taxBreakdown } from "@/services/domain";
 import { cn } from "@/lib/utils";
 import { lines } from "@/components/booking/StayInfo";
+import { useSignatureUrl } from "@/hooks/useSignature";
 import type { BookingView } from "@/hooks/useData";
 import type { Invoice } from "@/types";
 
@@ -40,6 +41,8 @@ export function InvoiceDocument({
   const guestState = (customer?.state ?? "").trim().toLowerCase();
   const interState = guestState !== "" && guestState !== homeState;
   const placeOfSupply = customer?.state?.trim() || settings?.state || "Karnataka";
+
+  const signatureUrl = useSignatureUrl(settings?.signaturePath || undefined);
 
   const taxLines = taxBreakdown(totals.tax, booking.charges.taxRate, taxes, interState);
 
@@ -218,7 +221,16 @@ export function InvoiceDocument({
             <p className="text-xs font-semibold uppercase">
               For {settings?.legalName || "Homes of Sanctuary"}
             </p>
-            <p className="mt-10 border-t print:mt-5 border-ink/30 pt-1.5 text-right text-xs text-stone-600">
+            {signatureUrl ? (
+              <img
+                src={signatureUrl}
+                alt="Authorised signature"
+                className="mt-2 ml-auto max-h-16 w-auto max-w-full object-contain print:max-h-12"
+              />
+            ) : (
+              <span className="mt-10 block print:mt-5" />
+            )}
+            <p className="mt-1 border-t border-ink/30 pt-1.5 text-right text-xs text-stone-600">
               {settings?.signatoryName || "Authorised signatory"}
             </p>
           </div>

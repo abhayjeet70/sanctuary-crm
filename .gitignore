@@ -12,3 +12,4 @@ supabase/.branches
 .DS_Store
 *.log
 CRM.docx
+scripts/browser-qa/tiny.png

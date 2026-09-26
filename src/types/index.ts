@@ -709,6 +709,8 @@ export interface PropertySettings {
   hsnCode: string;
   invoiceDeclaration: string;
   signatoryName: string;
+  /** Path of the signature image in the invoice-signature bucket. Empty: none. */
+  signaturePath: string;
 
   /** What guests are told before booking and on their voucher. Multi-line
    *  fields hold one bullet per line. */
@@ -731,6 +733,11 @@ export interface PropertySettings {
 
   /** New requests go straight to a free person at the villa they came from. */
   autoAssignRequests: boolean;
+
+  /** How long a found item is kept before it is due for a decision. */
+  lostFoundRetentionDays: number;
+  lostFoundHighValueRetentionDays: number;
+  lostFoundSensitiveRetentionDays: number;
 }
 
 /** Cancelled at least `days` before check-in earns `refundPercent` of what was paid. */

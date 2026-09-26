@@ -26,6 +26,8 @@ import { bookingStatus, foodOrderStatus, paymentStatus } from "@/lib/status";
 import { formatDate, money, nightsBetween } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
 import { useSession } from "@/services/session";
+import { useMockData } from "@/hooks/useData";
+import { refundBadge } from "@/components/booking/RefundSummary";
 import { GuestAttentionDialog } from "@/components/guest/GuestAttentionDialog";
 import { CompanionProfileCard } from "@/components/guest/CompanionProfileCard";
 import { clearDraft, loadDraft, submitDraft } from "@/lib/pendingBooking";
@@ -42,6 +44,7 @@ const LINKS = [
 
 export default function GuestDashboardPage() {
   const { session } = useSession();
+  const { refunds } = useMockData();
   const { view, orders, requests, today, isCompanion } = useGuestStay();
   // A companion's quick links are the ones they can use. The money and the
   // booking are the holder's — RLS returns nothing there to them anyway.
@@ -147,7 +150,8 @@ export default function GuestDashboardPage() {
 
   const { booking, villa, roomNames, totals } = view;
   const status = bookingStatus.get(booking.status);
-  const pay = paymentStatus.get(booking.paymentStatus);
+  const refund = refunds.find((r) => r.bookingId === booking.id);
+  const pay = refund ? refundBadge(refund) : paymentStatus.get(booking.paymentStatus);
   const nights = nightsBetween(booking.checkIn, booking.checkOut);
   // What was agreed for this stay, not the villa's standard hours.
   const times = stayTimes(booking, villa);

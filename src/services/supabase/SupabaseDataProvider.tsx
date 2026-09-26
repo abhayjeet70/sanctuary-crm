@@ -1373,7 +1373,11 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
       setAutoAssign: async (on) => {
         const { data, error } = await supabase.rpc("set_auto_assign", { p_on: on });
         if (error) return { error: error.message, assigned: 0 };
-        await refetch();
+        // Show the new state at once. The full refetch is ~20 queries and took
+        // three or four seconds, during which the switch sat locked on the old
+        // answer; it still runs, to pick up the requests that were just assigned.
+        setSettings((current) => (current ? { ...current, autoAssignRequests: on } : current));
+        void refetch();
         return { error: null, assigned: Number(data ?? 0) };
       },
 

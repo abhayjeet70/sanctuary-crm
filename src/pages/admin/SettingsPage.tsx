@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eyebrow, LoadingState, PageHeader } from "@/components/common";
 import { MenuManager } from "./MenuManager";
 import { CancellationPolicyEditor } from "./CancellationPolicyEditor";
+import { SignatureUpload } from "@/components/admin/SignatureUpload";
 import { TaxManager } from "./TaxManager";
 import { DepartmentManager } from "./DepartmentManager";
 import { AccountSettings } from "./AccountSettings";
@@ -216,6 +217,8 @@ export default function SettingsPage() {
               />
             </div>
 
+            <SignatureUpload />
+
             <div className="mt-4 space-y-1.5">
               <Label htmlFor="invoice-declaration">Declaration</Label>
               <Textarea
@@ -361,6 +364,33 @@ export default function SettingsPage() {
               <Field id="city" label="City" value={draft.city} onChange={(v) => set("city", v)} />
               <Field id="state" label="State" value={draft.state} onChange={(v) => set("state", v)} />
               <Field id="postcode" label="Postcode" value={draft.postcode} onChange={(v) => set("postcode", v)} />
+            </div>
+          </Section>
+
+          <Section
+            title="Lost & found retention"
+            note="How many days a found item is kept before it is due for a decision. Applies to items logged from now on."
+          >
+            <div className="grid gap-4 sm:grid-cols-3">
+              {(
+                [
+                  ["lostFoundRetentionDays", "Ordinary items", "lf-days"],
+                  ["lostFoundHighValueRetentionDays", "High-value items", "lf-high"],
+                  ["lostFoundSensitiveRetentionDays", "Sensitive items (documents, medication)", "lf-sensitive"],
+                ] as const
+              ).map(([key, label, id]) => (
+                <div key={key} className="space-y-1.5">
+                  <Label htmlFor={id}>{label}</Label>
+                  <Input
+                    id={id}
+                    type="number"
+                    min={1}
+                    max={3650}
+                    value={draft[key]}
+                    onChange={(e) => set(key, Math.min(3650, Math.max(1, Math.round(Number(e.target.value) || 1))))}
+                  />
+                </div>
+              ))}
             </div>
           </Section>
 

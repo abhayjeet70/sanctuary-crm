@@ -1,6 +1,6 @@
 # Homes of Sanctuary CRM — Progress
 
-Living status of the build. Updated 23 September 2026 (round fourteen).
+Living status of the build. Updated 26 September 2026 (round seventeen — the QA pass).
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind v4 · shadcn/ui · React Router 7 · Supabase (Postgres + Auth + Storage + Edge Functions)
 
@@ -1032,3 +1032,128 @@ Nothing here claims a device is online. Real connectivity, bandwidth, the
   villa's; the request stores `assigned_employee` (roster) as well as
   `assigned_user` (login), since most roster staff have no login.
 - Tests: `node supabase/tests/auto_assign.e2e.mjs` (20 live checks).
+
+---
+
+## 17. Round seventeen — the QA pass (26 September)
+
+Everything built since round fourteen was tested together: static checks, the
+live database, every SQL suite, six live end-to-end suites, and a real browser.
+
+### What was built between rounds fourteen and seventeen
+
+Recorded here because it had not been written up: the booking **voucher** (dark-
+green card, printable, emailed) and the tax **invoice** in the ledger layout that
+prints on one page; the **booking popup** (5 steps, progress bar, marketplace
+cards, voucher preview, sign-in-and-pay); admin-managed **guest info** (menu,
+add-ons, terms, policies) synced to the form, voucher and email; **cancellation**
+policy (property-wide or per villa), guest and staff cancelling with the refund
+shown first, **refunds** ledger, **Cancellations & refunds** page and the
+**Bookings & refunds** report (3/6/12-month and custom ranges, CSV); the shared
+**companion login**; **email validation** everywhere an address is asked for;
+the **invoice signature** upload. Rounds 15 and 16 (Wi-Fi; villa staff and
+auto-assign) are above.
+
+### How it was tested
+
+| Layer | Tool | Result |
+|---|---|---|
+| Types | `tsc -b` | clean |
+| Lint | `oxlint` | **0 errors** (was 1 — see B1); warnings only |
+| Domain rules | `npm run test` | pass (now includes email rules) |
+| Server render | `npm run smoke` | **207 checks, 0 failures** |
+| Charts | `npm run viz` | pass |
+| Build | `vite build` | clean |
+| DB | `supabase db lint --linked`, `db push --dry-run` | 1 harmless warning; **up to date** |
+| SQL suites | 10 files in `supabase/tests/*.sql`, live, rolled back | all clean |
+| Live end-to-end | `security` 36 · `cancellation` 19 · `guest_booking` 12 · `auto_assign` 20 · `signature` 11 · `wifi` 34 | **132 checks, all pass** |
+| Schema drift | every `.from()`, `.rpc()` and column the app uses vs the live schema | none missing |
+| Real browser | 41 screens as owner and guest in headless Chrome | **0 JS errors, 0 failed requests, 0 error screens** |
+| Real browser | 21 scripted interactions (popup incl. the bad-email block, room buttons, auto-assign switch, signature rules, villa/staff pages) | pass, 5 runs in a row |
+
+Re-run any of it: `node supabase/tests/<name>.e2e.mjs`;
+`npm i --no-save puppeteer-core` then `node scripts/browser-qa/crawl.mjs` and
+`…/interact.mjs` (see the header of each; not a project dependency).
+
+### Errors found, and what was done
+
+**Security**
+
+| # | Severity | Found | Fix |
+|---|---|---|---|
+| S1 | **High** | A visitor with **no login** could call `notify_staff` and `notify_guest` and put a fake alert in the staff tray, or in any guest's, by booking id. Postgres grants EXECUTE to PUBLIC on every new function, and Supabase exposes every public function; these had no revoke. | `20260926110000` revokes them from everyone (every caller is a definer function — checked) |
+| S2 | Medium | `find_booking_conflicts` returned other guests' **booking references and dates** to anon. | Revoked from anon. *Residual:* a signed-in guest can still call it — the create-booking function needs it on the caller's JWT. |
+| S3 | Medium | `next_invoice_number` / `next_booking_reference` were callable by anon **and by any signed-in guest**. An invoice series must be gapless for GST. | Revoked from anon; both now refuse a non-staff direct caller (`current_user` check) while the definer paths that legitimately use them are unaffected. |
+| S4 | Low | `can_order_food`, `generate_guest_code`, `next_employee_code`, `seed_id` open to anon. | Revoked from anon. |
+
+`security.e2e.mjs` (36 checks) now guards all of it, and also proves booking,
+invoicing and notifications still work through their definer paths.
+
+**Disclosure:** confirming S1–S3 required *calling* them. The probe **consumed
+one invoice number (HOS/26-27/0129) and one booking reference (HOS-1057)**, and
+briefly added two notifications (deleted). There is now a one-number gap in the
+invoice series. Sequences cannot be rewound; note it for whoever files the GST
+return.
+
+**Functional**
+
+| # | Found | Fix |
+|---|---|---|
+| B1 | `GuestBookingPage` called a hook after an early return — React's rules-of-hooks, so the page could throw "rendered more hooks" when the stay arrived a moment after the page. The only lint *error*. | Hook moved above the return. |
+| B2 | A **processed full refund left the booking "partial"** with the whole amount still paid. Refunding flips the payments to `refunded`, which re-ran `recalculate_payment_status`, which knew nothing of refunds. | `process_refund` sets the booking `refunded` after the payment update; the recalculation now leaves cancelled/rejected/no-show bookings alone. Regression test added. |
+| B3 | A cancelled booking read **"Cancelled · Paid in full"**. | Guest booking, guest dashboard and admin booking header now show the refund state ("Refund pending", "Refunded", "Cancellation charge applied", "Nothing to refund"). |
+| B4 | Housekeeping's **Send to clean / Mark clean did nothing** (`saveRoom` ignored `status`). | Now `set_room_status`; occupied rooms show "Cleaning queued". (Round 16.) |
+| B5 | Auto-assign switch stayed on the old answer for 3–4 s (waited for a ~20-query refetch). Looked broken; a second click was ignored. | Updates at once, refetches in the background. |
+
+**Data**
+
+| # | Found | Fix |
+|---|---|---|
+| D1 | HOS-1010 was cancelled before refunds were tracked: a refunded payment but **no refund record**, so Cancellations and the Bookings report could not see it. | Backfilled from its own payments (`legacy: true`, marked processed). |
+| D2 | HOS-1003 and HOS-1007 marked **paid with a balance** (₹581, ₹991). | Labels recomputed to `partial`. No amount changed. |
+| D3 | **Left alone, needs a decision:** HOS-1004 and HOS-1009 have `amount_paid` ₹708 / ₹710 higher than their approved payments. This is the round-three "I4" fix, which moved the amount received to match the total rather than the receipts. Both are completed demo stays. | Correcting it shows a small balance on a finished stay; not changed without your say-so. |
+
+**Missing UI**
+
+| # | Found | Fix |
+|---|---|---|
+| U1 | Lost & found retention days (30 / 90 / 180) drive due dates in the database but had **no screen**. | Added under Settings → Property. |
+| U2 | Lint: `wifi_configure_villa` typed its empty array as `text`. | Fixed in `20260926110000`. |
+
+**Tests that were wrong, not the product** (fixed so they stay useful): the
+waiting-list suite counted every live row and failed when real guests queued;
+four suites assumed a villa is *whole* and *free today* — villas are now split
+in places and booked solid. They pick rooms and windows themselves.
+
+### Things my own testing did to the live data, and how it was put back
+
+Worth recording, because a QA pass that quietly changes the thing it is testing
+is its own kind of bug.
+
+| What happened | Cause | Put right |
+|---|---|---|
+| **10 rooms were left flagged "cleaning"** (all of Maaya and Nirvaana, three of Praana) | The Wi-Fi suite checks a stay out, and *checking out flags the stay's rooms for cleaning* (a real trigger); the suite then deleted the stay, so the flag outlived it. The browser test's "undo" also clicked a sidebar link that merely contained the word "Cancel", so the room it queued was never released. | All 10 released (Praana D-1, genuinely being cleaned before testing began, was left alone). The Wi-Fi suite now snapshots every room's flag and restores it; the browser test matches buttons exactly. |
+| **Auto-assign was left switched ON** after a browser run | The UI-driven toggle test raced the page's refresh and could end on the wrong side. | Set back to off. The browser script now records the setting first, judges the switch by the **database** rather than by how fast the page redraws, and restores it through the API in all cases. |
+| One invoice number and one booking reference consumed | The security probe (S3, above) | Cannot be undone — see the disclosure under S3. |
+
+Both scripts now leave the database as they found it; five consecutive runs
+confirmed it (auto-assign off, only Praana D-1 flagged).
+
+One browser-test failure I could **not** explain: the "proper address moves on
+to step 4" check failed on one run in eleven, at a time the machine was busy.
+The step itself takes about 25 ms when measured, no run showed a JS error, and
+five clean runs followed. The check now waits for the step to change rather than
+sleeping a fixed 500 ms. If it ever fails again it prints the field's value, the
+error text and the step it is on.
+
+### Open
+
+1. **Voucher email is not live.** `send-notification` deployed is the old
+   version (the deploy is refused, 403, for this CLI's account). Run
+   `npx supabase functions deploy send-notification` from your own account.
+2. `wifi-controller` is written but **not deployed** for the same reason; the app
+   defaults to the mock controller and does not need it.
+3. D3 above.
+4. Lint still lists ~20 React-compiler *warnings* (state set inside effects,
+   `Date.now()` in render). None fails; none changed behaviour in the crawl.
+5. A signed-in guest can still call `find_booking_conflicts` (S2 residual).

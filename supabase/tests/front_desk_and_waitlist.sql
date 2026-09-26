@@ -142,7 +142,9 @@ begin
   values (hk_dept, 'waitlist.manage');
   perform set_config('role', 'authenticated', true);
 
-  select count(*) into n from public.waitlist;
+  -- Only this test's own two rows: the live table also holds real entries, and
+  -- counting those made the check fail whenever somebody genuinely queued.
+  select count(*) into n from public.waitlist where customer_id in (guest_a, guest_b);
   insert into res values ('7 after granting waitlist.manage',
     case when n = 2 then '2 (correct)' else n::text || ' rows — wrong, wanted 2' end);
 

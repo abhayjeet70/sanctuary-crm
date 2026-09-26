@@ -385,6 +385,7 @@ export const toSettings = (row: unknown): PropertySettings => {
     hsnCode: x.hsn_code ?? "996311",
     invoiceDeclaration: x.invoice_declaration ?? "",
     signatoryName: x.signatory_name ?? "",
+    signaturePath: x.signature_path ?? "",
     diningMenu: x.dining_menu ?? "",
     addons: x.addons ?? "",
     stayTerms: x.stay_terms ?? "",
@@ -402,6 +403,9 @@ export const toSettings = (row: unknown): PropertySettings => {
     ],
     cancellationNote: x.cancellation_note ?? "",
     autoAssignRequests: x.auto_assign_requests ?? false,
+    lostFoundRetentionDays: x.lost_found_retention_days ?? 90,
+    lostFoundHighValueRetentionDays: x.lost_found_high_value_retention_days ?? 180,
+    lostFoundSensitiveRetentionDays: x.lost_found_sensitive_retention_days ?? 30,
   };
 };
 
@@ -433,6 +437,7 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   hsnCode: "hsn_code",
   invoiceDeclaration: "invoice_declaration",
   signatoryName: "signatory_name",
+  signaturePath: "signature_path",
   diningMenu: "dining_menu",
   addons: "addons",
   stayTerms: "stay_terms",
@@ -447,6 +452,9 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   cancellationTiers: "cancellation_tiers",
   cancellationNote: "cancellation_note",
   autoAssignRequests: "auto_assign_requests",
+  lostFoundRetentionDays: "lost_found_retention_days",
+  lostFoundHighValueRetentionDays: "lost_found_high_value_retention_days",
+  lostFoundSensitiveRetentionDays: "lost_found_sensitive_retention_days",
 };
 
 export const toDepartment = (row: unknown): Department => {

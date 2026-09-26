@@ -2,6 +2,15 @@ import { Eyebrow, StatusBadge } from "@/components/common";
 import { formatDate, money } from "@/lib/format";
 import type { Refund } from "@/types";
 
+/** What to print where a cancelled booking would otherwise say "Paid in full". */
+export function refundBadge(refund: Refund): { label: string; tone: "pending" | "confirmed" | "completed" } {
+  if (refund.status === "pending") return { label: "Refund pending", tone: "pending" };
+  if (refund.status === "processed") {
+    return { label: refund.refundAmount >= refund.amountPaid ? "Refunded" : "Part refunded", tone: "confirmed" };
+  }
+  return { label: refund.retained > 0 ? "Cancellation charge applied" : "Nothing to refund", tone: "completed" };
+}
+
 const STATE = {
   not_due: { label: "No refund due", tone: "completed" },
   pending: { label: "Refund pending", tone: "pending" },

@@ -42,7 +42,7 @@ import { EmailGuestButton, GuestAccessPanel } from "@/components/booking/GuestAc
 import { SendBookingDetails } from "@/components/booking/SendBookingDetails";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
 import { CancelBookingDialog } from "@/components/booking/CancelBookingDialog";
-import { RefundSummary } from "@/components/booking/RefundSummary";
+import { RefundSummary, refundBadge } from "@/components/booking/RefundSummary";
 import { RejectPaymentDialog } from "@/components/payment/RejectPaymentDialog";
 import {
   useActivity,
@@ -113,7 +113,8 @@ export default function BookingDetailPage() {
 
   const { booking, villa, customer, roomNames, totals } = view;
   const status = bookingStatus.get(booking.status);
-  const pay = paymentStatus.get(booking.paymentStatus);
+  const refundRow = refunds.find((r) => r.bookingId === booking.id);
+  const pay = refundRow ? refundBadge(refundRow) : paymentStatus.get(booking.paymentStatus);
   const nights = nightsBetween(booking.checkIn, booking.checkOut);
   // What was agreed, or the villa's standard hours where nothing was.
   const times = stayTimes(booking, villa);

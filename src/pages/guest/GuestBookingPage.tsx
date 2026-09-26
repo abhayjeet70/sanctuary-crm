@@ -14,7 +14,7 @@ import { stayTimes } from "@/services/domain";
 import { useGuestStay } from "@/hooks/useGuest";
 import { useMockData, usePreferencesForBooking } from "@/hooks/useData";
 import { CancelBookingDialog } from "@/components/booking/CancelBookingDialog";
-import { RefundSummary } from "@/components/booking/RefundSummary";
+import { RefundSummary, refundBadge } from "@/components/booking/RefundSummary";
 import { policyFields, policyHeadline } from "@/lib/cancellation";
 import { hasPreferences } from "@/lib/preferences";
 import { bookingStatus, bookingSource, paymentStatus } from "@/lib/status";
@@ -34,12 +34,18 @@ export default function GuestBookingPage() {
   const { refunds, settings } = useMockData();
   const [cancelOpen, setCancelOpen] = useState(false);
 
+  // Hooks first, always: the early return below used to sit above this call, so
+  // when the stay arrived a moment after the page (view null, then present) React
+  // saw one hook more than on the previous render and threw.
+  const prefs = usePreferencesForBooking(view?.booking.id);
+
   if (!view) return <ErrorState className="m-5" title="No stay found" />;
   const { booking, villa, roomNames, totals } = view;
-  const prefs = usePreferencesForBooking(booking.id);
 
   const status = bookingStatus.get(booking.status);
-  const pay = paymentStatus.get(booking.paymentStatus);
+  const refund = refunds.find((r) => r.bookingId === booking.id);
+  // A cancelled stay says what happened to the money, not "Paid in full".
+  const pay = refund ? refundBadge(refund) : paymentStatus.get(booking.paymentStatus);
   const nights = nightsBetween(booking.checkIn, booking.checkOut);
   // What was agreed for this stay, not the villa's standard hours.
   const times = stayTimes(booking, villa);

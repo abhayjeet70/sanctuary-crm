@@ -38,15 +38,24 @@ for (const [c, email] of [[owner, "admin@gmail.com"], [manager, "manager@gmail.c
 }
 
 // ---- a stay that is live right now, found on whichever villa is free
-const villas = one({ data: [(await owner.from("villas").select("id, name, check_out_time").order("name")).data] });
+const villas = one({ data: [(await owner.from("villas").select("id, name, mode, check_out_time").order("name")).data] });
 const created = [];
+// Checking a stay out flags its rooms for cleaning (a real trigger). The test deletes
+// the stay, but the flag would outlive it — so remember every room's flag and put it back.
+const roomFlagsBefore = new Map((await owner.from("rooms").select("id, status")).data.map((r) => [r.id, r.status]));
 async function liveStay(from, to) {
   for (const v of villas) {
+    // A split villa needs a room named; try each room until one is free.
+    const rooms = v.mode === "split"
+      ? (await owner.from("rooms").select("id").eq("villa_id", v.id).order("name")).data.map((x) => [x.id])
+      : [[]];
+    for (const room of rooms) {
     const r = await guest.rpc("request_booking", {
-      p_villa_id: v.id, p_room_ids: [], p_check_in: from, p_check_out: to, p_adults: 3, p_children: 0,
+      p_villa_id: v.id, p_room_ids: room, p_check_in: from, p_check_out: to, p_adults: 3, p_children: 0,
       p_special_requests: "WIFI E2E — safe to delete", p_check_in_time: null, p_check_out_time: null, p_prefs: null,
     });
     if (!r.error) { created.push(r.data.id); return { id: r.data.id, villa: v }; }
+    }
   }
   return null;
 }
@@ -100,8 +109,12 @@ try {
   // Check-out moved through update_booking, as the edit screen does: shortened
   // a night, then extended back into dates this stay already holds.
   const b0 = (await owner.from("bookings").select("*").eq("id", bid).single()).data;
+  // A whole-villa booking passes no rooms; a split one must name the ones it holds.
+  const heldRooms = b0.booking_mode === "split"
+    ? (await owner.from("booking_rooms").select("room_id").eq("booking_id", bid)).data.map((r) => r.room_id)
+    : [];
   const moveTo = (out) => owner.rpc("update_booking", {
-    p_booking_id: bid, p_villa_id: b0.villa_id, p_room_ids: [], p_check_in: b0.check_in,
+    p_booking_id: bid, p_villa_id: b0.villa_id, p_room_ids: heldRooms, p_check_in: b0.check_in,
     p_check_out: out, p_adults: b0.adults, p_children: b0.children, p_source: b0.source,
     p_nightly_rate: b0.nightly_rate,
   });
@@ -204,6 +217,10 @@ try {
   console.error("ERROR", e.message);
 } finally {
   for (const id of created) await owner.from("bookings").delete().eq("id", id);
+  for (const r of (await owner.from("rooms").select("id, status")).data) {
+    const was = roomFlagsBefore.get(r.id);
+    if (was && r.status !== was) await owner.rpc("set_room_status", { p_room_id: r.id, p_status: was });
+  }
   const left = (await owner.from("wifi_devices").select("id").in("booking_id", created.length ? created : ["00000000-0000-0000-0000-000000000000"])).data;
   check("cleanup: test stays and their Wi-Fi rows removed", left.length === 0);
 }
