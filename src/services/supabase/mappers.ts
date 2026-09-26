@@ -549,6 +549,7 @@ export const toStayPreferences = (row: unknown): StayPreferences => {
     foodNotes: x.food_notes ?? "",
     occasions: x.occasions ?? [],
     specialRequests: x.special_requests ?? "",
+    mealChoices: (x.meal_choices as unknown as Record<string, string[]>) ?? {},
     createdAt: x.created_at,
   };
 };

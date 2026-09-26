@@ -75,6 +75,8 @@ function voucherHtml(v: {
   amountLabel: string;
   amount: string;
   meals: string;
+  /** "Breakfast: Upma, Poha · Dessert: Kesari Kheer" — empty when they chose none. */
+  menu: string;
   breakfast: string;
   status: string;
   reference: string;
@@ -107,6 +109,7 @@ function voucherHtml(v: {
   ${row("Number of guests", v.guests)}
   ${row(v.amountLabel, v.amount)}
   ${row("Meals", v.meals)}
+  ${v.menu ? row("Menu choices", v.menu) : ""}
   ${row("Breakfast", v.breakfast)}
   ${row("Booking status", v.status.toUpperCase())}
 </table></td></tr>
@@ -284,7 +287,7 @@ Deno.serve(async (req) => {
   if (kind === "booking_voucher") {
     const [{ data: settings }, { data: prefs }] = await Promise.all([
       supabase.from("property_settings").select("*").maybeSingle(),
-      supabase.from("stay_preferences").select("meals").eq("booking_id", bookingId).maybeSingle(),
+      supabase.from("stay_preferences").select("meals, meal_choices").eq("booking_id", bookingId).maybeSingle(),
     ]);
     const b = booking as unknown as Record<string, string | number>;
     const cfg = (settings ?? {}) as Record<string, string>;
@@ -293,6 +296,11 @@ Deno.serve(async (req) => {
     const adults = Number(b.adults ?? 1);
     const children = Number(b.children ?? 0);
     const pickedMeals = (prefs?.meals ?? []) as string[];
+    const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+    const menu = Object.entries((prefs?.meal_choices ?? {}) as Record<string, string[]>)
+      .filter(([, d]) => Array.isArray(d) && d.length > 0)
+      .map(([slug, d]) => `${cap(slug.replace(/_/g, " "))}: ${d.join(", ")}`)
+      .join(" · ");
     const settled = Number(totals?.balance ?? 0) <= 0;
     html = voucherHtml({
       guest,
@@ -308,6 +316,7 @@ Deno.serve(async (req) => {
       amountLabel: settled ? "Total amount paid" : "Total amount",
       amount: rupees(Number(settled ? totals?.paid : totals?.total) || 0),
       meals: pickedMeals.length ? pickedMeals.map((m) => m.replace(/_/g, " ")).join(", ") : "À la carte — not included",
+      menu,
       breakfast: cfg.breakfast_line || "—",
       status: String(b.status ?? "").replace(/_/g, " "),
       reference: booking.reference,

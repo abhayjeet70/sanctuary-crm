@@ -7,7 +7,7 @@ import { supabase } from "@/services/supabase/client";
 import { usePreferencesForBooking, useSettings } from "@/hooks/useData";
 import { formatDate, money } from "@/lib/format";
 import { stayTimes } from "@/services/domain";
-import { CUISINES, DIETARY, MEALS, OCCASIONS, label } from "@/lib/preferences";
+import { CUISINES, DIETARY, MEALS, OCCASIONS, label, mealChoiceLines } from "@/lib/preferences";
 import type { BookingView } from "@/hooks/useData";
 
 /**
@@ -38,6 +38,7 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
         prefs.meals.length ||
         prefs.cuisines.length ||
         prefs.allergies ||
+        Object.keys(prefs.mealChoices ?? {}).length ||
         prefs.occasions.length),
   );
 
@@ -57,6 +58,7 @@ export function SendBookingDetails({ view }: { view: BookingView }) {
     (prefs?.cuisines.length
       ? `Kitchen: ${prefs.cuisines.map((c) => label(CUISINES, c)).join(", ")}\n`
       : "") +
+    mealChoiceLines(prefs?.mealChoices).map((l) => `Menu — ${l}\n`).join("") +
     (prefs?.allergies ? `Allergies noted: ${prefs.allergies}\n` : "") +
     (prefs?.occasions.length
       ? `We have noted: ${prefs.occasions.map((o) => label(OCCASIONS, o)).join(", ")}\n`

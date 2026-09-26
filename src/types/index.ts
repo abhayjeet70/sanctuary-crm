@@ -442,7 +442,29 @@ export interface StayPreferences {
    *  accessibility · other */
   occasions: string[];
   specialRequests: string;
+  /** Dishes picked from the property's menu, by course: `{ breakfast: ["Upma"] }`. */
+  mealChoices: Record<string, string[]>;
   createdAt: ISODateTime;
+}
+
+/** A course the property offers guests to choose from. */
+export interface MealCategory {
+  id: ID;
+  slug: string;
+  label: string;
+  /** Most a guest may pick from it. Null means any number. */
+  maxChoices: number | null;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface MealOption {
+  id: ID;
+  categoryId: ID;
+  name: string;
+  description: string;
+  sortOrder: number;
+  active: boolean;
 }
 
 /** What the forms send. The RPC lands each field in its own column. */
@@ -456,6 +478,7 @@ export type StayPreferencesDraft = Pick<
   | "foodNotes"
   | "occasions"
   | "specialRequests"
+  | "mealChoices"
 >;
 
 /* ----------------------------------------------------------------- payments */

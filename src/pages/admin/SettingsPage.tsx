@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eyebrow, LoadingState, PageHeader } from "@/components/common";
 import { MenuManager } from "./MenuManager";
+import { MealOptionsManager } from "./MealOptionsManager";
 import { CancellationPolicyEditor } from "./CancellationPolicyEditor";
 import { SignatureUpload } from "@/components/admin/SignatureUpload";
 import { TaxManager } from "./TaxManager";
@@ -93,6 +94,7 @@ export default function SettingsPage() {
           <TabsTrigger value="property" className={TAB}>Property</TabsTrigger>
           <TabsTrigger value="departments" className={TAB}>Departments</TabsTrigger>
           <TabsTrigger value="menu" className={TAB}>Menu</TabsTrigger>
+          <TabsTrigger value="mealchoices" className={TAB}>Guest menu choices</TabsTrigger>
           <TabsTrigger value="villas" className={TAB}>Villas</TabsTrigger>
           <TabsTrigger value="account" className={TAB}>Account</TabsTrigger>
           <TabsTrigger value="demo" className={TAB}>
@@ -418,6 +420,11 @@ export default function SettingsPage() {
         {/* ---------------------------------------------------------- menu */}
         <TabsContent value="menu" className="pt-5">
           <MenuManager />
+        </TabsContent>
+
+        {/* ------------------------------------------------ guest menu choices */}
+        <TabsContent value="mealchoices" className="pt-5">
+          <MealOptionsManager />
         </TabsContent>
 
         {/* -------------------------------------------------------- villas */}

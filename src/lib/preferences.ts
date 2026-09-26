@@ -59,6 +59,7 @@ export const EMPTY_PREFERENCES: StayPreferencesDraft = {
   foodNotes: "",
   occasions: [],
   specialRequests: "",
+  mealChoices: {},
 };
 
 /** True when the guest actually told us something worth showing. */
@@ -72,6 +73,7 @@ export function hasPreferences(prefs?: StayPreferences | StayPreferencesDraft): 
       prefs.dietaryNotes.trim() ||
       prefs.foodNotes.trim() ||
       prefs.occasions.length ||
+      Object.keys(prefs.mealChoices ?? {}).length ||
       prefs.specialRequests.trim(),
   );
 }
@@ -92,4 +94,20 @@ export function kitchenLine(prefs?: StayPreferences): string {
   if (prefs.allergies.trim()) parts.push(`Allergies: ${prefs.allergies.trim()}`);
   if (prefs.dietaryNotes.trim()) parts.push(prefs.dietaryNotes.trim());
   return parts.join(" · ");
+}
+
+/** "breakfast" → "Breakfast", "high_tea" → "High tea". */
+const courseName = (slug: string) => {
+  const t = slug.replace(/_/g, " ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+/**
+ * The menu choices as one line each — `Breakfast: Upma, Poha` — for the voucher,
+ * the confirmation and anywhere else a sentence is wanted rather than chips.
+ */
+export function mealChoiceLines(choices?: Record<string, string[]>): string[] {
+  return Object.entries(choices ?? {})
+    .filter(([, dishes]) => dishes.length > 0)
+    .map(([slug, dishes]) => `${courseName(slug)}: ${dishes.join(", ")}`);
 }

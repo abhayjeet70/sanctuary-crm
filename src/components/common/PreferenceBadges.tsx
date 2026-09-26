@@ -1,6 +1,6 @@
 import { AlertTriangle, Cake, Clock, UtensilsCrossed } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CUISINES, DIETARY, MEALS, OCCASIONS, label } from "@/lib/preferences";
+import { CUISINES, DIETARY, MEALS, OCCASIONS, label, mealChoiceLines } from "@/lib/preferences";
 import type { StayPreferences } from "@/types";
 
 /**
@@ -38,6 +38,10 @@ export function PreferenceBadges({
     }
     for (const cuisine of preferences.cuisines) {
       chips.push({ key: `c-${cuisine}`, text: label(CUISINES, cuisine), tone: "plain" });
+    }
+    // What they actually picked from the menu: the kitchen plans from this.
+    for (const line of mealChoiceLines(preferences.mealChoices)) {
+      chips.push({ key: `dish-${line}`, text: line, tone: "plain" });
     }
     // An allergy is the one line that must never be skimmed past, so it is
     // toned apart from the preferences around it.

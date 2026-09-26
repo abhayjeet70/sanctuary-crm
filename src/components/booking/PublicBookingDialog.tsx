@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyState, StatusBadge } from "@/components/common";
 import { ChipGroup, DiningInfo, PaymentAndPolicies } from "@/components/booking/StayInfo";
+import { MealChoices } from "@/components/booking/MealChoices";
 import { VoucherCard } from "@/components/booking/VoucherDocument";
 import { supabase } from "@/services/supabase/client";
 import { toSettings } from "@/services/supabase/mappers";
@@ -40,6 +41,7 @@ import {
   MEALS,
   OCCASIONS,
   label,
+  mealChoiceLines,
   toggle,
 } from "@/lib/preferences";
 import { clearDraft, saveDraft, submitDraft, type BookingDraft } from "@/lib/pendingBooking";
@@ -237,6 +239,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
     const sub = nightly * nights;
     const total = Math.round(sub * (1 + (nightly > 7500 ? 0.18 : 0.12)));
     const arrangements = [
+      ...mealChoiceLines(prefs.mealChoices),
       ...prefs.occasions.map((o) => label(OCCASIONS, o)),
       prefs.allergies ? `Allergies noted: ${prefs.allergies}` : null,
       prefs.dietaryNotes || null,
@@ -664,6 +667,10 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                   </DialogDescription>
                 </DialogHeader>
                 <DiningInfo settings={info} />
+                <MealChoices
+                  value={prefs.mealChoices}
+                  onChange={(mealChoices) => setPrefs({ ...prefs, mealChoices })}
+                />
                 <Field label="Dietary preference" htmlFor="pb-dietary">
                   <Select
                     value={prefs.dietary}

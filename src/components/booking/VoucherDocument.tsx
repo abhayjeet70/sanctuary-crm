@@ -4,7 +4,7 @@ import { usePreferencesForBooking, useSettings } from "@/hooks/useData";
 import { formatDate, money, nightsBetween } from "@/lib/format";
 import { bookingStatus } from "@/lib/status";
 import { stayTimes, toISODate } from "@/services/domain";
-import { MEALS, OCCASIONS, label } from "@/lib/preferences";
+import { MEALS, OCCASIONS, label, mealChoiceLines } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import { lines } from "@/components/booking/StayInfo";
 import type { BookingView } from "@/hooks/useData";
@@ -172,6 +172,7 @@ export function VoucherDocument({
   const times = stayTimes(booking, villa);
 
   const arrangements = [
+    ...mealChoiceLines(prefs?.mealChoices),
     ...(prefs?.occasions.map((o) => label(OCCASIONS, o)) ?? []),
     prefs?.allergies ? `Allergies noted: ${prefs.allergies}` : null,
     prefs?.dietaryNotes || null,

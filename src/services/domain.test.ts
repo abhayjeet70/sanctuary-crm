@@ -7,6 +7,7 @@ import { companionAccess } from "../lib/companions";
 import { cleanPhone, isPhone } from "../lib/format";
 import { csvField, toCsv } from "../lib/csv";
 import { emailProblem, isValidEmail } from "../lib/email";
+import { hasPreferences, mealChoiceLines, EMPTY_PREFERENCES } from "../lib/preferences";
 import {
   addDays,
   bookingTotals,
@@ -535,5 +536,12 @@ assert.match(emailProblem("dollarsidestories@gmial.com") ?? "", /gmail\.com/, "a
 assert.match(emailProblem("x@yahooo.com") ?? "", /yahoo\.com/);
 assert.equal(emailProblem("", { required: false }), null, "an optional field may be empty");
 assert.notEqual(emailProblem("sam@", { required: false }), null, "but not half-filled");
+
+/* ------------------------------------------------------------ menu choices */
+assert.deepEqual(mealChoiceLines({ breakfast: ["Upma", "Poha"], high_tea: ["Samosa"] }), ["Breakfast: Upma, Poha", "High tea: Samosa"], "one line per course, slugs made readable");
+assert.deepEqual(mealChoiceLines({ dessert: [] }), [], "an emptied course leaves no line");
+assert.deepEqual(mealChoiceLines(undefined), [], "no choices, no lines");
+assert.equal(hasPreferences(EMPTY_PREFERENCES), false, "a blank form says nothing");
+assert.equal(hasPreferences({ ...EMPTY_PREFERENCES, mealChoices: { lunch: ["Dal Makhani"] } }), true, "menu picks alone count as telling us something");
 
 console.log("domain.ts — all checks passed");

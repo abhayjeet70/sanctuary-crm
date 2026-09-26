@@ -1165,6 +1165,31 @@ edge of the page.
 content present, no blank band, nothing past the right margin, dark fills kept,
 page count sane (Overview 4 pages, Analysis 2, Bookings 3, Statements 2).
 
+### Guest menu choices (26 September)
+
+The booking form's dining section was a block of text the guest could read but
+not answer. It is now a dropdown per course — Breakfast, Lunch, Dinner, Dessert,
+Beverages — in which the guest ticks any number of dishes, up to a limit the
+property sets per course ("choose up to 2" for breakfast, "choose any" for lunch).
+
+- **Admin:** Settings → **Guest menu choices**. Add, rename, reorder, switch off and
+  delete courses and dishes; set each course's limit. Live immediately. Deleting
+  asks first; switching off hides without deleting.
+- **Schema** (`20260926150000_meal_options`): `meal_categories`, `meal_options`
+  (readable by anon — live rows only — because the popup runs before sign-in;
+  editable by management) and `stay_preferences.meal_choices` (jsonb, by course slug).
+  Choices are stored as the **dish names**, so renaming a dish later never rewrites
+  what a guest picked. `save_stay_preferences` now drops unknown courses and
+  **enforces each course's limit in the database**; `convert_waitlist_entry` carries
+  choices from a waiting-list entry onto the booking it becomes.
+- **Where the picks appear:** the voucher preview and the printed voucher ("We have
+  noted"), the WhatsApp message, the emailed voucher (`send-notification`
+  redeployed), and as chips wherever preferences show (booking, kitchen, front desk).
+- **Tests:** `meal_options.e2e.mjs` (20 live checks — visibility, limits, dropped
+  courses, rename-safety, waiting-list carry-over) and `scripts/browser-qa/menu.mjs`
+  (20 real-browser checks — the dropdowns, the limit, the voucher, and an admin
+  adding, hiding and deleting a course that guests then see).
+
 ### Open
 
 1. ~~Voucher email is not live.~~ **Deployed 26 Sept** with a Supabase token that has

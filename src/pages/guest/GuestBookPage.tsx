@@ -25,6 +25,7 @@ import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useMockData, useSettings, useVillas, useWaitlist } from "@/hooks/useData";
 import { useGuestStay } from "@/hooks/useGuest";
 import { ChipGroup, DiningInfo, PaymentAndPolicies } from "@/components/booking/StayInfo";
+import { MealChoices } from "@/components/booking/MealChoices";
 import { supabase } from "@/services/supabase/client";
 import { useSession } from "@/services/session";
 import { formatDateRange, money, nightsBetween } from "@/lib/format";
@@ -644,6 +645,10 @@ export default function GuestBookPage() {
         subtitle="So the kitchen can plan before you arrive rather than after."
       >
         <DiningInfo settings={settings} />
+        <MealChoices
+          value={prefs.mealChoices}
+          onChange={(mealChoices) => setPrefs({ ...prefs, mealChoices })}
+          />
         <div className="mt-5 space-y-5">
           <Field id="dietary" label="Dietary preference">
             <Select
