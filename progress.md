@@ -1148,11 +1148,16 @@ error text and the step it is on.
 
 ### Open
 
-1. **Voucher email is not live.** `send-notification` deployed is the old
-   version (the deploy is refused, 403, for this CLI's account). Run
-   `npx supabase functions deploy send-notification` from your own account.
-2. `wifi-controller` is written but **not deployed** for the same reason; the app
-   defaults to the mock controller and does not need it.
+1. ~~Voucher email is not live.~~ **Deployed 26 Sept** with a Supabase token that has
+   the Edge Functions scope (`send-notification`, and `wifi-controller` with it).
+   Verified live: `send-notification` accepts `booking_voucher`; `wifi-controller`
+   refuses an anonymous caller and a guest with no live stay. **Still needs a mail
+   provider:** no `RESEND_API_KEY` / `SMTP_*` / `NOTIFY_FROM` secret is set, so the
+   email reports "not configured" until one is (Edge Functions → Secrets, or
+   `npm run configure-email`). Until a sending domain is verified in Resend, mail
+   only reaches the account owner's own address.
+2. `wifi-controller` is deployed but unused: the app stays on the mock controller
+   unless `VITE_WIFI_CONTROLLER=edge`.
 3. D3 above.
 4. Lint still lists ~20 React-compiler *warnings* (state set inside effects,
    `Date.now()` in render). None fails; none changed behaviour in the crawl.
