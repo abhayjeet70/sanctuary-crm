@@ -73,7 +73,10 @@ export function WifiDevicesTable({
     setBusy(false);
     if (!r.ok) return toast.error("Could not do that", { description: r.error });
     toast.success(confirm.action === "revoke" ? "Access revoked" : "Device disconnected", {
-      description: "Recorded in the CRM · Controller: Mock — no network was changed.",
+      description:
+        r.controller === "mock"
+          ? "Recorded in the CRM · Controller: Mock — no network was changed."
+          : "Recorded in the CRM and sent to the network controller.",
     });
     setConfirm(null);
     setReason("");
@@ -90,12 +93,9 @@ export function WifiDevicesTable({
   const extend = async () => {
     if (!extending || !until) return;
     setBusy(true);
-    const { error } = await supabase.rpc("wifi_extend", {
-      p_device_id: extending.id,
-      p_until: new Date(until).toISOString(),
-    });
+    const r = await wifiController.extendDevice({ deviceId: extending.id, until });
     setBusy(false);
-    if (error) return toast.error("Could not extend", { description: error.message });
+    if (!r.ok) return toast.error("Could not extend", { description: r.error });
     toast.success("Access extended");
     setExtending(null);
     onChanged();

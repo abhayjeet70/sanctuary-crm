@@ -51,6 +51,9 @@ export interface Villa {
   /** What the Wi-Fi controller calls this network. Empty until hardware is connected. */
   wifiNetworkId?: string;
   wifiConfigurationNotes?: string;
+  /** VLAN the guest network is tagged with, and access points installed. */
+  wifiVlanId?: number;
+  wifiApCount?: number;
   /** Overrides the property-wide policy for this villa. Null means "same as all". */
   cancellationPolicy?: CancellationPolicy | null;
   rooms: Room[];

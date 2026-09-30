@@ -11,6 +11,7 @@ import { WifiDevicesTable } from "@/components/wifi/WifiDevicesTable";
 import { useWifiAdmin } from "@/hooks/useWifi";
 import { useMockData } from "@/hooks/useData";
 import { usePermission } from "@/services/session";
+import { wifiController } from "@/services/wifi/controller";
 import { supabase } from "@/services/supabase/client";
 import type { Villa } from "@/types";
 
@@ -63,7 +64,7 @@ export function VillaWifiPanel({ villa }: { villa: Villa }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Wifi className="size-4 text-gold-700" aria-hidden />
-          <Eyebrow className="text-gold-700">Guest Wi-Fi</Eyebrow>
+          <Eyebrow className="text-gold-700">Captive Wi-Fi</Eyebrow>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge
@@ -78,7 +79,7 @@ export function VillaWifiPanel({ villa }: { villa: Villa }) {
             label={initial.networkId ? "Controller linked" : "No controller linked"}
             tone={initial.networkId ? "confirmed" : "pending"}
           />
-          <ControllerTag kind="mock" />
+          <ControllerTag kind={wifiController.kind === "edge" ? "edge" : "mock"} />
         </div>
       </div>
 

@@ -116,8 +116,8 @@ export default function VillasListPage() {
                           key={room.id}
                           className={
                             held
-                              ? "rounded-md bg-status-inhouse-bg py-1.5 text-center text-xs text-status-inhouse"
-                              : "rounded-md bg-status-confirmed-bg py-1.5 text-center text-xs text-status-confirmed"
+                              ? "rounded-md bg-status-inhouse-solid py-1.5 text-center text-xs text-white"
+                              : "rounded-md bg-status-confirmed-solid py-1.5 text-center text-xs text-white"
                           }
                           title={`${room.name} — ${held ? "held" : "free"} today`}
                         >

@@ -38,7 +38,7 @@ import { GuestShell } from "@/components/layout/GuestShell";
 import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
 import GuestBookPage from "@/pages/guest/GuestBookPage";
 import CancellationsPage from "@/pages/admin/CancellationsPage";
-import WifiPage from "@/pages/admin/WifiPage";
+import CaptiveWifiPage from "@/pages/admin/CaptiveWifiPage";
 import WifiPortalPage from "@/pages/wifi/WifiPortalPage";
 import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
 import GuestVoucherPage from "@/pages/guest/GuestVoucherPage";
@@ -171,7 +171,7 @@ export function AppRoutes() {
         <Route path="lost-found" element={<LostFoundPage />} />
         <Route path="maintenance" element={<MaintenancePage />} />
         <Route path="amenities" element={<AmenitiesPage />} />
-        <Route path="wifi" element={<WifiPage />} />
+        <Route path="wifi" element={<CaptiveWifiPage />} />
         <Route path="enquiries" element={<EnquiriesPage />} />
         <Route path="waitlist" element={<WaitlistPage />} />
         <Route path="quotes" element={<QuotesPage />} />

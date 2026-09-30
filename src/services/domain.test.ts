@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import type { Booking, BookingCompanion, LostItemStatus } from "../types";
 import { isDueSoon, isOverdue } from "../lib/lostFound";
 import { companionAccess, stayIsLive } from "../lib/companions";
+import { hardwarePlan, hostOf, parsePortalRedirect, walledGarden } from "../lib/captiveWifi";
 import { cleanPhone, isPhone } from "../lib/format";
 import { csvField, toCsv } from "../lib/csv";
 import { emailProblem, isValidEmail } from "../lib/email";
@@ -553,5 +554,40 @@ assert.deepEqual(mealChoiceLines({ dessert: [] }), [], "an emptied course leaves
 assert.deepEqual(mealChoiceLines(undefined), [], "no choices, no lines");
 assert.equal(hasPreferences(EMPTY_PREFERENCES), false, "a blank form says nothing");
 assert.equal(hasPreferences({ ...EMPTY_PREFERENCES, mealChoices: { lunch: ["Dal Makhani"] } }), true, "menu picks alone count as telling us something");
+
+/* ------------------------------------------------------- captive Wi-Fi */
+const plan = hardwarePlan(
+  [
+    { name: "Maaya", bedrooms: 4, capacity: 8 },
+    { name: "Praana", bedrooms: 4, capacity: 8, installedAps: 3 },
+    { name: "Nirvaana", bedrooms: 5, capacity: 10 },
+  ],
+  { vendor: "unifi", outdoorZonesPerVilla: 1, failover: true },
+);
+assert.deepEqual(plan.perVilla.map((v) => v.indoorAps), [2, 2, 3], "one indoor AP per two bedrooms, rounded up");
+assert.equal(plan.totalAps, 3 + 3 + 4, "indoor plus one outdoor per villa");
+assert.equal(plan.perVilla[1].toBuy, 0, "what is installed comes off what to buy");
+assert.equal(plan.perVilla[0].switchPorts, 6, "every AP, an uplink and two spare");
+assert.equal(plan.recommendedMbps, 150, "26 guests x 3 devices x half active x 3 Mbps = 117, up to the next 50");
+assert.ok(plan.lines.some((l) => l.item === "Failover internet line"), "failover line only when asked");
+assert.equal(hardwarePlan([{ name: "A", bedrooms: 1, capacity: 2 }], { vendor: "mikrotik" }).perVilla[0].indoorAps, 1, "never fewer than one");
+assert.ok(!hardwarePlan([{ name: "A", bedrooms: 2, capacity: 2 }], { vendor: "unifi" }).lines.some((l) => l.item === "Failover internet line"));
+
+assert.equal(hostOf("https://crm.example.com/wifi"), "crm.example.com");
+assert.equal(hostOf("crm.example.com"), "crm.example.com", "a bare host is accepted");
+assert.equal(hostOf("not a url"), "");
+const garden = walledGarden("https://crm.example.com/wifi", "https://abc.supabase.co").map((g) => g.host);
+assert.ok(garden.includes("crm.example.com") && garden.includes("abc.supabase.co"), "the portal and its API must be reachable before sign-in");
+assert.ok(garden.includes("captive.apple.com") && garden.includes("connectivitycheck.gstatic.com"), "phones' detection hosts too");
+
+const unifi = parsePortalRedirect(new URLSearchParams("id=AA-BB-CC-DD-EE-FF&ap=11:22:33:44:55:66&ssid=Sanctuary-Maaya&url=https%3A%2F%2Fexample.com"));
+assert.equal(unifi.mac, "aa:bb:cc:dd:ee:ff", "UniFi puts the client MAC in id, dashes normalised");
+assert.equal(unifi.portal.apMac, "11:22:33:44:55:66");
+assert.equal(unifi.original, "https://example.com");
+const omada = parsePortalRedirect(new URLSearchParams("clientMac=aa:bb:cc:dd:ee:ff&apMac=11:22:33:44:55:66&ssidName=X&radioId=1&site=Default&redirectUrl=http://a.b"));
+assert.equal(omada.mac, "aa:bb:cc:dd:ee:ff");
+assert.equal(omada.portal.radioId, "1");
+assert.equal(parsePortalRedirect(new URLSearchParams("mac=not-a-mac")).mac, undefined, "a malformed MAC is dropped, not forwarded");
+assert.equal(parsePortalRedirect(new URLSearchParams("url=javascript:alert(1)")).original, undefined, "only http(s) may be offered as the way back");
 
 console.log("domain.ts — all checks passed");

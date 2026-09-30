@@ -65,12 +65,58 @@ export interface MyWifiAccess {
   expiresAt?: string;
 }
 
+/** What the controller's redirect to the portal tells us about the device. */
+export interface PortalParams {
+  apMac?: string;
+  ssidName?: string;
+  radioId?: string;
+  gatewayMac?: string;
+  vid?: string;
+  site?: string;
+}
+
+/** Which hardware family runs the network. */
+export type ControllerVendor = "mock" | "unifi" | "omada" | "mikrotik";
+
+/** The property's captive Wi-Fi configuration. The controller's LOGIN is not
+ *  here: it is an edge function secret and never reaches the browser. */
+export interface WifiSettings {
+  kind: ControllerVendor;
+  controllerUrl: string;
+  site: string;
+  controllerId: string;
+  portalUrl: string;
+  graceMinutes: number;
+  earlyHours: number;
+  maxDevices: number;
+  downKbps: number | null;
+  upKbps: number | null;
+  dataCapMb: number | null;
+  lastTestAt?: string;
+  lastTestOk?: boolean;
+  lastTestMessage: string;
+}
+
+export interface ControllerTestResult {
+  ok: boolean;
+  message: string;
+  /** Whether the edge function has its secrets — never their values. */
+  secrets?: { user: boolean; password: boolean };
+}
+
 export interface AuthorizeDeviceInput {
   deviceName: string;
   deviceType?: WifiDeviceType;
   /** Supplied by the controller's redirect in production; absent in a browser. */
   macAddress?: string;
   ipAddress?: string;
+  /** Extra detail from the redirect that some controllers need (Omada). */
+  portal?: PortalParams;
+}
+export interface ExtendDeviceInput {
+  deviceId: string;
+  /** ISO time. */
+  until: string;
 }
 export interface RevokeDeviceInput {
   deviceId: string;
@@ -97,6 +143,7 @@ export interface WifiControllerResult {
 export interface WifiController {
   readonly kind: ControllerKind;
   authorizeDevice(input: AuthorizeDeviceInput): Promise<WifiControllerResult>;
+  extendDevice(input: ExtendDeviceInput): Promise<WifiControllerResult>;
   revokeDevice(input: RevokeDeviceInput): Promise<WifiControllerResult>;
   disconnectDevice(input: DisconnectDeviceInput): Promise<WifiControllerResult>;
   getConnectedDevices(input: GetDevicesInput): Promise<WifiDevice[]>;

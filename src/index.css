@@ -58,6 +58,15 @@
   --color-status-completed-bg: #ece8e2;
   --color-status-inhouse: #4a7c8c;
   --color-status-inhouse-bg: #e3edf1;
+  /* Fills for solid badges, white text on top. All clear 4.5:1 except pending: a clean
+     yellow was asked for by choice, and white on yellow is only ~2.3:1 - the label is
+     semibold and always written out, so state is never carried by colour alone. */
+  --color-status-pending-solid: #d9a000;
+  --color-status-uploaded-solid: #7f68c1;
+  --color-status-confirmed-solid: #368551;
+  --color-status-cancelled-solid: #c6504c;
+  --color-status-completed-solid: #807569;
+  --color-status-inhouse-solid: #2680a0;
 
   /* --- Type --- */
   --font-display: "Playfair Display", "Cormorant Garamond", Georgia, serif;

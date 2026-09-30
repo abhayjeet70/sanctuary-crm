@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/services/supabase/client";
 import {
   fetchMyWifiAccess,
+  fetchWifiSettings,
   toWifiDevice,
   toWifiSession,
 } from "@/services/wifi/controller";
-import type { MyWifiAccess, WifiDevice, WifiSession } from "@/services/wifi/types";
+import type { MyWifiAccess, WifiDevice, WifiSession, WifiSettings } from "@/services/wifi/types";
 
 /**
  * Wi-Fi rows for staff. RLS returns nothing to anyone without wifi.view, so
@@ -72,4 +73,25 @@ export function useMyWifi() {
   }, [reload]);
 
   return { access, devices, reload };
+}
+
+/** The property's controller and policy. Only wifi.configure holders get it. */
+export function useWifiSettings(enabled = true) {
+  const [settings, setSettings] = useState<WifiSettings | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(enabled);
+
+  const reload = useCallback(async () => {
+    if (!enabled) return;
+    const r = await fetchWifiSettings();
+    setSettings(r.settings ?? null);
+    setError(r.error ?? null);
+    setLoading(false);
+  }, [enabled]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+
+  return { settings, error, loading, reload };
 }

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/common/PasswordInput";
 import { Logo, Photo } from "@/components/common";
 import { photo } from "@/lib/assets";
+import { parsePortalRedirect } from "@/lib/captiveWifi";
 import { formatDateTime } from "@/lib/format";
 import { useSession } from "@/services/session";
 import { fetchMyWifiAccess, wifiController } from "@/services/wifi/controller";
@@ -26,6 +27,9 @@ import type { MyWifiAccess, WifiDeviceType } from "@/services/wifi/types";
 export default function WifiPortalPage() {
   const [params] = useSearchParams();
   const { session, signIn } = useSession();
+  // What the controller told us about this device. UniFi, Omada and MikroTik
+  // each name it differently; the parser reads all three.
+  const redirect = useMemo(() => parsePortalRedirect(params), [params]);
 
   const device = useMemo(() => {
     const ua = navigator.userAgent;
@@ -47,7 +51,7 @@ export default function WifiPortalPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [access, setAccess] = useState<MyWifiAccess | null>(null);
-  const [done, setDone] = useState<{ expiresAt?: string } | null>(null);
+  const [done, setDone] = useState<{ expiresAt?: string; controller?: string } | null>(null);
 
   useEffect(() => {
     if (session?.role === "guest") void fetchMyWifiAccess().then(setAccess);
@@ -71,12 +75,13 @@ export default function WifiPortalPage() {
     const r = await wifiController.authorizeDevice({
       deviceName: deviceName.trim() || device.name,
       deviceType: device.type,
-      macAddress: params.get("mac") ?? undefined,
-      ipAddress: params.get("ip") ?? undefined,
+      macAddress: redirect.mac,
+      ipAddress: redirect.ip,
+      portal: redirect.portal,
     });
     setBusy(false);
     if (!r.ok) return setError(r.error ?? "Could not authorise this device.");
-    setDone({ expiresAt: r.expiresAt });
+    setDone({ expiresAt: r.expiresAt, controller: r.controller });
   };
 
   const staff = session && session.role !== "guest";
@@ -102,10 +107,17 @@ export default function WifiPortalPage() {
               {deviceName} may use <strong>{access?.ssid}</strong>
               {done.expiresAt && <> until {formatDateTime(done.expiresAt)}</>}.
             </p>
-            <p className="rounded-lg bg-sand-200/70 p-3 text-xs text-stone-600">
-              Controller: Mock — your stay has authorised this device in our system. The network
-              itself is not yet connected to it, so this page cannot confirm you are online.
-            </p>
+            {done.controller === "mock" && (
+              <p className="rounded-lg bg-sand-200/70 p-3 text-xs text-stone-600">
+                Controller: Mock — your stay has authorised this device in our system. The network
+                itself is not yet connected to it, so this page cannot confirm you are online.
+              </p>
+            )}
+            {redirect.original && done.controller !== "mock" && (
+              <Button asChild className="w-full">
+                <a href={redirect.original}>Continue browsing</a>
+              </Button>
+            )}
             <Button asChild variant="outline" className="w-full">
               <Link to="/guest/amenities">Go to your stay</Link>
             </Button>

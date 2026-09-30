@@ -509,7 +509,7 @@ export default function DesignSystemPage() {
         <Section
           id="status"
           title="Status system"
-          description="Booking, payment, kitchen and request states, each mapped to one of six tones. The label always travels with the colour."
+          description="Booking, payment, kitchen and request states, each mapped to one of six tones: a solid earthy fill with clean white text, deep enough to pass AA contrast. The label always travels with the colour."
         >
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[

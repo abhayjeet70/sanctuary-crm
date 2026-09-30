@@ -18,13 +18,15 @@ export type Tone =
   | "cancelled"
   | "completed";
 
+/** The status badge: a coloured fill with clean white text. The fills are the
+ *  `-solid` tokens, deep enough that white passes AA (4.5:1) on every tone. */
 export const toneClasses: Record<Tone, string> = {
-  pending: "bg-status-pending-bg text-status-pending",
-  uploaded: "bg-status-uploaded-bg text-status-uploaded",
-  confirmed: "bg-status-confirmed-bg text-status-confirmed",
-  inhouse: "bg-status-inhouse-bg text-status-inhouse",
-  cancelled: "bg-status-cancelled-bg text-status-cancelled",
-  completed: "bg-status-completed-bg text-status-completed",
+  pending: "bg-status-pending-solid text-white",
+  uploaded: "bg-status-uploaded-solid text-white",
+  confirmed: "bg-status-confirmed-solid text-white",
+  inhouse: "bg-status-inhouse-solid text-white",
+  cancelled: "bg-status-cancelled-solid text-white",
+  completed: "bg-status-completed-solid text-white",
 };
 
 /** Solid fills, for calendar bars where a tinted background needs to read

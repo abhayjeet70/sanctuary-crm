@@ -74,7 +74,7 @@ const NAV = [
       { to: "/admin/villas", label: "Villas / Rooms", icon: Building2 },
       { to: "/admin/maintenance", label: "Maintenance", icon: Wrench },
       { to: "/admin/amenities", label: "Amenities", icon: Sparkles },
-      { to: "/admin/wifi", label: "Guest Wi-Fi", icon: Wifi },
+      { to: "/admin/wifi", label: "Captive Wi-Fi", icon: Wifi },
     ],
   },
   {

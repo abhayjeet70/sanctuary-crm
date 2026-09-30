@@ -200,6 +200,13 @@ for (const width of WIDTHS) {
       await (await page.$$("[role=tab]"))[i].click();
       await audit(page, `/admin/settings › ${names[i]}`, width);
     }
+    await page.goto(`${BASE}/admin/wifi`, { waitUntil: "networkidle0" });
+    const wt = await page.$$("[role=tab]");
+    const wn = await Promise.all(wt.map((t) => t.evaluate((e) => e.innerText.trim())));
+    for (let i = 0; i < wt.length; i++) {
+      await (await page.$$("[role=tab]"))[i].click();
+      await audit(page, `/admin/wifi › ${wn[i]}`, width);
+    }
     await page.goto(`${BASE}/admin/reports`, { waitUntil: "networkidle0" });
     const rt = await page.$$("[role=tab]");
     const rn = await Promise.all(rt.map((t) => t.evaluate((e) => e.innerText.trim())));

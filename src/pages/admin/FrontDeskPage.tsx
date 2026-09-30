@@ -289,12 +289,12 @@ function MovementList({
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <StatusBadge {...bookingStatus.get(view.booking.status)} />
                     {owes && (
-                      <span className="rounded-md bg-status-pending-bg px-1.5 py-0.5 text-[0.6875rem] text-status-pending">
+                      <span className="rounded-md bg-status-pending-solid px-1.5 py-0.5 text-[0.6875rem] text-white">
                         {money(view.totals.balance)} due
                       </span>
                     )}
                     {kind === "arrival" && noId && (
-                      <span className="flex items-center gap-1 rounded-md bg-status-cancelled-bg px-1.5 py-0.5 text-[0.6875rem] text-status-cancelled">
+                      <span className="flex items-center gap-1 rounded-md bg-status-cancelled-solid px-1.5 py-0.5 text-[0.6875rem] text-white">
                         <ShieldAlert className="size-3" aria-hidden />
                         No ID on file
                       </span>

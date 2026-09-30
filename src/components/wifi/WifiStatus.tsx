@@ -30,11 +30,19 @@ export function DeviceBadge({ status }: { status: WifiDeviceStatus }) {
   return <StatusBadge label={DEVICE[status].label} tone={DEVICE[status].tone} />;
 }
 
+const CONTROLLER_NAME: Record<string, string> = {
+  mock: "Mock",
+  edge: "Server",
+  unifi: "UniFi",
+  omada: "Omada",
+  mikrotik: "MikroTik",
+};
+
 /** Says which controller acted. "Mock" is shown, not hidden. */
 export function ControllerTag({ kind }: { kind?: string }) {
   return (
     <span className="inline-flex items-center rounded-md bg-sand-200 px-2 py-0.5 text-[0.6875rem] font-medium tracking-wide text-stone-600">
-      {`Controller: ${kind === "mock" || !kind ? "Mock" : kind}`}
+      {`Controller: ${CONTROLLER_NAME[kind ?? "mock"] ?? kind}`}
     </span>
   );
 }
