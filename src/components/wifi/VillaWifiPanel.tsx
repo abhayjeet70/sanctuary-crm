@@ -85,7 +85,7 @@ export function VillaWifiPanel({ villa }: { villa: Villa }) {
       {/* ----------------------------------------------------- network */}
       <fieldset disabled={!canConfigure} className="space-y-4">
         <legend className="sr-only">Network settings</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="wifi-ssid">Network name (SSID)</Label>
             <Input id="wifi-ssid" value={cfg.ssid} onChange={(e) => setCfg({ ...cfg, ssid: e.target.value })} />
@@ -146,7 +146,7 @@ export function VillaWifiPanel({ villa }: { villa: Villa }) {
       {/* ----------------------------------------------------- usage */}
       {canView ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
             <StatCard label="Guests with access" value={new Set(live.map((d) => d.userId)).size} />
             <StatCard label="Authorised devices" value={live.length} />
             <StatCard label="Open sessions" value={sessions.filter((s) => s.status === "active").length} />

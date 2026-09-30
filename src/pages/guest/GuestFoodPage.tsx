@@ -276,7 +276,7 @@ export default function GuestFoodPage() {
       )}
 
       {/* ---------------------------------------------------------- category */}
-      <nav aria-label="Menu categories" className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
+      <nav aria-label="Menu categories" className="-mx-5 relative overflow-x-auto px-5 sm:mx-0 sm:px-0">
         <ul className="flex gap-2">
           {[ALL, ...categories].map((value) => (
             <li key={value}>
@@ -299,7 +299,7 @@ export default function GuestFoodPage() {
       </nav>
 
       {/* -------------------------------------------------------------- menu */}
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((item) => {
           const quantity = cart[item.id] ?? 0;
           return (

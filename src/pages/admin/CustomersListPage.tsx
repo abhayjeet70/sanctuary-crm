@@ -108,7 +108,7 @@ export default function CustomersListPage() {
         />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] md:block">
+          <div className="hidden relative overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -156,7 +156,7 @@ export default function CustomersListPage() {
             </Table>
           </div>
 
-          <ul className="grid gap-3 sm:grid-cols-2 md:hidden">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:hidden">
             {rows.map(({ customer, bookingCount, spend, lastStay }) => (
               <li key={customer.id}>
                 <Link

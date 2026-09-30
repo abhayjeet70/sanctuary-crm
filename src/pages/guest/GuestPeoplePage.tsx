@@ -34,7 +34,7 @@ import { EmptyState, ErrorState, Eyebrow, StatusBadge } from "@/components/commo
 import { useGuestStay } from "@/hooks/useGuest";
 import { useFoodOrderViews, useMockData, useRequestViews } from "@/hooks/useData";
 import { useSession } from "@/services/session";
-import { companionAccess, RELATIONSHIPS, ACCESS } from "@/lib/companions";
+import { companionAccess, stayIsLive, RELATIONSHIPS, ACCESS } from "@/lib/companions";
 import { formatDateRange, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { BookingCompanion, CompanionCredentials, CompanionRelationship } from "@/types";
@@ -72,6 +72,9 @@ export default function GuestPeoplePage() {
   const adultsLeft = Math.max(0, booking.adults - 1 - listed.filter((c) => !c.isChild).length);
   const childrenLeft = Math.max(0, booking.children - listed.filter((c) => c.isChild).length);
   const full = adultsLeft === 0 && childrenLeft === 0;
+  // Once the stay is over the database refuses a companion's every request, so
+  // a login issued now would fail in their hands. Do not offer one.
+  const live = stayIsLive(booking);
 
   // One tap, one login, no names. Whoever it is shared with signs in and adds
   // their own details in their portal, so the holder never types anybody in.
@@ -151,16 +154,22 @@ export default function GuestPeoplePage() {
         </p>
         <Button
           className="mt-4 bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
-          disabled={full || busy}
+          disabled={full || busy || !live}
           onClick={() => void generateShared()}
         >
           <KeyRound aria-hidden />
           {listed.length > 0 ? "Generate another login" : "Generate shared login"}
         </Button>
-        {full && (
+        {!live ? (
           <p className="mt-2 text-xs text-sand/60">
-            Everyone the booking was sold for already has a place.
+            This stay has ended, so a new login would not open anything.
           </p>
+        ) : (
+          full && (
+            <p className="mt-2 text-xs text-sand/60">
+              Everyone the booking was sold for already has a place.
+            </p>
+          )
         )}
       </section>
 
@@ -247,7 +256,7 @@ export default function GuestPeoplePage() {
                       </Button>
                     </div>
                   )}
-                  {access === "revoked" && (
+                  {access === "revoked" && live && (
                     <div className="mt-3 pl-12">
                       <Button
                         variant="ghost"
@@ -412,7 +421,7 @@ function AddGuestDialog({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="companion-phone">Phone (optional)</Label>
               <Input
@@ -429,7 +438,7 @@ function AddGuestDialog({
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="companion-relationship">They are your</Label>
               <Select

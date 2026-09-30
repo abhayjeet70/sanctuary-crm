@@ -148,7 +148,7 @@ export function CancellationPolicyEditor({
         />
       </div>
 
-      <div className="grid gap-6 rounded-xl bg-sand-200/50 p-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 rounded-xl bg-sand-200/50 p-4 sm:grid-cols-2">
         <div>
           <p className="label-caps text-gold-700">Guests will read</p>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink">

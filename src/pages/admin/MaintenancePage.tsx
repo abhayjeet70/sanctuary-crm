@@ -39,7 +39,7 @@ export default function MaintenancePage() {
         description="What is broken, who is on it, and what it is costing the property in rooms."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Open jobs" value={open.length} icon={<Wrench className="size-4" />} />
         <StatCard
           label="Urgent"

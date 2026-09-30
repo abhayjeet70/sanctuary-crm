@@ -252,7 +252,7 @@ export default function BookingsListPage() {
           }
         />
       ) : layout === "cards" ? (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((view) => (
             <BookingCard key={view.booking.id} view={view} />
           ))}
@@ -260,7 +260,7 @@ export default function BookingsListPage() {
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] lg:block">
+          <div className="hidden relative overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06] lg:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -342,7 +342,7 @@ export default function BookingsListPage() {
           </div>
 
           {/* Below the table breakpoint, rows become cards rather than scrolling away */}
-          <ul className="grid gap-4 sm:grid-cols-2 lg:hidden">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:hidden">
             {filtered.map((view) => (
               <BookingCard key={view.booking.id} view={view} />
             ))}

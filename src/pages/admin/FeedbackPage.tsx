@@ -75,7 +75,7 @@ export default function FeedbackPage() {
         description="Read it, reply to it, and mark it reviewed so nothing sits unanswered."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Average rating"
           value={average.toFixed(1)}

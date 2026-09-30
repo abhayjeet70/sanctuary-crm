@@ -88,7 +88,7 @@ function IdentityCard({
 
       <hr className="rule-gold my-5 opacity-60" />
 
-      <dl className="grid gap-4 sm:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {facts.map((fact) => (
           <div key={fact.label}>
             <dt className="label-caps text-gold-400/75">{fact.label}</dt>

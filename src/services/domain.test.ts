@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import type { Booking, BookingCompanion, LostItemStatus } from "../types";
 import { isDueSoon, isOverdue } from "../lib/lostFound";
-import { companionAccess } from "../lib/companions";
+import { companionAccess, stayIsLive } from "../lib/companions";
 import { cleanPhone, isPhone } from "../lib/format";
 import { csvField, toCsv } from "../lib/csv";
 import { emailProblem, isValidEmail } from "../lib/email";
@@ -491,6 +491,16 @@ assert.equal(
   "expired",
   "cancelling the booking ends access before the dates arrive",
 );
+
+// The same clock decides whether a *new* login may be issued at all — the UI
+// and add_companion both ask this before handing out a password.
+assert.equal(stayIsLive(companionStay, new Date("2026-08-25T13:59:00+05:30")), true);
+assert.equal(
+  stayIsLive(companionStay, new Date("2026-08-25T14:01:00+05:30")),
+  false,
+  "no fresh login once the stay is over: the database would refuse every request made with it",
+);
+assert.equal(stayIsLive({ ...companionStay, status: "cancelled" }, new Date("2026-08-21T10:00:00+05:30")), false);
 
 // ------------------------------------------------- lost & found retention
 //

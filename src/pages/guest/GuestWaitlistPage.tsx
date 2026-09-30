@@ -134,7 +134,7 @@ export default function GuestWaitlistPage() {
                   </p>
                 )}
 
-                <dl className="grid gap-4 sm:grid-cols-3">
+                <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <Detail label="Dates">
                     {formatDateRange(entry.checkIn, entry.checkOut)}
                     <span className="block text-xs text-stone-600">

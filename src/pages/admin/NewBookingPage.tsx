@@ -340,7 +340,7 @@ export default function NewBookingPage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
         <div className="min-w-0 space-y-6">
           {/* ------------------------------------------------------- source */}
           <Section title="Where did this come from?">
@@ -365,7 +365,7 @@ export default function NewBookingPage() {
 
           {/* ------------------------------------------------------ the stay */}
           <Section title="The stay">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Villa" htmlFor="villa" error={showError("villaId") ? errors.villaId : undefined}>
                 <Select
                   value={form.villaId}
@@ -420,7 +420,7 @@ export default function NewBookingPage() {
             {isSplit && villa && (
               <fieldset className="mt-4">
                 <legend className="label-caps mb-2">Rooms</legend>
-                <div className="grid gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
                   {villa.rooms.map((room) => {
                     const checked = form.roomIds.includes(room.id);
                     return (
@@ -477,7 +477,7 @@ export default function NewBookingPage() {
               </fieldset>
             )}
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
               <Field label="Check-in" htmlFor="check-in" error={showError("checkIn") ? errors.checkIn : undefined}>
                 <Input
                   id="check-in"
@@ -626,7 +626,7 @@ export default function NewBookingPage() {
             </Field>
 
             {form.customerId === NEW_GUEST && (
-              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Field label="Name" htmlFor="name" error={showError("name") ? errors.name : undefined}>
                   <Input
                     id="name"
@@ -669,7 +669,7 @@ export default function NewBookingPage() {
 
           {/* --------------------------------------------------------- money */}
           <Section title="Rate & payment">
-            <div className="grid gap-4 sm:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
               <Field
                 label="Nightly rate"
                 htmlFor="rate"

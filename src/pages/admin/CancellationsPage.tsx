@@ -132,7 +132,7 @@ export default function CancellationsPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Cancellations" value={rows.length} icon={<Ban className="size-4" />} />
         <StatCard
           label="Refunds still owed"
@@ -159,7 +159,7 @@ export default function CancellationsPage() {
           description="Widen the dates, or change the status filter."
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
+        <div className="relative overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
           <Table>
             <TableHeader>
               <TableRow>

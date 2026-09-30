@@ -48,7 +48,7 @@ export default function HousekeepingPage() {
         description="Which rooms are ready, which are being turned over, and what the floor has been asked for."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Departures today"
           value={overview.departures.length}
@@ -111,7 +111,7 @@ export default function HousekeepingPage() {
         <h2 id="rooms" className="text-xl text-ink">
           Room status
         </h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {villas.map((villa) => (
             <div
               key={villa.id}

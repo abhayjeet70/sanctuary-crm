@@ -248,7 +248,7 @@ export function GuestShell() {
                 whole rail out of alignment. */}
             <nav
               aria-label="Guest portal"
-              className="scrollbar-none hidden gap-0.5 overflow-x-auto lg:flex"
+              className="scrollbar-none hidden gap-0.5 relative overflow-x-auto lg:flex"
             >
               {[...primary, ...secondary].map(({ to, label, icon: Icon }) => (
                 <NavLink

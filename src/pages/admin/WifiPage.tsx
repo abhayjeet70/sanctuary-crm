@@ -60,7 +60,7 @@ export default function WifiPage() {
         actions={<ControllerTag kind="mock" />}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard label="Authorised devices" value={live.length} icon={<Wifi className="size-4" />} />
         <StatCard label="Guests with access" value={new Set(live.map((d) => d.userId)).size} icon={<Users className="size-4" />} />
         <StatCard label="Sessions today" value={sessions.filter((s) => s.connectedAt.slice(0, 10) === today).length} />

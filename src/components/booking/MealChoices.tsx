@@ -25,7 +25,7 @@ export function MealChoices({
   return (
     <fieldset className="space-y-4">
       <legend className="label-caps mb-1">Choose your dishes</legend>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {courses.map((course) => (
           <MultiSelect
             key={course.slug}

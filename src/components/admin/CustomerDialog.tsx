@@ -402,7 +402,7 @@ function Section({
       </p>
       <hr className="rule-gold mt-2 mb-3" />
       {note && <p className="mb-4 text-xs leading-relaxed text-stone-600">{note}</p>}
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
     </section>
   );
 }

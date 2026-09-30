@@ -274,7 +274,7 @@ function TimelineView({
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
+    <div className="relative overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
       <div className="min-w-[52rem]">
         {/* Day ruler */}
         <div

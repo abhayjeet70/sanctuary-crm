@@ -318,7 +318,7 @@ export default function DashboardPage() {
       </header>
 
       {/* ------------------------------------------------------- the strip */}
-      <section aria-label="Today at a glance" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Today at a glance" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Tile
           to="/admin/frontdesk"
           label="Arrivals today"
@@ -376,7 +376,7 @@ export default function DashboardPage() {
       </section>
 
       {/* ---------------------------------------------- revenue + occupancy */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {showsFinancials && (
           <section className="rounded-xl bg-ink p-6 text-sand shadow-lift ring-1 ring-gold/30">
             <div className="flex items-start justify-between gap-3">
@@ -417,7 +417,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ------------------------------------ attention · villas · schedule */}
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Panel
           title="Needs attention"
           badge={attention.length}
@@ -506,7 +506,7 @@ export default function DashboardPage() {
             </Link>
           </Button>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {villas.map((villa) => {
             const stay = overview.inHouse.find((v) => v.booking.villaId === villa.id);
             const cleaning = villa.rooms.some((r) => r.status === "cleaning");
@@ -549,7 +549,7 @@ export default function DashboardPage() {
       </section>
 
       {/* ------------------------------- bookings · funnel · satisfaction */}
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Panel
           title="Recent bookings"
           link={{ to: "/admin/bookings", label: "All bookings" }}
@@ -648,7 +648,7 @@ export default function DashboardPage() {
       </div>
 
       {/* -------------------------------------------------- kitchen + floor */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel title="Active kitchen orders" link={{ to: "/admin/food", label: "Kitchen board" }}>
           {activeOrders.length === 0 ? (
             <EmptyState

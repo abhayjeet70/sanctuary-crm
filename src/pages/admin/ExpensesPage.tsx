@@ -116,7 +116,7 @@ export default function ExpensesPage() {
         description="What the property spends, so the reports show both sides of the ledger."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="This month"
           value={money(thisMonth.reduce((sum, e) => sum + e.amount, 0))}
@@ -135,7 +135,7 @@ export default function ExpensesPage() {
         <StatCard label="Entries" value={expenses.length} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[22rem_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[22rem_1fr]">
         {/* ------------------------------------------------------- record */}
         <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
           <h2 className="text-xl text-ink">Record a spend</h2>
@@ -326,7 +326,7 @@ export default function ExpensesPage() {
               description="Add what the property has paid out and it will show here and in the reports."
             />
           ) : (
-            <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
+            <div className="relative overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
               <table className="w-full text-sm">
                 <caption className="sr-only">Expenses recorded by the property</caption>
                 <thead>

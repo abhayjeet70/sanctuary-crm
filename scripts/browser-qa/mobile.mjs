@@ -19,7 +19,7 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
 );
 const BASE = "http://localhost:4173";
-const WIDTHS = [390, 360];
+const WIDTHS = (process.env.W ?? "390,360").split(",").map(Number);
 const shots = process.argv.includes("--shots");
 const outDir = `${process.env.TEMP ?? "."}/qa-mobile`;
 if (shots) mkdirSync(outDir, { recursive: true });

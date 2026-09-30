@@ -384,7 +384,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <section>
       <p className="label-caps text-gold-700">{title}</p>
       <hr className="rule-gold mt-2 mb-4" />
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
     </section>
   );
 }

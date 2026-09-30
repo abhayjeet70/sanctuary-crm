@@ -21,7 +21,7 @@ export default function VillasListPage() {
         actions={<VillaDialog />}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {villas.map((villa) => {
           const live = bookingsOnDate(bookings, villa.id, today);
           const occupied = live.length > 0;

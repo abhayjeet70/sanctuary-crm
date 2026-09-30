@@ -146,7 +146,7 @@ export function GuestWifiCard({ password }: { password?: string }) {
             <span className="rounded-md bg-sand/10 px-2 py-0.5 text-[0.6875rem] text-sand/70">Controller: Mock</span>
           </div>
 
-          <dl className="grid gap-6 sm:grid-cols-3">
+          <dl className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div>
               <dt className="label-caps text-sand/50">Network</dt>
               <dd className="text-gold-gradient mt-2 font-display text-3xl">{access.ssid ?? "—"}</dd>

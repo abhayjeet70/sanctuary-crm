@@ -165,7 +165,7 @@ export function VillaDialog() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="villa-bedrooms">Bedrooms</Label>
               <Input
@@ -192,7 +192,7 @@ export function VillaDialog() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="villa-rate">Nightly rate (₹)</Label>
               <Input
@@ -218,7 +218,7 @@ export function VillaDialog() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="villa-checkin">Check-in time</Label>
               <Input

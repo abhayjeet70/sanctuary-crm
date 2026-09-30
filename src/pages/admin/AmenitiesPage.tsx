@@ -35,7 +35,7 @@ export default function AmenitiesPage() {
         description="The list a guest reads before they arrive, and the one the desk quotes on the phone."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Distinct amenities"
           value={all.size}
@@ -56,7 +56,7 @@ export default function AmenitiesPage() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {villas.map((villa) => (
           <VillaAmenities key={villa.id} villa={villa} />
         ))}

@@ -76,7 +76,7 @@ export function SignatureUpload() {
           )}
         </div>
 
-        <div className="min-w-0 flex-1 space-y-2 text-xs leading-relaxed text-stone-600">
+        <div className="min-w-0 flex-1 basis-56 space-y-2 text-xs leading-relaxed text-stone-600">
           <p className="font-medium text-ink">What works</p>
           <ul className="list-disc space-y-0.5 pl-4">
             <li>Format: {SIGNATURE.typeNames}</li>

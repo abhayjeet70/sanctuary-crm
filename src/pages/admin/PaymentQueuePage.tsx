@@ -87,7 +87,7 @@ export default function PaymentQueuePage() {
         description="Newest first. Open the receipt, check the amount and the reference, then decide."
       />
 
-      <div className="grid gap-6 xl:grid-cols-[19rem_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[19rem_1fr]">
         {/* ------------------------------------------------------- the queue */}
         <nav aria-label="Verification queue" className="xl:sticky xl:top-20 xl:self-start">
           <ol className="space-y-2">
@@ -158,7 +158,7 @@ export default function PaymentQueuePage() {
               </div>
             </header>
 
-            <div className="grid gap-6 border-t border-gold/15 p-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 border-t border-gold/15 p-6 lg:grid-cols-2">
               {/* Receipt */}
               <div>
                 <Eyebrow className="mb-3">Uploaded receipt</Eyebrow>

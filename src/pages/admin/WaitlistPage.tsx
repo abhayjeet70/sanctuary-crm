@@ -156,7 +156,7 @@ export default function WaitlistPage() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Waiting" value={open.length} icon={<Hourglass className="size-4" />} />
         <StatCard
           label="Offered, no answer"
@@ -338,7 +338,7 @@ function WaitlistCard({ row, place }: { row: Row; place: number }) {
           </div>
 
           {/* ---------------------------------------------------- the stay */}
-          <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <Fact label="Stay">
               {formatDate(entry.checkIn)} → {formatDate(entry.checkOut)}
               <span className="block text-xs text-stone-600">
@@ -482,7 +482,7 @@ function WaitlistCard({ row, place }: { row: Row; place: number }) {
           {open && (
             <div className="rounded-xl bg-sand-200/50 p-4">
               <Eyebrow className="mb-2 text-gold-700">Everything they told us</Eyebrow>
-              <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+              <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
                 <Fact label="Asked through">{bookingSource[entry.source]}</Fact>
                 <Fact label="Guest since">
                   {customer ? formatDate(customer.createdAt) : "—"}

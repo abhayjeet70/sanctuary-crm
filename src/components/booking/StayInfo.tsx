@@ -27,13 +27,31 @@ function Block({ title, text }: { title: string; text?: string }) {
 /** Dining menu and add-ons, exactly as set in admin Settings → Guest info.
  *  Takes the settings as a prop because the booking wizard runs before sign-in,
  *  where the data provider does not exist. */
-export function DiningInfo({ settings: s }: { settings: Info }) {
+export function DiningInfo({ settings: s, bare = false }: { settings: Info; bare?: boolean }) {
   if (!s) return null;
   return (
-    <div className="space-y-5 rounded-xl bg-sand-200/50 p-5">
+    <div className={cn("space-y-5", !bare && "rounded-xl bg-sand-200/50 p-5")}>
       <Block title="Dining & menu" text={s.diningMenu} />
       <Block title="Optional add-ons" text={s.addons} />
     </div>
+  );
+}
+
+/** The same text, folded away: the dropdowns are the way to answer, this is the reference. */
+export function DiningDetails({ settings }: { settings: Info }) {
+  if (!settings || (!lines(settings.diningMenu).length && !lines(settings.addons).length)) return null;
+  return (
+    <details className="group rounded-xl bg-sand-200/50">
+      <summary className="cursor-pointer list-none px-5 py-3.5 text-sm font-medium text-ink marker:hidden [&::-webkit-details-marker]:hidden">
+        <span className="flex items-center justify-between gap-3">
+          Full menu &amp; optional add-ons
+          <span aria-hidden className="text-stone-600 transition-transform group-open:rotate-180">⌄</span>
+        </span>
+      </summary>
+      <div className="px-5 pb-5">
+        <DiningInfo settings={settings} bare />
+      </div>
+    </details>
   );
 }
 
@@ -52,7 +70,7 @@ export function PaymentAndPolicies({ settings: s, payment = true }: { settings: 
       {payment && (
         <div>
           <Eyebrow className="text-gold-700">Payment details</Eyebrow>
-          <dl className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+          <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
             {rows
               .filter(([, v]) => v)
               .map(([k, v]) => (

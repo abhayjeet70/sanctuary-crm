@@ -158,7 +158,7 @@ export default function VillaDetailPage() {
         {/* --------------------------------------------------- mode toggle */}
         <div className="border-t border-gold/15 p-6">
           <Eyebrow className="text-gold-700">Operating mode</Eyebrow>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {(["whole", "split"] as const).map((mode) => {
               const active = villa.mode === mode;
               return (
@@ -196,7 +196,7 @@ export default function VillaDetailPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
         <div className="min-w-0 space-y-6">
           {/* -------------------------------------------------------- rooms */}
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
@@ -214,7 +214,7 @@ export default function VillaDetailPage() {
               </Button>
             </div>
             <hr className="rule-gold my-4" />
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {villa.rooms.map((room) => {
                 const holder = live.find(
                   (b) => b.roomIds.length === 0 || b.roomIds.includes(room.id),
@@ -306,13 +306,13 @@ export default function VillaDetailPage() {
                 />
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <RateField id="baseRate" label="Base rate" value={fields.baseRate} onChange={set} />
                 <RateField id="weekendRate" label="Weekend rate" value={fields.weekendRate} onChange={set} />
                 <RateField id="seasonalRate" label="Seasonal rate" value={fields.seasonalRate} onChange={set} />
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="checkInTime">Check-in time</Label>
                   <Input

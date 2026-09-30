@@ -168,7 +168,7 @@ export default function CustomerDetailPage() {
       {/* ----------------------------------------------------------- figures */}
       <div
         className={cn(
-          "grid gap-4 sm:grid-cols-2",
+          "grid grid-cols-1 gap-4 sm:grid-cols-2",
           showsFinancials ? "xl:grid-cols-4" : "xl:grid-cols-3",
         )}
       >

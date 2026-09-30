@@ -212,7 +212,7 @@ export default function BookingDetailPage() {
       </div>
 
       {/* -------------------------------------------------------------- body */}
-      <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
         <Tabs defaultValue="stay" className="min-w-0">
           <TabsList>
             <TabsTrigger value="stay">Stay</TabsTrigger>
@@ -231,7 +231,7 @@ export default function BookingDetailPage() {
           <TabsContent value="stay" className="space-y-6 pt-5">
             <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Guest</Eyebrow>
-              <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+              <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Detail label="Name">
                   <Link
                     to={`/admin/customers/${customer?.id}`}
@@ -247,7 +247,7 @@ export default function BookingDetailPage() {
               <hr className="rule-gold my-6" />
 
               <Eyebrow className="text-gold-700">Stay</Eyebrow>
-              <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+              <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Detail label="Villa">{villa?.name}</Detail>
                 <Detail label="Rooms">
                   {booking.bookingMode === "whole"
@@ -392,7 +392,7 @@ export default function BookingDetailPage() {
                       </div>
                     )}
 
-                    <div className="mt-4 grid gap-4 sm:grid-cols-[10rem_1fr] sm:items-start">
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[10rem_1fr] sm:items-start">
                       <ReceiptViewer
                         src={payment.receiptImage}
                         alt={`Receipt for ${money(payment.amount)} from ${customer?.name}`}

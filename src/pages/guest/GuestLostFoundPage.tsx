@@ -123,7 +123,7 @@ function FoundForYou({ item }: { item: GuestLostItem }) {
           {villa && ` after your stay at ${villa.name}`}. Is it yours?
         </p>
 
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="label-caps">Found</dt>
             <dd className="mt-0.5 text-ink">
@@ -286,7 +286,7 @@ function ReturnChooser({ item }: { item: GuestLostItem }) {
   return (
     <div className="space-y-4">
       <p className="font-medium text-ink">It is yours. How would you like it back?</p>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {(
           [
             ["pickup", "Collect from Homes of Sanctuary", "Bring photo ID"],
@@ -310,7 +310,7 @@ function ReturnChooser({ item }: { item: GuestLostItem }) {
       </div>
 
       {method === "pickup" && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field id="pickup-at" label="When would suit you">
             <Input id="pickup-at" type="datetime-local" value={fields.pickupAt} onChange={(e) => set("pickupAt", e.target.value)} />
           </Field>
@@ -321,7 +321,7 @@ function ReturnChooser({ item }: { item: GuestLostItem }) {
       )}
 
       {method === "courier" && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Field id="rcpt-name" label="Name">
             <Input id="rcpt-name" value={fields.recipientName} onChange={(e) => set("recipientName", e.target.value)} autoComplete="name" />
           </Field>
@@ -373,7 +373,7 @@ function Shipment({ item }: { item: GuestLostItem }) {
         <Eyebrow className="text-gold-700">Return shipment</Eyebrow>
         {courier && <StatusBadge label={courier.label} tone={courier.tone} />}
       </div>
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         {item.courierProvider && <Detail label="Courier">{item.courierProvider}</Detail>}
         {item.trackingNumber && (
           <Detail label="Tracking">
@@ -457,7 +457,7 @@ function ReportForm() {
   return (
     <section className="space-y-4 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07]">
       <Eyebrow className="text-gold-700">Report a lost item</Eyebrow>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field id="rep-title" label="What is it" className="sm:col-span-2">
           <Input id="rep-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Silver earring" />
         </Field>

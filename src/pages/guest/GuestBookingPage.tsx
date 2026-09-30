@@ -76,7 +76,7 @@ export default function GuestBookingPage() {
         aria-label="Where your booking has got to"
         className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]"
       >
-        <ol className="grid gap-4 sm:grid-cols-4">
+        <ol className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           {GUEST_STEPS.map((step, index) => {
             const done = index + 1 <= reached;
             const current = index + 1 === reached;
@@ -124,7 +124,7 @@ export default function GuestBookingPage() {
 
           <hr className="rule-gold my-5" />
 
-          <dl className="grid gap-5 sm:grid-cols-3">
+          <dl className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             {[
               ["Check-in", `${formatDate(booking.checkIn)}, from ${times.arrival}`],
               ["Check-out", `${formatDate(booking.checkOut)}, by ${times.departure}`],

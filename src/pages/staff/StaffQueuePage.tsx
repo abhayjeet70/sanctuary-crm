@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ChefHat, ClipboardList, LogOut, RefreshCw } from "lucide-react";
+import { ChefHat, ClipboardList, LogOut, MapPin, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   EmptyState,
@@ -141,7 +141,7 @@ export default function StaffQueuePage() {
           <h1 className="display-caps mt-2 text-3xl text-ink">Your queue</h1>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard
             label="Open jobs"
             value={open.length}
@@ -186,9 +186,19 @@ export default function StaffQueuePage() {
                         {titleCase(request.category)}
                       </span>
                     </div>
-                    <p className="mt-3 text-ink">{request.description}</p>
+                    {/* Where to go comes first: it is what they act on. */}
+                    <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-ink">
+                      <MapPin className="size-4 shrink-0 text-gold-700" aria-hidden />
+                      <span>{villa?.name}</span>
+                      {request.location && (
+                        <span className="rounded-md bg-sand px-2 py-0.5 text-xs font-semibold tracking-wide text-gold-700 ring-1 ring-gold/30">
+                          {request.location}
+                        </span>
+                      )}
+                    </p>
+                    <p className="mt-2 text-ink">{request.description}</p>
                     <p className="mt-2 text-xs text-stone-600">
-                      {villa?.name} · raised {formatTime(request.createdAt)}
+                      Raised {formatTime(request.createdAt)}
                     </p>
                     {step && (
                       <Button

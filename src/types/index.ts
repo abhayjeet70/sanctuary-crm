@@ -630,6 +630,8 @@ export interface GuestRequest {
   resolutionNote?: string;
   /** Who asked, when it was not the booking holder. */
   companionId?: ID;
+  /** "Whole villa" or the rooms the stay holds — copied on when it was raised. */
+  location?: string;
   createdAt: ISODateTime;
 }
 

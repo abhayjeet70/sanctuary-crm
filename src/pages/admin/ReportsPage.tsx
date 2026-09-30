@@ -21,6 +21,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EmptyState, Eyebrow, PageHeader, StatCard } from "@/components/common";
 import { FinanceAnalysis } from "./reports/FinanceAnalysis";
 import { OperatingStatement } from "./reports/OperatingStatement";
@@ -69,16 +76,25 @@ export default function ReportsPage() {
   const villas = useVillas();
   const customers = useCustomers();
   const taxes = useTaxes();
-  const { payments, foodOrders, settings, employeePay, today, refunds } = useMockData();
+  const { payments, foodOrders, settings, employeePay, employees, today, refunds } = useMockData();
 
   const ranges = periodPresets(today);
   const [from, setFrom] = useState(ranges[2].from);
   const [to, setTo] = useState(today);
+  /** "all", or one villa's id — every figure on every tab follows it. */
+  const [villaId, setVillaId] = useState("all");
+  const inVilla = (id: string) => villaId === "all" || id === villaId;
+  const scopeName = villaId === "all" ? "All villas" : villas.find((v) => v.id === villaId)?.name;
 
   const rows: RevenueRow[] = useMemo(
     () =>
       views
-        .filter((v) => v.booking.checkIn >= from && v.booking.checkIn <= to)
+        .filter(
+          (v) =>
+            v.booking.checkIn >= from &&
+            v.booking.checkIn <= to &&
+            (villaId === "all" || v.booking.villaId === villaId),
+        )
         .map((v) => ({
           checkIn: v.booking.checkIn,
           checkOut: v.booking.checkOut,
@@ -98,9 +114,10 @@ export default function ReportsPage() {
           paid: v.totals.paid,
           balance: v.totals.balance,
         })),
-    [views, from, to],
+    [views, from, to, villaId],
   );
 
+  const villaCount = villaId === "all" ? villas.length : 1;
   const days = daysBetween(from, to);
 
   /** Only shown on paper, where the screen's date picker is gone. Every tab
@@ -109,12 +126,12 @@ export default function ReportsPage() {
     <div className="hidden print:block">
       <h1 className="font-display text-2xl">{settings?.legalName ?? "Homes of Sanctuary"}</h1>
       <p className="text-sm text-stone-600">
-        Financial report · {section} · {formatDate(from)} to {formatDate(to)}
+        Financial report · {section} · {scopeName} · {formatDate(from)} to {formatDate(to)}
       </p>
     </div>
   );
   const revenue = revenueBreakdown(rows);
-  const kpis = hotelKpis(rows, villas.length, days);
+  const kpis = hotelKpis(rows, villaCount, days);
   const aged = agedReceivables(rows, today);
   const figures = monthlyFigures(rows);
   const byVilla = groupRevenue(rows, "villaId");
@@ -125,8 +142,14 @@ export default function ReportsPage() {
 
   // Null rather than 0 when nothing is recorded: "no salaries on file" and
   // "this property has no wage bill" are very different claims.
+  // For one villa this is the people who work there; floaters belong to no
+  // single house, so their pay is left to the all-villas view.
+  const villaOf = new Map(employees.map((e) => [e.id, e.villaId]));
+  const payroll = employeePay.filter(
+    (p) => villaId === "all" || villaOf.get(p.employeeId) === villaId,
+  );
   const monthlyPayroll =
-    employeePay.length > 0 ? employeePay.reduce((n, p) => n + p.monthlySalary, 0) : null;
+    payroll.length > 0 ? payroll.reduce((n, p) => n + p.monthlySalary, 0) : null;
   const months = Math.max(1, Math.round(days / 30));
 
   const label = (dimension: string, key: string) =>
@@ -136,13 +159,14 @@ export default function ReportsPage() {
         ? monthLabel(key)
         : titleCase(key);
 
+  const villaByBooking = new Map(views.map((v) => [v.booking.id, v.booking.villaId]));
   const villaName = (id: string) => villas.find((v) => v.id === id)?.name ?? "—";
   const guestName = (id: string) => customers.find((c) => c.id === id)?.name ?? "—";
 
   const exportCsv = () => {
     const heading = [
       [settings?.legalName ?? "Homes of Sanctuary"],
-      [`Financial report ${from} to ${to}`],
+      [`Financial report ${from} to ${to} · ${scopeName}`],
       [],
     ];
 
@@ -203,7 +227,7 @@ export default function ReportsPage() {
       ]),
     ];
 
-    downloadCsv(`sanctuary-report-${from}-to-${to}.csv`, [...heading, ...summary]);
+    downloadCsv(`sanctuary-report-${villaId === "all" ? "all-villas" : scopeName?.toLowerCase().replace(/\s+/g, "-")}-${from}-to-${to}.csv`, [...heading, ...summary]);
   };
 
   return (
@@ -243,6 +267,23 @@ export default function ReportsPage() {
             />
           </div>
 
+          <div className="w-48 space-y-1.5">
+            <Label htmlFor="report-villa">Villa</Label>
+            <Select value={villaId} onValueChange={setVillaId}>
+              <SelectTrigger id="report-villa" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All villas</SelectItem>
+                {villas.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    {v.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex flex-wrap gap-1.5">
             {ranges.map((range) => (
               <Button
@@ -271,7 +312,7 @@ export default function ReportsPage() {
           </div>
         </div>
         <p className="mt-3 text-xs text-stone-600">
-          {days} days · stays counted against their check-in date. The spreadsheet is a
+          {scopeName} · {days} days · stays counted against their check-in date. The spreadsheet is a
           CSV, which Excel, Numbers and Sheets all open directly; PDF goes through your
           browser's print dialog — choose "Save as PDF".
         </p>
@@ -303,7 +344,12 @@ export default function ReportsPage() {
             <div data-print-flow className="space-y-6">
               {printTitle("Bookings & refunds")}
               <BookingsReport
-                views={views.filter((v) => v.booking.checkIn >= from && v.booking.checkIn <= to)}
+                views={views.filter(
+                  (v) =>
+                    v.booking.checkIn >= from &&
+                    v.booking.checkIn <= to &&
+                    inVilla(v.booking.villaId),
+                )}
                 refunds={refunds}
                 from={from}
                 to={to}
@@ -315,7 +361,7 @@ export default function ReportsPage() {
             <div data-print-flow>
               <OperatingStatement
                 rows={rows}
-                villas={villas.length}
+                villas={villaCount}
                 days={days}
                 months={months}
                 monthlyPayroll={monthlyPayroll}
@@ -333,7 +379,7 @@ export default function ReportsPage() {
           {printTitle("Overview")}
 
           {/* ------------------------------------------------------ headline */}
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Gross billed"
               value={money(revenue.gross)}
@@ -356,7 +402,7 @@ export default function ReportsPage() {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="ADR" value={money(kpis.adr)} hint="Per night sold" />
             <StatCard label="RevPAR" value={money(kpis.revpar)} hint="Per night available" />
             <StatCard
@@ -373,7 +419,7 @@ export default function ReportsPage() {
           </div>
 
           {/* -------------------------------------------------- where it came */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Where the money came from</Eyebrow>
               <hr className="rule-gold my-4" />
@@ -485,7 +531,7 @@ export default function ReportsPage() {
           </section>
 
           {/* ------------------------------------------------- the breakdowns */}
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Breakdown
               title="Which house earns"
               head="Villa"
@@ -498,7 +544,7 @@ export default function ReportsPage() {
             />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
               <Eyebrow className="text-gold-700">Best guests in this period</Eyebrow>
               <hr className="rule-gold my-4" />
@@ -536,7 +582,7 @@ export default function ReportsPage() {
               <ul className="space-y-2 text-sm">
                 {Object.entries(
                   payments
-                    .filter((p) => p.status === "approved")
+                    .filter((p) => p.status === "approved" && inVilla(villaByBooking.get(p.bookingId) ?? ""))
                     .reduce<Record<string, number>>((acc, p) => {
                       acc[p.method] = (acc[p.method] ?? 0) + p.amount;
                       return acc;
@@ -558,7 +604,7 @@ export default function ReportsPage() {
                 <span className="tabular-nums">
                   {money(
                     foodOrders
-                      .filter((o) => o.status === "billed")
+                      .filter((o) => o.status === "billed" && inVilla(o.villaId))
                       .reduce(
                         (sum, o) => sum + o.lines.reduce((n, l) => n + l.price * l.quantity, 0),
                         0,
@@ -573,7 +619,7 @@ export default function ReportsPage() {
             Revenue counts a stay against its check-in date and excludes cancelled,
             rejected, no-show and enquiry bookings — {rows.filter((r) => !isEarned(r.status)).length}{" "}
             of the {rows.length} bookings in this period. Available nights are{" "}
-            {villas.length} villas × {days} days, so a villa let by the room can read
+            {villaCount} {villaCount === 1 ? "villa" : "villas"} × {days} days, so a villa let by the room can read
             above 100%. ADR counts accommodation only; dinner is not a room rate.
           </p>
         </div>

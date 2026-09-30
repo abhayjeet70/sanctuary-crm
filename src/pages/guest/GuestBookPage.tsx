@@ -24,7 +24,7 @@ import {
 import { EmptyState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useMockData, useSettings, useVillas, useWaitlist } from "@/hooks/useData";
 import { useGuestStay } from "@/hooks/useGuest";
-import { ChipGroup, DiningInfo, PaymentAndPolicies } from "@/components/booking/StayInfo";
+import { ChipGroup, DiningDetails, PaymentAndPolicies } from "@/components/booking/StayInfo";
 import { MealChoices } from "@/components/booking/MealChoices";
 import { supabase } from "@/services/supabase/client";
 import { useSession } from "@/services/session";
@@ -321,7 +321,7 @@ export default function GuestBookPage() {
 
       {/* ------------------------------------------------------ 1. the guest */}
       <Section step="1" title="Who is coming">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field id="guest-name" label="Full name">
             <Input
               id="guest-name"
@@ -376,7 +376,7 @@ export default function GuestBookPage() {
 
       {/* ------------------------------------------------------- 2. the stay */}
       <Section step="2" title="When, and how many">
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Field id="check-in" label="Check-in">
             <Input
               id="check-in"
@@ -415,7 +415,7 @@ export default function GuestBookPage() {
           </Field>
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field id="arrival" label="Arriving around" hint="Leave blank for the house's own hours.">
             <Input
               id="arrival"
@@ -460,7 +460,7 @@ export default function GuestBookPage() {
               : undefined
           }
         >
-          <ul className="grid gap-4 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {results.map((row) => {
               const villa = villas.find((v) => v.id === row.villa_id);
               const free = row.villa_mode === "split" ? row.free_rooms > 0 : row.whole_available;
@@ -595,7 +595,7 @@ export default function GuestBookPage() {
                       ? `the ${chosenRooms.length === 1 ? "room" : "rooms"} you have picked sleep ${roomsSleep}.`
                       : `pick rooms sleeping ${guests} between them.`}
                   </p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-4">
                     {rooms.map((room) => {
                       const picked = chosenRooms.includes(room.room_id);
                       return (
@@ -644,11 +644,13 @@ export default function GuestBookPage() {
         title="Food and dining"
         subtitle="So the kitchen can plan before you arrive rather than after."
       >
-        <DiningInfo settings={settings} />
         <MealChoices
           value={prefs.mealChoices}
           onChange={(mealChoices) => setPrefs({ ...prefs, mealChoices })}
-          />
+        />
+        <div className="mt-4">
+          <DiningDetails settings={settings} />
+        </div>
         <div className="mt-5 space-y-5">
           <Field id="dietary" label="Dietary preference">
             <Select
@@ -684,7 +686,7 @@ export default function GuestBookPage() {
             onToggle={(value) => setPrefs({ ...prefs, cuisines: toggle(prefs.cuisines, value) })}
           />
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field
               id="allergies"
               label="Allergies"

@@ -239,7 +239,7 @@ export function LogFoundItemDialog({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="lf-category">Kind</Label>
               <Select
@@ -291,7 +291,7 @@ export function LogFoundItemDialog({
           )}
 
           {/* ------------------------------------------------------- where */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="lf-location">Found in</Label>
               <Select
@@ -354,7 +354,7 @@ export function LogFoundItemDialog({
           )}
 
           {/* ------------------------------------------------ where it went */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="lf-storage">Put away in</Label>
               <Input
@@ -400,7 +400,7 @@ export function LogFoundItemDialog({
                   placeholder="Bedside table, left side"
                 />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="lf-brand">Brand</Label>
                   <Input id="lf-brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
@@ -433,7 +433,7 @@ export function LogFoundItemDialog({
                   Never shown to a guest. It is how we check a claim is genuine.
                 </p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="lf-found-at">Found at</Label>
                   <Input

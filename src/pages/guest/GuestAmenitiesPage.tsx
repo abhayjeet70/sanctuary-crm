@@ -43,7 +43,7 @@ export default function GuestAmenitiesPage() {
               : `${roomNames.length} of the ${villa.rooms.length} rooms in this villa are yours.`}
           </p>
 
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {villa.rooms.map((room) => {
               const yours = wholeVilla || roomNames.includes(room.name);
               return (
@@ -73,7 +73,7 @@ export default function GuestAmenitiesPage() {
         <GuestWifiCard password={villa.wifiPassword} />
 
         {/* ---------------------------------------------------------- times */}
-        <section className="grid gap-4 sm:grid-cols-2">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[
             ["Check-in", times.arrival, "Your rooms are ready from this time."],
             ["Check-out", times.departure, "Late check-out on request, subject to the next stay."],
@@ -100,7 +100,7 @@ export default function GuestAmenitiesPage() {
         <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06] sm:p-8">
           <Eyebrow className="text-gold-700">What is here</Eyebrow>
           <hr className="rule-gold mt-3 mb-5" />
-          <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
             {villa.amenities.map((amenity) => (
               <li key={amenity} className="flex items-baseline gap-2.5 text-sm text-ink">
                 <Check className="size-3.5 shrink-0 translate-y-0.5 text-gold-700" aria-hidden />

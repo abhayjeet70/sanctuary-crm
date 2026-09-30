@@ -96,7 +96,7 @@ export default function EmployeesPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Working" value={working.length} icon={<Users className="size-4" />} />
         <StatCard
           label="On leave"
@@ -110,7 +110,7 @@ export default function EmployeesPage() {
         />
       </div>
 
-      <div className="grid gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 rounded-xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06] sm:grid-cols-4">
         <div className="space-y-1.5">
           <Label htmlFor="employee-search">Search</Label>
           <div className="relative">
@@ -286,7 +286,7 @@ function EmployeeRow({
       {open && (
         <div className="mt-5 space-y-4 border-t border-ink/8 pt-5">
           {(employee.address || employee.emergencyName || employee.notes) && (
-            <dl className="grid gap-3 text-sm sm:grid-cols-3">
+            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
               {employee.address && (
                 <div>
                   <dt className="label-caps">Address</dt>

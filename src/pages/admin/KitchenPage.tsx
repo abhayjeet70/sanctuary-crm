@@ -73,7 +73,7 @@ export default function KitchenPage() {
         description="Every order from placed to billed. Billed orders join the guest's booking total."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="In progress" value={inProgress.length} icon={<ChefHat className="size-4" />} />
         <StatCard
           label="Cooking now"
@@ -88,7 +88,7 @@ export default function KitchenPage() {
       </div>
 
       {/* -------------------------------------------------------------- board */}
-      <div className="overflow-x-auto pb-2">
+      <div className="relative overflow-x-auto pb-2">
         <div className="flex min-w-max gap-4">
           {FOOD_PIPELINE.map((column) => {
             const columnOrders = active.filter((o) => o.order.status === column);

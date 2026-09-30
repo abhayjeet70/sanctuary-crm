@@ -173,7 +173,7 @@ export default function DesignSystemPage() {
         aria-label="Design system sections"
         className="sticky top-0 z-20 border-b border-ink/12 bg-sand/92 backdrop-blur"
       >
-        <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-6 py-3 sm:px-10">
+        <div className="mx-auto flex max-w-6xl gap-1 relative overflow-x-auto px-6 py-3 sm:px-10">
           {SECTIONS.map(([id, label]) => (
             <a
               key={id}
@@ -193,7 +193,7 @@ export default function DesignSystemPage() {
           title="Colour"
           description="Four brand tokens carry the identity. Status tones stay desaturated and earthy — never the bright red, green and yellow of a generic dashboard."
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Ink", "#142731", "bg-ink", "Headings, navigation, primary buttons", "text-sand"],
               ["Sand", "#FAF7F3", "bg-sand", "Application background, warm surfaces", "text-ink"],
@@ -243,7 +243,7 @@ export default function DesignSystemPage() {
           </div>
 
           <p className="label-caps mt-10 mb-4">Brass accents</p>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-xl bg-ink p-6 ring-1 ring-gold/30">
               <p className="label-caps text-gold-400">On ink</p>
               <p className="text-gold-gradient mt-2 font-display text-3xl">₹1,86,540</p>
@@ -331,7 +331,7 @@ export default function DesignSystemPage() {
           title="Spacing & shape"
           description="A 4px base. Prefer 16 / 24 / 32 / 48 between elements, and more than feels necessary between major sections."
         >
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             <div className="rounded-xl bg-paper p-6 shadow-soft">
               <p className="label-caps mb-4">Scale</p>
               <div className="space-y-2">
@@ -437,7 +437,7 @@ export default function DesignSystemPage() {
           title="Forms & inputs"
           description="Errors are announced, not just coloured. Every field has a visible label and a described hint."
         >
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="space-y-5 rounded-xl bg-paper p-6 shadow-soft">
               <div className="space-y-2">
                 <Label htmlFor="ds-name">Guest name</Label>
@@ -511,7 +511,7 @@ export default function DesignSystemPage() {
           title="Status system"
           description="Booking, payment, kitchen and request states, each mapped to one of six tones. The label always travels with the colour."
         >
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["Booking lifecycle", bookingStatus.all],
               ["Payment", paymentStatus.all],
@@ -536,7 +536,7 @@ export default function DesignSystemPage() {
           title="Cards & surfaces"
           description="Photography-led cards for villas and menu items; quiet figure cards for the admin dashboard."
         >
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07] transition-shadow hover:shadow-lift">
               <img
                 src={photo.maaya}
@@ -559,7 +559,7 @@ export default function DesignSystemPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
               <StatCard label="In house" value="21 guests" hint="Across 3 villas" icon={<BedDouble className="size-4" />} />
               <StatCard label="Awaiting verification" value="3" hint="Oldest waiting 18 hours" tone="warn" icon={<Wallet className="size-4" />} />
               <StatCard label="Outstanding" value={money(186540)} hint="Across 4 live bookings" tone="accent" />
@@ -567,7 +567,7 @@ export default function DesignSystemPage() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle>Card primitive</CardTitle>
@@ -598,7 +598,7 @@ export default function DesignSystemPage() {
           title="Tables"
           description="The admin's primary surface. Dense, quiet, and scannable — status and money align to the right."
         >
-          <div className="overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
+          <div className="relative overflow-x-auto rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.06]">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -745,7 +745,7 @@ export default function DesignSystemPage() {
           title="Photography"
           description="The property's own images carry the brand more than any component does. Large, uncropped where possible, and never a tiny thumbnail."
         >
-          <div className="grid gap-3 sm:grid-cols-4 sm:grid-rows-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:grid-rows-2">
             {collage.map((image, index) => (
               <figure
                 key={image.src}
@@ -770,7 +770,7 @@ export default function DesignSystemPage() {
             ))}
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-paper p-5 shadow-soft">
               <p className="label-caps mb-3">The mark on ink</p>
               <div className="flex items-center justify-center rounded-lg bg-ink p-6">
@@ -792,7 +792,7 @@ export default function DesignSystemPage() {
           title="Loading, empty, error & success"
           description="Every list and form has all four. None of them are a bare spinner on white."
         >
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="rounded-xl bg-paper p-6 shadow-soft">
               <p className="label-caps mb-4">Loading</p>
               <LoadingState label="Fetching bookings" />

@@ -100,7 +100,7 @@ export default function LoginPage() {
         </header>
         <hr className="rule-gold mt-6 opacity-70" />
 
-        <div className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1.1fr_minmax(0,26rem)] lg:items-start lg:gap-16 lg:pt-16">
+        <div className="grid grid-cols-1 flex-1 items-center gap-12 py-12 lg:grid-cols-[1.1fr_minmax(0,26rem)] lg:items-start lg:gap-16 lg:pt-16">
           {/* Left — the editorial column */}
           <div
             className="transition-transform duration-700 ease-out"

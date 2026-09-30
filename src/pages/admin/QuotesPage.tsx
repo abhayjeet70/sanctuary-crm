@@ -40,7 +40,7 @@ export default function QuotesPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Open quotes" value={quotes.length} icon={<FileText className="size-4" />} />
         <StatCard
           label="Accepted, unpaid"
@@ -74,7 +74,7 @@ export default function QuotesPage() {
           }
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {quotes.map((view) => {
             const { booking, villa, customer, totals } = view;
             const status = bookingStatus.get(booking.status);

@@ -109,7 +109,7 @@ export default function SettingsPage() {
             title="Where guests pay"
             note="Shown on the guest payment page and printed on every invoice. Change it here and both follow."
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field
                 id="upi"
                 label="UPI ID"
@@ -169,7 +169,7 @@ export default function SettingsPage() {
             title="Invoice"
             note="What appears on the document a guest receives and prints."
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field
                 id="legal-name"
                 label="Legal name"
@@ -279,7 +279,7 @@ export default function SettingsPage() {
             title="What guests are told"
             note="Shown on the guest booking form and printed on the booking voucher and its email. One bullet per line."
           >
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               {(
                 [
                   ["diningMenu", "Dining & menu", 6, "BREAKFAST — …"],
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Field
                 id="breakfast-line"
                 label="Breakfast line on voucher"
@@ -357,7 +357,7 @@ export default function SettingsPage() {
         {/* ------------------------------------------------------ property */}
         <TabsContent value="property" className="space-y-6 pt-5">
           <Section title="The property" note="Address and contact details.">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field id="trading-name" label="Trading name" value={draft.tradingName} onChange={(v) => set("tradingName", v)} />
               <Field id="contact-email" label="Contact email" value={draft.contactEmail} onChange={(v) => set("contactEmail", v)} />
               <Field id="contact-phone" label="Contact phone" value={draft.contactPhone} onChange={(v) => set("contactPhone", v)} />
@@ -373,7 +373,7 @@ export default function SettingsPage() {
             title="Lost & found retention"
             note="How many days a found item is kept before it is due for a decision. Applies to items logged from now on."
           >
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {(
                 [
                   ["lostFoundRetentionDays", "Ordinary items", "lf-days"],

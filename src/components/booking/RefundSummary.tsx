@@ -28,7 +28,7 @@ export function RefundSummary({ refund, audience }: { refund: Refund; audience: 
         <StatusBadge label={state.label} tone={state.tone} />
       </div>
 
-      <dl className="mt-4 grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
+      <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
         <Item k="Cancelled" v={`${formatDate(refund.cancelledAt.slice(0, 10))} · by ${refund.cancelledByRole === "guest" ? (audience === "guest" ? "you" : "the guest") : "our team"}`} />
         <Item k="Days before check-in" v={String(refund.daysBefore)} />
         <Item k="Paid" v={money(refund.amountPaid)} />

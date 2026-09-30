@@ -145,7 +145,7 @@ export function TaxManager() {
       <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <h2 className="text-xl text-ink">Add a tax</h2>
         <hr className="rule-gold my-4" />
-        <form onSubmit={add} className="grid gap-4 sm:grid-cols-[1fr_8rem_12rem_auto] sm:items-end">
+        <form onSubmit={add} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_8rem_12rem_auto] sm:items-end">
           <div className="space-y-1.5">
             <Label htmlFor="tax-name">Name</Label>
             <Input

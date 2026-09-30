@@ -112,7 +112,7 @@ export function OperatingStatement({
         <Eyebrow className="text-gold-700">Statistics</Eyebrow>
         <hr className="rule-gold my-4" />
 
-        <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           <Group title="Occupancy and rate">
             <Stat label="Available nights" value={String(kpis.availableNights)} />
             <Stat label="Nights sold" value={String(kpis.roomNights)} />

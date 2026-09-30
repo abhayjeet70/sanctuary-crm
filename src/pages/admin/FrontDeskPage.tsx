@@ -91,7 +91,7 @@ export default function FrontDeskPage() {
         description="Arrivals, departures, what is standing empty, and who is waiting."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           label="Arriving"
           value={arrivals.length}
@@ -136,7 +136,7 @@ export default function FrontDeskPage() {
         </TabsList>
 
         <TabsContent value="today">
-          <div className="grid gap-6 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <MovementList
               title="Arrivals"
               hint="In the order they said they would get here."
@@ -401,7 +401,7 @@ function RoomRack({
                   wide
                 />
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {villa.rooms.map((room) => {
                     // A whole-villa hold blocks every bedroom under it — the
                     // rack has to say so, or reception sells a room twice.
@@ -585,7 +585,7 @@ function OnShift() {
             </div>
             <hr className="rule-gold my-4" />
 
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {members.map((employee) => {
                 const jobs = open.filter((r) => r.request.assignedUser === employee.id);
                 const free = jobs.length === 0;

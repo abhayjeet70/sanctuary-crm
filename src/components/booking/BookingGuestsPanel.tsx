@@ -125,7 +125,7 @@ export function BookingGuestsPanel({ view }: { view: BookingView }) {
 
                 {expanded && (
                   <div className="mt-3 space-y-4 rounded-lg bg-sand-200/50 p-4 text-sm">
-                    <dl className="grid gap-3 sm:grid-cols-3">
+                    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       <Fact label="Phone">{person.phone || "—"}</Fact>
                       <Fact label="Email">{person.email || "—"}</Fact>
                       <Fact label="Added">{formatDateTime(person.createdAt)}</Fact>
@@ -336,7 +336,7 @@ function AdminAddGuest({
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="admin-companion-phone">Phone</Label>
               <Input

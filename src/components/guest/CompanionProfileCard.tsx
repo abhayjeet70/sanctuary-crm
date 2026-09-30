@@ -55,7 +55,7 @@ export function CompanionProfileCard() {
         You are signed in on a shared guest login. Add your name so your orders and requests
         are yours.
       </p>
-      <form className="mt-4 grid gap-4 sm:grid-cols-3" onSubmit={save} noValidate>
+      <form className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3" onSubmit={save} noValidate>
         <div className="space-y-1.5">
           <Label htmlFor="cp-name">Your name</Label>
           <Input id="cp-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />

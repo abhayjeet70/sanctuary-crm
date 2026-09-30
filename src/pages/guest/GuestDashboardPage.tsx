@@ -132,7 +132,7 @@ export default function GuestDashboardPage() {
           </div>
         </section>
 
-        <ul className="mt-6 grid gap-3 sm:grid-cols-3">
+        <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {collage.slice(0, 3).map((image) => (
             <li key={image.src} className="overflow-hidden rounded-2xl ring-1 ring-gold/20">
               <Photo
@@ -316,7 +316,7 @@ export default function GuestDashboardPage() {
 
         {/* ------------------------------------------------- live activity */}
         {(liveOrder || openRequests.length > 0) && (
-          <section className="grid gap-4 sm:grid-cols-2">
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {liveOrder && (
               <Link
                 to="/guest/food"
@@ -410,7 +410,7 @@ export default function GuestDashboardPage() {
               View all <span aria-hidden>→</span>
             </Link>
           </div>
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {links.map(({ to, label, hint, icon: Icon }) => (
               <li key={to}>
                 <Link

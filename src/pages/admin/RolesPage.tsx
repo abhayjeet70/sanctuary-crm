@@ -24,7 +24,7 @@ export default function RolesPage() {
         description="What each department may open. Access follows the department, so moving somebody moves their access with them."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Departments"
           value={departments.length}

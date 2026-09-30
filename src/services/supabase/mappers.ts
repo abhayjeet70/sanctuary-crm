@@ -284,6 +284,7 @@ export const toGuestRequest = (row: unknown): GuestRequest => {
     resolvedAt: x.resolved_at ?? undefined,
     resolutionNote: x.resolution_note ?? undefined,
     companionId: x.companion_id ?? undefined,
+    location: x.location ?? undefined,
     createdAt: x.created_at,
   };
 };

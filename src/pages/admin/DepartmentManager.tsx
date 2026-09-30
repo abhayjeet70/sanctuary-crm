@@ -142,7 +142,7 @@ export function DepartmentManager() {
       <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
         <h2 className="text-xl text-ink">Add a department</h2>
         <hr className="rule-gold my-4" />
-        <form onSubmit={add} className="grid gap-4 sm:grid-cols-[1fr_1.4fr_auto] sm:items-end">
+        <form onSubmit={add} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_1.4fr_auto] sm:items-end">
           <div className="space-y-1.5">
             <Label htmlFor="dept-name">Name</Label>
             <Input
@@ -226,7 +226,7 @@ function DepartmentCard({
 
       <fieldset>
         <legend className="label-caps text-gold-700">What they may do</legend>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {PERMISSIONS.map((permission) => {
             const held = department.permissions.includes(permission.key);
             return (

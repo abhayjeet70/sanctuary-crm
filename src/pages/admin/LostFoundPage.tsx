@@ -128,7 +128,7 @@ export default function LostFoundPage() {
       />
 
       {/* ------------------------------------------------------ the figures */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <StatCard label="Open items" value={counts.open} icon={<PackageSearch className="size-4" />} />
         <StatCard
           label="Guests to contact"
@@ -224,7 +224,7 @@ export default function LostFoundPage() {
           }
         />
       ) : (
-        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {shown.map((item) => (
             <ItemCard key={item.id} item={item} today={today} onOpen={() => setOpenId(item.id)} />
           ))}

@@ -70,7 +70,7 @@ export function QuickWaitlistForm() {
       className="space-y-4 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07]"
     >
       <Eyebrow className="text-gold-700">Join the waiting list</Eyebrow>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
           <Label htmlFor="wl-villa">Which house</Label>
           <Select value={villa} onValueChange={setVilla}>

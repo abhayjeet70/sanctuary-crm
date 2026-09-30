@@ -129,7 +129,7 @@ export function VoucherCard({
         </section>
       )}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-[1.3fr_1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-[1.3fr_1fr]">
         <section aria-label="Important information" className="rounded-xl border border-gold/40 bg-white/60 p-4">
           <p className="text-sm font-medium tracking-wide text-gold-700 uppercase">
             Important information

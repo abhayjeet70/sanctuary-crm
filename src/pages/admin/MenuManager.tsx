@@ -137,7 +137,7 @@ export function MenuManager() {
           description="Add the first one, and it will appear in the guest portal straight away."
         />
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {shown.map((item) => {
             const villa = villas.find((v) => v.id === item.villaId);
             return (
@@ -240,7 +240,7 @@ export function MenuManager() {
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="dish-price">Price</Label>
                 <Input

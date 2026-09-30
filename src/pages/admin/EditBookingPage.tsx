@@ -211,10 +211,10 @@ export default function EditBookingPage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_22rem]">
         <div className="min-w-0 space-y-6">
           <Section title="The stay">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Villa" htmlFor="villa">
                 <Select
                   value={form.villaId}
@@ -256,7 +256,7 @@ export default function EditBookingPage() {
             {isSplit && villa && (
               <fieldset className="mt-4">
                 <legend className="label-caps mb-2">Rooms</legend>
-                <div className="grid gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
                   {villa.rooms.map((room) => {
                     const checked = form.roomIds.includes(room.id);
                     return (
@@ -300,7 +300,7 @@ export default function EditBookingPage() {
               </fieldset>
             )}
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-4">
               <Field label="Check-in" htmlFor="check-in" error={showError("checkIn") ? errors.checkIn : undefined}>
                 <Input id="check-in" type="date" value={form.checkIn} onChange={(e) => set("checkIn", e.target.value)} />
               </Field>
@@ -365,7 +365,7 @@ export default function EditBookingPage() {
           </Section>
 
           <Section title="Charges">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Field label="Nightly rate" htmlFor="rate" error={showError("nightlyRate") ? errors.nightlyRate : undefined}>
                 <Input id="rate" type="number" min={0} step={500} value={form.nightlyRate} onChange={(e) => set("nightlyRate", e.target.value)} />
               </Field>

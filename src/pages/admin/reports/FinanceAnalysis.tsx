@@ -70,7 +70,7 @@ export function FinanceAnalysis({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel
           title="Bookings by"
           value={byCount}
@@ -105,7 +105,7 @@ export function FinanceAnalysis({
         </Panel>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
           <Eyebrow className="text-gold-700">What the money is made of</Eyebrow>
           <p className="mt-2 text-sm text-stone-600">

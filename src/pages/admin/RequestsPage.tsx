@@ -143,7 +143,7 @@ export default function RequestsPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Open" value={open.length} icon={<ClipboardList className="size-4" />} />
         <StatCard label="Urgent" value={urgent.length} tone={urgent.length ? "warn" : "default"} />
         <StatCard label="Unassigned" value={unassigned.length} />
@@ -242,7 +242,8 @@ export default function RequestsPage() {
                         {customer?.name}
                       </Link>
                       {companion && ` · asked by ${companion.fullName}`}{" "}
-                      · {villa?.name} ·{" "}
+                      · {villa?.name}
+                      {request.location && ` · ${request.location}`} ·{" "}
                       <Link
                         to={`/admin/bookings/${request.bookingId}`}
                         className="underline-offset-4 hover:text-clay-600 hover:underline"
@@ -389,7 +390,7 @@ export default function RequestsPage() {
       )}
 
       {/* A count per column, so the spread is visible without a kanban */}
-      <div className="grid gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
         {COLUMNS.map((column) => {
           const meta = requestStatus.get(column);
           const count = requests.filter((r) => r.request.status === column).length;

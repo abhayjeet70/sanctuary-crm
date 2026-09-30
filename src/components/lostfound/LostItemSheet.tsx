@@ -134,7 +134,7 @@ function SheetBody({ item }: { item: LostItem }) {
         )}
 
         {/* ----------------------------------------------------- the facts */}
-        <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
           <Fact label="Kind">{CATEGORIES[item.category]}</Fact>
           <Fact label="Found">{formatDateTime(item.foundAt)}</Fact>
           <Fact label="Where">
@@ -622,7 +622,7 @@ function CourierForm({
 
   return (
     <div className="space-y-3 rounded-xl ring-1 ring-ink/10 p-4">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field id="courier-provider" label="Courier">
           <Input id="courier-provider" value={provider} onChange={(e) => setProvider(e.target.value)} placeholder="Blue Dart" />
         </Field>
@@ -785,7 +785,7 @@ function Disposal({
           ? `Held past ${formatDate(item.retentionUntil!)} — the property's retention period is over.`
           : `Property policy holds it until ${item.retentionUntil ? formatDate(item.retentionUntil) : "its retention date"}.`}
       </p>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Select value={disposition} onValueChange={(v) => setDisposition(v as LostItemDisposition)}>
           <SelectTrigger aria-label="Disposition" className="w-full"><SelectValue /></SelectTrigger>
           <SelectContent>

@@ -127,7 +127,7 @@ export function Donut({
       </svg>
 
       {/* The legend is the identity channel; the ring only shows proportion. */}
-      <ul className="min-w-0 flex-1 space-y-2">
+      <ul className="min-w-0 flex-1 basis-60 space-y-2">
         {arcs.map((arc) => (
           <li
             key={arc.key}

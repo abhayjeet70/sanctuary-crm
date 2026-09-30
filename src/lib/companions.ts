@@ -37,11 +37,25 @@ export function companionAccess(
   now: Date = new Date(),
 ): CompanionAccess {
   if (companion.revokedAt) return "revoked";
-  if (["cancelled", "rejected", "no_show"].includes(booking.status)) return "expired";
+  return stayIsLive(booking, now) ? "active" : "expired";
+}
+
+/**
+ * Whether the stay is still running — the same clock, without a companion.
+ *
+ * Issuing a login once this is false would hand out a password the database
+ * refuses on the first request, so the screens that issue one ask this first.
+ * `booking_stay_is_live` is the copy that actually decides.
+ */
+export function stayIsLive(
+  booking: Pick<Booking, "status" | "checkOut" | "checkOutTime">,
+  now: Date = new Date(),
+): boolean {
+  if (["cancelled", "rejected", "no_show"].includes(booking.status)) return false;
 
   // The departure hour in IST, as a real instant.
   const time = booking.checkOutTime ?? "11:00";
   const ends = new Date(`${booking.checkOut}T${time}:00+05:30`);
   ends.setHours(ends.getHours() + GRACE_HOURS);
-  return now < ends ? "active" : "expired";
+  return now < ends;
 }

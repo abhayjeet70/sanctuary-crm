@@ -215,7 +215,7 @@ export default function GuestPaymentPage() {
           {/* ------------------------------------------------- instructions */}
           <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
             <Eyebrow className="text-gold-700">How to pay</Eyebrow>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="rounded-xl bg-sand-200/60 p-4">
                 <p className="flex items-center gap-2 font-medium text-ink">
                   <Smartphone className="size-4 text-gold-700" aria-hidden />
@@ -344,7 +344,7 @@ export default function GuestPaymentPage() {
               {/* Method */}
               <fieldset>
                 <legend className="label-caps mb-2">How did you pay?</legend>
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {(
                     [
                       ["upi", "UPI", Smartphone],
@@ -375,7 +375,7 @@ export default function GuestPaymentPage() {
                 </div>
               </fieldset>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="amount">
                     Amount transferred{" "}

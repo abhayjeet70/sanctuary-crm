@@ -103,7 +103,7 @@ export function InvoiceDocument({
         </p>
 
         {/* ------------------------------------------------ parties and refs */}
-        <div className="grid sm:grid-cols-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2">
           <div className="border-b border-ink/70 sm:border-r sm:border-b-0">
             <p className="border-b border-ink/40 px-2 py-0.5 text-xs font-semibold italic underline">
               Exporter / Invoicer
@@ -207,7 +207,7 @@ export function InvoiceDocument({
         </dl>
 
         {/* ---------------------------------------------------- declaration */}
-        <div className="grid border-t border-ink/70 sm:grid-cols-[1.4fr_1fr]">
+        <div className="grid grid-cols-1 border-t border-ink/70 sm:grid-cols-[1.4fr_1fr]">
           <div className="border-b border-ink/70 sm:border-r sm:border-b-0">
             <p className="border-b border-ink/70 py-0.5 text-center text-xs font-semibold uppercase">
               Declaration

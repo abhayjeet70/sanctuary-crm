@@ -24,7 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmptyState, StatusBadge } from "@/components/common";
-import { ChipGroup, DiningInfo, PaymentAndPolicies } from "@/components/booking/StayInfo";
+import { ChipGroup, DiningDetails, PaymentAndPolicies } from "@/components/booking/StayInfo";
 import { MealChoices } from "@/components/booking/MealChoices";
 import { VoucherCard } from "@/components/booking/VoucherDocument";
 import { supabase } from "@/services/supabase/client";
@@ -386,7 +386,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                     Pick your dates — no account needed until the very end.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 sm:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
                   <Field label="Check-in" htmlFor="pb-checkin">
                     <Input
                       id="pb-checkin"
@@ -424,7 +424,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                     />
                   </Field>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Arriving around" htmlFor="pb-arrival" hint="Blank for the house's own hours.">
                     <Input id="pb-arrival" type="time" value={arrival} onChange={(e) => setArrival(e.target.value)} />
                   </Field>
@@ -597,7 +597,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                 {isSplit && chosen && (
                   <div className="rounded-xl bg-sand-200/60 p-4">
                     <p className="text-sm font-medium text-ink">Choose your rooms</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {rooms.map((room) => {
                         const picked = chosenRooms.includes(room.room_id);
                         return (
@@ -640,7 +640,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                       : `${chosenVillaRecord?.name ?? chosen?.villa_name} · ${nights} ${nights === 1 ? "night" : "nights"}`}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Full name" htmlFor="pb-name">
                     <Input id="pb-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
                   </Field>
@@ -666,11 +666,11 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                     Tell us once — the kitchen, the desk and your voucher all read the same answers.
                   </DialogDescription>
                 </DialogHeader>
-                <DiningInfo settings={info} />
                 <MealChoices
                   value={prefs.mealChoices}
                   onChange={(mealChoices) => setPrefs({ ...prefs, mealChoices })}
                 />
+                <DiningDetails settings={info} />
                 <Field label="Dietary preference" htmlFor="pb-dietary">
                   <Select
                     value={prefs.dietary}
@@ -700,7 +700,7 @@ export function PublicBookingDialog({ trigger }: { trigger: React.ReactNode }) {
                   selected={prefs.cuisines}
                   onToggle={(v) => setPrefs({ ...prefs, cuisines: toggle(prefs.cuisines, v) })}
                 />
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Allergies" htmlFor="pb-allergies" hint="Anything the kitchen must never serve.">
                     <Input id="pb-allergies" value={prefs.allergies} onChange={(e) => setPrefs({ ...prefs, allergies: e.target.value })} />
                   </Field>
