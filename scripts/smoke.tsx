@@ -288,7 +288,7 @@ console.log(failed ? `\n${failed} route(s) failed to render` : "\nall routes ren
     ["a manager is not called Owner", !manager.includes(">Owner<")],
     ["a manager is called Manager", manager.includes(">Manager<")],
     ["the nav is grouped", ["Operations", "Property", "Sales", "Finance", "Management"].every((g) => owner.includes(">" + g + "<"))],
-    ["the active item carries its brass rail", /bg-gold[^"]*"/.test(owner) && owner.includes("-translate-y-1/2")],
+    ["the active item carries its brass rail", owner.includes("border-l-[3px] border-gold") && owner.includes("rounded-l-lg")],
     ["the scroll region is not the platform default", owner.includes("scrollbar-slim")],
   ];
 

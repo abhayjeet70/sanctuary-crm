@@ -29,7 +29,8 @@ await page.goto("http://localhost:4173/admin/reports", { waitUntil: "networkidle
 await sleep(1500);
 
 const names = await Promise.all((await page.$$("[role=tab]")).map((t) => t.evaluate((e) => e.innerText.trim())));
-const PAGE_W = 688; // A4 minus 14 mm margins, at 96 dpi
+// A4 minus 14 mm margins, at 96 dpi: portrait, and landscape (wider than lg).
+for (const [orient, PAGE_W] of [["portrait", 688], ["landscape", 1100]])
 for (let i = 0; i < names.length; i++) {
   await (await page.$$("[role=tab]"))[i].click();
   await sleep(1200);
@@ -45,6 +46,7 @@ for (let i = 0; i < names.length; i++) {
     const dark = [...(flow?.querySelectorAll("*") ?? [])].filter((e) => { const c = getComputedStyle(e).backgroundColor; return c === "rgb(20, 39, 49)" && e.innerText.trim().length > 0; });
     return {
       text: flow?.innerText.trim().length ?? 0,
+      widthShare: (r?.width ?? 0) / window.innerWidth,
       top: Math.round(r?.top ?? -1),
       overflowing,
       darkCards: dark.length,
@@ -52,22 +54,55 @@ for (let i = 0; i < names.length; i++) {
       colourAdjust: flow ? getComputedStyle(flow).getPropertyValue("print-color-adjust") : "",
     };
   });
-  const pdf = await page.pdf({ format: "A4", margin: { top: "14mm", bottom: "14mm", left: "14mm", right: "14mm" } });
+  const pdf = await page.pdf({ format: "A4", landscape: orient === "landscape", margin: { top: "14mm", bottom: "14mm", left: "14mm", right: "14mm" } });
   const pages = (Buffer.from(pdf).toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
-  const slug = names[i].toLowerCase().replace(/[^a-z]+/g, "-");
+  const slug = `${names[i].toLowerCase().replace(/[^a-z]+/g, "-")}-${orient}`;
   writeFileSync(`${out}/${slug}.pdf`, pdf);
   await page.screenshot({ path: `${out}/${slug}.png`, fullPage: true });
 
-  check(`${names[i]}: prints real content`, m.text > 400, `${m.text} chars`);
-  check(`${names[i]}: no blank band above the title`, m.top >= 0 && m.top < 60, `starts ${m.top}px down`);
-  check(`${names[i]}: nothing runs off the right edge`, m.overflowing === 0, `${m.overflowing} elements overflow`);
-  check(`${names[i]}: dark cards keep their fill`, m.darkCards === 0 || m.colourAdjust === "exact", `print-color-adjust=${m.colourAdjust}`);
-  check(`${names[i]}: a sensible page count (${pages})`, pages >= 1 && pages <= 6);
+  check(`${names[i]} (${orient}): prints real content`, m.text > 400, `${m.text} chars`);
+  check(`${names[i]} (${orient}): uses the page width`, m.widthShare > 0.9, `only ${Math.round(m.widthShare * 100)}% of the width`);
+  check(`${names[i]} (${orient}): no blank band above the title`, m.top >= 0 && m.top < 60, `starts ${m.top}px down`);
+  check(`${names[i]} (${orient}): nothing runs off the right edge`, m.overflowing === 0, `${m.overflowing} elements overflow`);
+  check(`${names[i]} (${orient}): dark cards keep their fill`, m.darkCards === 0 || m.colourAdjust === "exact", `print-color-adjust=${m.colourAdjust}`);
+  check(`${names[i]} (${orient}): a sensible page count (${pages})`, pages >= 1 && pages <= 6);
 
   await page.emulateMediaType("screen");
   await page.setViewport({ width: 1400, height: 1000 });
   await sleep(300);
 }
+// ---- an invoice printed from the Invoices page (it opens in a dialog)
+await page.goto("http://localhost:4173/admin/invoices", { waitUntil: "networkidle0" });
+await sleep(1200);
+const opened = await page.evaluate(() => {
+  const b = document.querySelector('button[aria-label^="View "]');
+  if (!b) return false;
+  b.click();
+  return true;
+});
+await sleep(1000);
+if (!opened) check("Invoice dialog: opens", false, "no View button");
+else {
+  for (const [orient, w] of [["portrait", 688], ["landscape", 1100]]) {
+    await page.emulateMediaType("print");
+    await page.setViewport({ width: w, height: 1000 });
+    await sleep(400);
+    const inv = await page.evaluate(() => {
+      const root = document.querySelector("[data-print-root]");
+      const r = root?.getBoundingClientRect();
+      return { text: root?.innerText ?? "", visibleHeight: r?.height ?? 0, scrollHeight: root?.scrollHeight ?? 0, left: Math.round(r?.left ?? -1) };
+    });
+    const pdf = await page.pdf({ format: "A4", landscape: orient === "landscape", margin: { top: "14mm", bottom: "14mm", left: "14mm", right: "14mm" } });
+    const pages = (Buffer.from(pdf).toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+    writeFileSync(`${out}/invoice-${orient}.pdf`, pdf);
+    await page.screenshot({ path: `${out}/invoice-${orient}.png`, fullPage: true });
+    check(`Invoice (${orient}): line items and total print`, /total/i.test(inv.text) && inv.text.length > 300, `${inv.text.length} chars`);
+    check(`Invoice (${orient}): starts at the left edge`, inv.left >= 0 && inv.left < 20, `left ${inv.left}px`);
+    check(`Invoice (${orient}): one or two pages, not repeats (${pages})`, pages >= 1 && pages <= 2);
+  }
+  await page.emulateMediaType("screen");
+}
+
 await browser.close();
 console.log(fails ? `\n${fails} FAILED` : "\nall passed");
 process.exit(fails ? 1 : 0);

@@ -158,14 +158,13 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
                     >
                       {({ isActive }) => (
                         <>
-                          {/* The brass rail. Rounded ends and inset by 2px:
-                              a square bar flush at left-0 sits proud of the
-                              pill's own corner radius, which reads as a
-                              rendering slip rather than an accent. */}
+                          {/* The brass rail: the pill's own left edge in gold, so it
+                              bends round the rounded corners as one arc instead of
+                              a straight bar sitting inside them. */}
                           {isActive && (
                             <span
                               aria-hidden
-                              className="absolute top-1/2 left-0.5 h-5 w-[3px] -translate-y-1/2 rounded-full bg-gold"
+                              className="pointer-events-none absolute inset-y-0 left-0 w-3 rounded-l-lg border-l-[3px] border-gold"
                             />
                           )}
                           <Icon
@@ -355,7 +354,7 @@ export function AdminShell() {
   };
 
   return (
-    <div className="min-h-dvh bg-sand lg:grid lg:grid-cols-[13.5rem_1fr]">
+    <div className="min-h-dvh bg-sand lg:grid lg:grid-cols-[13.5rem_1fr] print:block">
       {/* Desktop sidebar. A hairline on the right edge only — a ring drew
           brass down the offscreen side and along the top of the window. */}
       <aside

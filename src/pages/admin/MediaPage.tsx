@@ -145,13 +145,14 @@ function PhotoSet({
               >
                 {i > 0 && (
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="secondary"
-                    className="size-8"
+                    className="h-8"
                     aria-label={`Make photo ${i + 1} the cover`}
                     onClick={() => onChange([src, ...photos.filter((_, j) => j !== i)])}
                   >
                     <Star aria-hidden />
+                    Set as cover
                   </Button>
                 )}
                 <Button

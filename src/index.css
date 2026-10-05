@@ -331,6 +331,34 @@
     padding: 0 !important;
   }
 
+  /* A document opened in a dialog (the Invoices list) prints as the page.
+     The dialog is position: fixed, 90vh tall and scrolls — printed, that box
+     repeated on every sheet with only its first screenful showing. So the app
+     behind steps out entirely and the dialog becomes ordinary flow. */
+  body:has([role="dialog"] [data-print-root]) #root {
+    display: none !important;
+  }
+  [role="dialog"]:has([data-print-root]) {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    /* Tailwind drives translate through these; a bare `translate: none` is
+       folded into `transform` by the CSS minifier and lost. */
+    --tw-translate-x: 0 !important;
+    --tw-translate-y: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    animation: none !important;
+  }
+  [role="dialog"] [data-print-root] {
+    position: static;
+  }
+
   html,
   body {
     background: #fff !important;
