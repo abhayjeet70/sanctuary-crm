@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -16,13 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { PasswordInput } from "@/components/common/PasswordInput";
 import { EmailInput } from "@/components/common/EmailInput";
 import { emailProblem } from "@/lib/email";
@@ -150,7 +143,15 @@ export default function BookStayPage() {
   const [waitlistFor, setWaitlistFor] = useState<{ villaId?: string; villaName?: string } | null>(
     null,
   );
-  const [detailsFor, setDetailsFor] = useState<Availability | null>(null);
+  // The villa page lives in the URL, so the phone's back button closes it.
+  const [params, setParams] = useSearchParams();
+  const detailsFor = results?.find((r) => r.villa_id === params.get("villa")) ?? null;
+  const setDetailsFor = (row: Availability | null) => {
+    if (row) {
+      setParams({ villa: row.villa_id });
+      window.scrollTo(0, 0);
+    } else navigate(-1);
+  };
 
   const nights = checkOut > checkIn ? nightsBetween(checkIn, checkOut) : 0;
   const chosen = results?.find((r) => r.villa_id === chosenVilla);
@@ -347,6 +348,38 @@ export default function BookStayPage() {
     window.location.assign(result.waitlisted ? "/guest/waitlist" : "/guest/dashboard");
   };
 
+  const chatButton = whatsappNumber && (
+        <button
+          type="button"
+          onClick={chatOnWhatsApp}
+          className="fixed right-4 bottom-24 z-40 flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-sm font-medium text-white shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:right-6 lg:bottom-6"
+        >
+          <MessageCircle className="size-5" aria-hidden />
+          Chat with us
+        </button>
+  );
+
+  if (detailsFor) {
+    return (
+      <>
+        <VillaDetails
+          row={detailsFor}
+          villa={villas.find((v) => v.id === detailsFor.villa_id)}
+          rooms={roomMedia.filter((r) => r.villa_id === detailsFor.villa_id)}
+          nights={nights}
+          guests={Number(adults) + Number(children)}
+          dates={formatDateRange(checkIn, checkOut)}
+          onClose={() => setDetailsFor(null)}
+          onSelect={(row) => {
+            navigate(-1);
+            void pickVilla(row);
+          }}
+        />
+        {chatButton}
+      </>
+    );
+  }
+
   const pct = Math.round(((step + 1) / STEPS.length) * 100);
 
   return (
@@ -377,7 +410,7 @@ export default function BookStayPage() {
           </Button>
         </header>
 
-        <main className="mt-6 flex-1 rounded-2xl bg-sand p-5 shadow-lift ring-1 ring-gold/30 sm:p-8">
+        <main className="mt-4 flex-1 rounded-2xl bg-sand p-4 shadow-lift sm:mt-6 ring-1 ring-gold/30 sm:p-8">
           {/* ---------------------------------------------------- progress bar */}
           <div className="flex items-baseline justify-between text-xs text-stone-600">
             <span className="label-caps text-gold-700">
@@ -834,102 +867,119 @@ export default function BookStayPage() {
         )}
       </div>
 
-      {/* ----------------------------------------------- chat on WhatsApp */}
-      {whatsappNumber && (
-        <button
-          type="button"
-          onClick={chatOnWhatsApp}
-          className="fixed right-4 bottom-20 z-40 flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-sm font-medium text-white shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:right-6 sm:bottom-6"
-        >
-          <MessageCircle className="size-5" aria-hidden />
-          Chat with us
-        </button>
-      )}
+      {chatButton}
 
-      {/* --------------------------------------------- villa details & photos */}
-      <VillaDetails
-        key={detailsFor?.villa_id}
-        row={detailsFor}
-        villa={villas.find((v) => v.id === detailsFor?.villa_id)}
-        rooms={roomMedia.filter((r) => r.villa_id === detailsFor?.villa_id)}
-        nights={nights}
-        onClose={() => setDetailsFor(null)}
-        onSelect={(row) => {
-          setDetailsFor(null);
-          void pickVilla(row);
-        }}
-      />
     </div>
   );
 }
 
+/**
+ * One villa, as its own page — the way a travel site shows a hotel: a photo
+ * grid (a swipeable strip on phones), the essentials, the rooms, and a price
+ * bar that stays on screen with the button to book.
+ */
 function VillaDetails({
   row,
   villa,
   rooms,
   nights,
+  guests,
+  dates,
   onClose,
   onSelect,
 }: {
-  row: Availability | null;
+  row: Availability;
   villa?: Villa;
   rooms: RoomMedia[];
   nights: number;
+  guests: number;
+  dates: string;
   onClose: () => void;
   onSelect: (row: Availability) => void;
 }) {
   const photos = villa ? [villa.image, ...(villa.gallery ?? [])].filter(Boolean) : [];
-  const [active, setActive] = useState(0);
-  const free = row && (row.villa_mode === "split" ? row.free_rooms > 0 : row.whole_available);
+  const [allPhotos, setAllPhotos] = useState(false);
+  const free = row.villa_mode === "split" ? row.free_rooms > 0 : row.whole_available;
+  const stayTotal = withTax(row.nightly_rate * nights, row.nightly_rate);
 
   return (
-    <Dialog open={Boolean(row)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[94dvh] overflow-y-auto sm:max-w-5xl">
-        {row && (
-          <>
-            <DialogHeader>
-              <DialogTitle>{row.villa_name}</DialogTitle>
-              <DialogDescription>
-                {row.total_rooms} bedrooms · sleeps {villa?.capacity ?? row.total_rooms * 2} ·{" "}
-                {money(row.nightly_rate)} / night
-              </DialogDescription>
-            </DialogHeader>
+    <div className="min-h-dvh bg-sand pb-28">
+      {/* --------------------------------------------------------- top bar */}
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink/8 bg-sand/95 px-4 py-3 backdrop-blur sm:px-8">
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Back to all villas">
+          <ArrowLeft aria-hidden />
+        </Button>
+        <div className="min-w-0">
+          <p className="truncate font-display text-lg text-ink">{row.villa_name}</p>
+          <p className="truncate text-xs text-stone-600">
+            {dates} · {guests} guests
+          </p>
+        </div>
+      </header>
 
-            {photos.length > 0 && (
-              <div className="space-y-2">
-                <img
-                  src={photos[active]}
-                  alt={`${row.villa_name}, photo ${active + 1} of ${photos.length}`}
-                  className="aspect-[16/9] w-full rounded-xl object-cover"
-                />
-                {photos.length > 1 && (
-                  <ul className="flex gap-2 overflow-x-auto pb-1">
-                    {photos.map((src, i) => (
-                      <li key={src + i} className="shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setActive(i)}
-                          aria-label={`Show photo ${i + 1}`}
-                          aria-current={i === active}
-                          className={cn("block overflow-hidden rounded-lg ring-2", i === active ? "ring-gold" : "ring-transparent")}
-                        >
-                          <img src={src} alt="" className="h-16 w-24 object-cover" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
+      <main className="mx-auto max-w-6xl space-y-8 px-4 pt-4 sm:px-8 sm:pt-6">
+        {/* ------------------------------------------------------ photos */}
+        {photos.length > 0 && (
+          <section aria-label="Photos">
+            {/* Phone: swipe strip */}
+            <ul className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 sm:hidden">
+              {photos.map((src, i) => (
+                <li key={src + i} className="relative w-[88%] shrink-0 snap-center">
+                  <img src={src} alt={`${row.villa_name}, photo ${i + 1}`} className="aspect-[4/3] w-full rounded-xl object-cover" />
+                  <span className="absolute right-2 bottom-2 rounded bg-ink/70 px-2 py-0.5 text-xs text-white">
+                    {i + 1}/{photos.length}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {/* Tablet & desktop: one large, four small */}
+            <div className="hidden h-[26rem] grid-cols-4 grid-rows-2 gap-2 sm:grid">
+              {photos.slice(0, 5).map((src, i) => (
+                <button
+                  key={src + i}
+                  type="button"
+                  onClick={() => setAllPhotos(true)}
+                  className={cn("relative overflow-hidden rounded-xl", i === 0 && "col-span-2 row-span-2")}
+                  aria-label={`Show all photos (${photos.length})`}
+                >
+                  <img src={src} alt="" className="size-full object-cover transition-transform duration-500 hover:scale-105" />
+                  {i === Math.min(4, photos.length - 1) && photos.length > 1 && (
+                    <span className="absolute right-3 bottom-3 rounded-md bg-white/95 px-3 py-1.5 text-sm font-medium text-ink shadow-soft">
+                      All {photos.length} photos
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
-            {villa?.description && <p className="leading-relaxed text-ink/85">{villa.description}</p>}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
+          <div className="min-w-0 space-y-8">
+            {/* ---------------------------------------------- essentials */}
+            <section>
+              <h1 className="font-display text-3xl text-ink sm:text-4xl">{row.villa_name}</h1>
+              <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-600">
+                <span className="flex items-center gap-1">
+                  <BedDouble className="size-4" aria-hidden />
+                  {row.total_rooms} bedrooms
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="size-4" aria-hidden />
+                  Sleeps {villa?.capacity ?? row.total_rooms * 2}
+                </span>
+                <span>{row.villa_mode === "split" ? "Book rooms or the whole villa" : "Entire villa, private to you"}</span>
+              </p>
+              {villa?.description && <p className="mt-4 max-w-prose leading-relaxed text-ink/85">{villa.description}</p>}
+            </section>
 
             {villa && villa.amenities.length > 0 && (
               <section>
-                <h3 className="label-caps text-gold-700">Amenities</h3>
-                <ul className="mt-2 flex flex-wrap gap-1.5">
+                <h2 className="font-display text-xl text-ink">Amenities</h2>
+                <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
                   {villa.amenities.map((a) => (
-                    <li key={a} className="rounded-md border border-ink/12 px-2 py-0.5 text-xs text-stone-600">
+                    <li key={a} className="flex items-start gap-2 text-sm text-ink/85">
+                      <Check className="mt-0.5 size-4 shrink-0 text-status-confirmed" aria-hidden />
                       {a}
                     </li>
                   ))}
@@ -939,18 +989,18 @@ function VillaDetails({
 
             {rooms.length > 0 && (
               <section>
-                <h3 className="label-caps text-gold-700">The rooms</h3>
-                <ul className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <h2 className="font-display text-xl text-ink">The rooms</h2>
+                <ul className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {rooms.map((room) => (
-                    <li key={room.id} className="overflow-hidden rounded-xl bg-white ring-1 ring-ink/[0.07]">
+                    <li key={room.id} className="overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-ink/[0.07]">
                       {room.gallery.length > 0 && (
-                        <div className="flex gap-1 overflow-x-auto">
+                        <div className="flex snap-x snap-mandatory overflow-x-auto">
                           {room.gallery.map((src) => (
-                            <img key={src} src={src} alt={room.name} className="h-32 w-48 shrink-0 object-cover" />
+                            <img key={src} src={src} alt={room.name} className="aspect-[4/3] w-full shrink-0 snap-center object-cover" />
                           ))}
                         </div>
                       )}
-                      <div className="p-3">
+                      <div className="p-4">
                         <p className="font-medium text-ink">{room.name}</p>
                         <p className="text-xs text-stone-600">Sleeps {room.capacity}</p>
                         {room.description && <p className="mt-1 text-sm text-ink/80">{room.description}</p>}
@@ -961,27 +1011,63 @@ function VillaDetails({
               </section>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink/8 pt-4">
-              <p className="text-sm text-stone-600">
-                {nights > 0 && (
-                  <>
-                    <span className="font-display text-xl text-ink tabular-nums">
-                      {money(withTax(row.nightly_rate * nights, row.nightly_rate))}
-                    </span>{" "}
-                    for {nights} {nights === 1 ? "night" : "nights"}, incl. GST
-                  </>
-                )}
-              </p>
-              {free && (
-                <Button onClick={() => onSelect(row)}>
+            {allPhotos && (
+              <section id="all-photos">
+                <h2 className="font-display text-xl text-ink">All photos</h2>
+                <ul className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {photos.map((src, i) => (
+                    <li key={src + i}>
+                      <img src={src} alt={`${row.villa_name}, photo ${i + 1}`} loading="lazy" className="w-full rounded-xl object-cover" />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </div>
+
+          {/* ------------------------------------------- desktop price card */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07]">
+              <PriceBlock row={row} nights={nights} total={stayTotal} />
+              {free ? (
+                <Button className="mt-4 w-full" size="lg" onClick={() => onSelect(row)}>
                   {row.villa_mode === "split" ? "Choose rooms" : "Book this villa"}
                 </Button>
+              ) : (
+                <StatusBadge label="Not available for these dates" tone="cancelled" />
               )}
             </div>
-          </>
+          </aside>
+        </div>
+      </main>
+
+      {/* ------------------------------------------ phone/tablet price bar */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-ink/10 bg-white px-4 py-3 shadow-lift lg:hidden">
+        <PriceBlock row={row} nights={nights} total={stayTotal} />
+        {free ? (
+          <Button size="lg" onClick={() => onSelect(row)}>
+            {row.villa_mode === "split" ? "Choose rooms" : "Book now"}
+          </Button>
+        ) : (
+          <StatusBadge label="Not available" tone="cancelled" />
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
+  );
+}
+
+function PriceBlock({ row, nights, total }: { row: Availability; nights: number; total: number }) {
+  return (
+    <div>
+      <p className="font-display text-2xl text-ink tabular-nums">
+        {money(row.nightly_rate)} <span className="text-xs font-sans text-stone-600">/ night</span>
+      </p>
+      {nights > 0 && (
+        <p className="text-xs text-stone-600 tabular-nums">
+          {money(total)} for {nights} {nights === 1 ? "night" : "nights"} · incl. GST
+        </p>
+      )}
+    </div>
   );
 }
 
