@@ -406,11 +406,11 @@ export default function BookStayPage() {
       </div>
       <div aria-hidden className="fixed inset-0 bg-ink/75 backdrop-blur-[2px]" />
 
-      <div className="relative mx-auto flex min-h-dvh max-w-7xl flex-col px-3 py-3 sm:px-6">
-        <header className="flex items-center justify-between min-[1560px]:justify-end">
-          {/* Wide screens: in the empty margin left of the card, a little larger. */}
-          <Link to="/login" aria-label="Back to sign in" className="z-20 min-[1560px]:fixed min-[1560px]:top-6 min-[1560px]:left-8">
-            <Logo variant="onDark" size="h-12 min-[1560px]:h-24" />
+      <div className="relative mx-auto flex min-h-dvh max-w-[90rem] flex-col px-3 py-3 sm:px-6 lg:pl-40">
+        <header className="flex items-center justify-between lg:justify-end">
+          {/* Laptop and up: its own column left of the card, at twice the size. */}
+          <Link to="/login" aria-label="Back to sign in" className="z-20 lg:absolute lg:top-6 lg:left-8">
+            <Logo variant="onDark" size="h-12 lg:h-24" />
           </Link>
           <Button asChild variant="ghost" className="text-sand/80 hover:bg-white/10 hover:text-white">
             <Link to="/login">
@@ -505,6 +505,36 @@ export default function BookStayPage() {
                       <Search aria-hidden />
                       {searching ? "Checking…" : "Check availability"}
                     </Button>
+
+                    <section aria-label="Homes of Sanctuary" className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-[1fr_1.5fr]">
+                      <figure className="relative flex flex-col justify-center overflow-hidden rounded-2xl bg-forest p-6 text-sand sm:p-8">
+                        <span aria-hidden className="absolute -top-6 left-4 font-display text-[9rem] leading-none text-white/10">
+                          &ldquo;
+                        </span>
+                        <blockquote className="relative font-display text-2xl leading-snug text-white sm:text-3xl">
+                          Some places you visit. Others, you return to — in your mind, long after you leave.
+                        </blockquote>
+                        <hr className="rule-gold relative my-5 w-24" />
+                        <figcaption className="relative text-[11px] tracking-[0.3em] text-gold-200 uppercase">
+                          Three houses above the clouds · Nandi Hills
+                        </figcaption>
+                      </figure>
+                      <ul className="grid h-64 grid-cols-3 grid-rows-2 gap-2 sm:h-72">
+                        {backdrop.slice(0, 3).map((src, i) => (
+                          <li
+                            key={src + i}
+                            className={cn("overflow-hidden rounded-xl", i === 0 && "col-span-2 row-span-2")}
+                          >
+                            <img
+                              src={src}
+                              alt=""
+                              loading="lazy"
+                              className="size-full object-cover transition-transform duration-700 hover:scale-105"
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
                   </>
                 )}
 
