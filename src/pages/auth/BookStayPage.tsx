@@ -352,10 +352,11 @@ export default function BookStayPage() {
         <button
           type="button"
           onClick={chatOnWhatsApp}
-          className="fixed right-4 bottom-24 z-40 flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-sm font-medium text-white shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:right-6 lg:bottom-6"
+          aria-label="Chat with us on WhatsApp"
+          className="fixed right-3 bottom-24 z-40 flex items-center gap-2 rounded-full bg-[#25D366] p-3 sm:right-6 sm:px-4 text-sm font-medium text-white shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:right-6 lg:bottom-6"
         >
           <MessageCircle className="size-5" aria-hidden />
-          Chat with us
+          <span className="hidden sm:inline">Chat with us</span>
         </button>
   );
 
@@ -369,6 +370,10 @@ export default function BookStayPage() {
           nights={nights}
           guests={Number(adults) + Number(children)}
           dates={formatDateRange(checkIn, checkOut)}
+          highlights={[
+            policyHeadline(policyFields(villas.find((v) => v.id === detailsFor.villa_id)?.cancellation_policy, info), checkIn),
+            info?.breakfastLine,
+          ].filter(Boolean) as string[]}
           onClose={() => setDetailsFor(null)}
           onSelect={(row) => {
             navigate(-1);
@@ -588,12 +593,11 @@ export default function BookStayPage() {
                                   <>
                                     <div className="min-w-0">
                                       <p className="font-display text-2xl text-ink tabular-nums">
-                                        {money(row.nightly_rate)}
-                                        <span className="ml-1 font-sans text-xs text-stone-600">/ night</span>
+                                        {money(stay + tax)}
+                                        <span className="ml-1 font-sans text-xs text-stone-600">total</span>
                                       </p>
                                       <p className="text-xs text-stone-600">
-                                        + {money(tax)} tax · <strong className="text-ink">{money(stay + tax)}</strong> for {nights}{" "}
-                                        {nights === 1 ? "night" : "nights"}
+                                        {nights} {nights === 1 ? "night" : "nights"} · {money(row.nightly_rate)}/night + {money(tax)} GST
                                       </p>
                                     </div>
                                     <Button
@@ -740,8 +744,9 @@ export default function BookStayPage() {
 
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_22rem] lg:items-start">
                     {!waitlistFor && chosen && (
-                      <div className="space-y-3 lg:max-h-[calc(100dvh-15rem)] lg:overflow-y-auto lg:pr-1">
+                      <div className="space-y-3">
                         <VoucherCard
+                          compact
                           className="rounded-xl"
                           settings={info}
                           data={{
@@ -763,11 +768,6 @@ export default function BookStayPage() {
                             arrangements: requests.trim() ? [requests.trim()] : [],
                           }}
                         />
-                        <p className="rounded-xl bg-status-pending-bg p-3 text-sm text-ink">
-                          <strong>Payment pending.</strong> Continue to sign in and pay from your
-                          portal — the booking is confirmed, and the final voucher issued, once your
-                          payment is verified. GST is included in the total shown.
-                        </p>
                         <details className="rounded-xl bg-sand-200/50 p-4">
                           <summary className="cursor-pointer text-sm font-medium text-ink">Terms &amp; policies</summary>
                           <div className="mt-3">
@@ -781,6 +781,15 @@ export default function BookStayPage() {
                     )}
 
                     <div className="space-y-3 rounded-xl bg-white p-4 ring-1 ring-ink/[0.07] lg:sticky lg:top-4">
+                      {!waitlistFor && chosen && (
+                        <div className="rounded-lg bg-ink p-3 text-sand">
+                          <p className="label-caps text-gold-400">Total to pay · 100% advance</p>
+                          <p className="font-display text-3xl text-white tabular-nums">{money(total)}</p>
+                          <p className="text-xs text-sand/70">
+                            {nights} {nights === 1 ? "night" : "nights"} · incl. GST · payment pending until we verify your receipt
+                          </p>
+                        </div>
+                      )}
                       <p className="text-sm font-medium text-ink">
                         {returning ? `Sign in as ${email}` : "Create your login to continue"}
                       </p>
@@ -884,9 +893,10 @@ export default function BookStayPage() {
 }
 
 /**
- * One villa, as its own page — the way a travel site shows a hotel: a photo
- * grid (a swipeable strip on phones), the essentials, the rooms, and a price
- * bar that stays on screen with the button to book.
+ * One villa, as its own page — laid out the way MakeMyTrip shows a property:
+ * title, then photos beside a booking card with the total and the button, all
+ * above the fold; details below. Phones get a swipe strip and a price bar
+ * pinned to the bottom.
  */
 function VillaDetails({
   row,
@@ -895,6 +905,7 @@ function VillaDetails({
   nights,
   guests,
   dates,
+  highlights,
   onClose,
   onSelect,
 }: {
@@ -904,6 +915,7 @@ function VillaDetails({
   nights: number;
   guests: number;
   dates: string;
+  highlights: string[];
   onClose: () => void;
   onSelect: (row: Availability) => void;
 }) {
@@ -911,28 +923,49 @@ function VillaDetails({
   const [allPhotos, setAllPhotos] = useState(false);
   const free = row.villa_mode === "split" ? row.free_rooms > 0 : row.whole_available;
   const stayTotal = withTax(row.nightly_rate * nights, row.nightly_rate);
+  const cta = row.villa_mode === "split" ? "Choose rooms" : "Book this villa";
+  const showAll = () => {
+    setAllPhotos(true);
+    setTimeout(() => document.getElementById("all-photos")?.scrollIntoView({ behavior: "smooth" }), 50);
+  };
 
   return (
-    <div className="min-h-dvh bg-sand pb-28">
+    <div className="min-h-dvh bg-sand pb-24 lg:pb-10">
       {/* --------------------------------------------------------- top bar */}
-      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-ink/8 bg-sand/95 px-4 py-3 backdrop-blur sm:px-8">
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Back to all villas">
-          <ArrowLeft aria-hidden />
-        </Button>
-        <div className="min-w-0">
-          <p className="truncate font-display text-lg text-ink">{row.villa_name}</p>
-          <p className="truncate text-xs text-stone-600">
-            {dates} · {guests} guests
-          </p>
+      <header className="sticky top-0 z-30 border-b border-ink/8 bg-sand/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 py-2 sm:px-6">
+          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Back to all villas">
+            <ArrowLeft aria-hidden />
+          </Button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-ink">{row.villa_name}</p>
+            <p className="truncate text-xs text-stone-600">
+              {dates} · {guests} guests · {nights} {nights === 1 ? "night" : "nights"}
+            </p>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl space-y-8 px-4 pt-4 sm:px-8 sm:pt-6">
-        {/* ------------------------------------------------------ photos */}
-        {photos.length > 0 && (
-          <section aria-label="Photos">
+      <main className="mx-auto max-w-7xl px-3 pt-3 sm:px-6 sm:pt-4">
+        {/* ------------------------------------------------- title */}
+        <h1 className="font-display text-2xl text-ink sm:text-3xl">{row.villa_name}</h1>
+        <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-600">
+          <span className="flex items-center gap-1">
+            <BedDouble className="size-4" aria-hidden />
+            {row.total_rooms} bedrooms
+          </span>
+          <span className="flex items-center gap-1">
+            <Users className="size-4" aria-hidden />
+            Sleeps {villa?.capacity ?? row.total_rooms * 2}
+          </span>
+          <span>{row.villa_mode === "split" ? "Book rooms or the whole villa" : "Entire villa, private to you"}</span>
+        </p>
+
+        {/* ----------------------------------- photos + booking card */}
+        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_21rem]">
+          <section aria-label="Photos" className="min-w-0">
             {/* Phone: swipe strip */}
-            <ul className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 sm:hidden">
+            <ul className="-mx-3 flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 sm:hidden">
               {photos.map((src, i) => (
                 <li key={src + i} className="relative w-[88%] shrink-0 snap-center">
                   <img src={src} alt={`${row.villa_name}, photo ${i + 1}`} className="aspect-[4/3] w-full rounded-xl object-cover" />
@@ -942,46 +975,82 @@ function VillaDetails({
                 </li>
               ))}
             </ul>
-            {/* Tablet & desktop: one large, four small */}
-            <div className="hidden h-[26rem] grid-cols-4 grid-rows-2 gap-2 sm:grid">
-              {photos.slice(0, 5).map((src, i) => (
+            {/* Tablet & desktop: one large, two stacked */}
+            <div className="hidden h-[22rem] grid-cols-3 grid-rows-2 gap-2 sm:grid xl:h-[24rem]">
+              {photos.slice(0, 3).map((src, i) => (
                 <button
                   key={src + i}
                   type="button"
-                  onClick={() => setAllPhotos(true)}
-                  className={cn("relative overflow-hidden rounded-xl", i === 0 && "col-span-2 row-span-2")}
-                  aria-label={`Show all photos (${photos.length})`}
+                  onClick={showAll}
+                  className={cn("relative overflow-hidden rounded-xl", i === 0 && "col-span-2 row-span-2", photos.length === 1 && "col-span-3")}
+                  aria-label={`Show all ${photos.length} photos`}
                 >
                   <img src={src} alt="" className="size-full object-cover transition-transform duration-500 hover:scale-105" />
-                  {i === Math.min(4, photos.length - 1) && photos.length > 1 && (
-                    <span className="absolute right-3 bottom-3 rounded-md bg-white/95 px-3 py-1.5 text-sm font-medium text-ink shadow-soft">
-                      All {photos.length} photos
+                  {i === 0 && (
+                    <span className="absolute bottom-3 left-3 rounded-full bg-ink/75 px-3 py-1 text-xs text-white">
+                      {photos.length} photos →
                     </span>
                   )}
                 </button>
               ))}
             </div>
           </section>
-        )}
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
-          <div className="min-w-0 space-y-8">
-            {/* ---------------------------------------------- essentials */}
-            <section>
-              <h1 className="font-display text-3xl text-ink sm:text-4xl">{row.villa_name}</h1>
-              <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-600">
-                <span className="flex items-center gap-1">
-                  <BedDouble className="size-4" aria-hidden />
-                  {row.total_rooms} bedrooms
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="size-4" aria-hidden />
-                  Sleeps {villa?.capacity ?? row.total_rooms * 2}
-                </span>
-                <span>{row.villa_mode === "split" ? "Book rooms or the whole villa" : "Entire villa, private to you"}</span>
+          {/* booking card — beside the photos on desktop */}
+          <aside className="hidden lg:block">
+            <div className="flex h-full flex-col rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07]">
+              <p className="font-display text-lg text-ink">
+                {row.villa_mode === "split" ? "Rooms or whole villa" : "Entire villa"}
               </p>
-              {villa?.description && <p className="mt-4 max-w-prose leading-relaxed text-ink/85">{villa.description}</p>}
-            </section>
+              <p className="text-sm text-stone-600">Fits {villa?.capacity ?? row.total_rooms * 2} guests</p>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                {highlights.map((h) => (
+                  <li key={h} className="flex items-start gap-2 text-status-confirmed">
+                    <Check className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    {h}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-auto pt-4">
+                <p className="text-xs text-stone-600">
+                  {money(row.nightly_rate)} per night × {nights}
+                </p>
+                <p className="font-display text-3xl text-ink tabular-nums">{money(stayTotal)}</p>
+                <p className="text-xs text-stone-600">total incl. GST · 100% advance</p>
+                {free ? (
+                  <Button className="mt-3 w-full" size="lg" onClick={() => onSelect(row)}>
+                    {cta}
+                  </Button>
+                ) : (
+                  <div className="mt-3">
+                    <StatusBadge label="Not available for these dates" tone="cancelled" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {/* ------------------------------------------------- details */}
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_21rem]">
+          <div className="min-w-0 space-y-6">
+            {villa?.description && (
+              <section>
+                <h2 className="font-display text-xl text-ink">About the villa</h2>
+                <p className="mt-2 max-w-prose leading-relaxed text-ink/85">{villa.description}</p>
+              </section>
+            )}
+
+            {highlights.length > 0 && (
+              <ul className="space-y-1.5 text-sm lg:hidden">
+                {highlights.map((h) => (
+                  <li key={h} className="flex items-start gap-2 text-status-confirmed">
+                    <Check className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    {h}
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {villa && villa.amenities.length > 0 && (
               <section>
@@ -1034,20 +1103,6 @@ function VillaDetails({
               </section>
             )}
           </div>
-
-          {/* ------------------------------------------- desktop price card */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 rounded-2xl bg-white p-5 shadow-soft ring-1 ring-ink/[0.07]">
-              <PriceBlock row={row} nights={nights} total={stayTotal} />
-              {free ? (
-                <Button className="mt-4 w-full" size="lg" onClick={() => onSelect(row)}>
-                  {row.villa_mode === "split" ? "Choose rooms" : "Book this villa"}
-                </Button>
-              ) : (
-                <StatusBadge label="Not available for these dates" tone="cancelled" />
-              )}
-            </div>
-          </aside>
         </div>
       </main>
 
@@ -1070,13 +1125,11 @@ function PriceBlock({ row, nights, total }: { row: Availability; nights: number;
   return (
     <div>
       <p className="font-display text-2xl text-ink tabular-nums">
-        {money(row.nightly_rate)} <span className="text-xs font-sans text-stone-600">/ night</span>
+        {money(total)} <span className="font-sans text-xs text-stone-600">total</span>
       </p>
-      {nights > 0 && (
-        <p className="text-xs text-stone-600 tabular-nums">
-          {money(total)} for {nights} {nights === 1 ? "night" : "nights"} · incl. GST
-        </p>
-      )}
+      <p className="text-xs text-stone-600 tabular-nums">
+        {money(row.nightly_rate)}/night × {nights} · incl. GST
+      </p>
     </div>
   );
 }

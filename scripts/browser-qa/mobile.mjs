@@ -103,7 +103,7 @@ const click = (p, label, exact = false) => p.evaluate((l, exact) => {
 }, label, exact);
 const waitText = (p, re) => p.waitForFunction((s) => new RegExp(s, "i").test(document.body.innerText), { timeout: 10000 }, re.source).then(() => true).catch(() => false);
 
-const ADMIN = ["dashboard", "frontdesk", "bookings", "bookings/new", "payments", "villas", "customers", "calendar", "food", "requests", "housekeeping", "lost-found", "maintenance", "amenities", "wifi", "enquiries", "waitlist", "quotes", "followups", "feedback", "invoices", "cancellations", "reports", "employees", "expenses", "roles", "activity", "settings"];
+const ADMIN = ["dashboard", "frontdesk", "bookings", "bookings/new", "payments", "villas", "customers", "calendar", "food", "requests", "housekeeping", "lost-found", "maintenance", "amenities", "media", "wifi", "enquiries", "waitlist", "quotes", "followups", "feedback", "invoices", "cancellations", "reports", "employees", "expenses", "roles", "activity", "settings"];
 const GUEST = ["dashboard", "book", "waitlist", "voucher", "lost-found", "booking", "payment", "invoice", "amenities", "food", "requests", "feedback", "people"];
 
 for (const width of WIDTHS) {

@@ -45,10 +45,14 @@ export function VoucherCard({
   data,
   settings,
   className,
+  compact = false,
 }: {
   data: VoucherData;
   settings: Partial<PropertySettings> | null | undefined;
   className?: string;
+  /** Landscape layout that fits one screen — the booking window's review step.
+   *  Same facts; the printed voucher keeps the full document layout. */
+  compact?: boolean;
 }) {
   const nights = nightsBetween(data.checkIn, data.checkOut);
   const guests =
@@ -70,6 +74,54 @@ export function VoucherCard({
     [Coffee, "Breakfast", settings?.breakfastLine || "—", undefined],
     [Ticket, "Booking status", data.statusLabel, undefined],
   ];
+
+  if (compact) {
+    return (
+      <article
+        className={cn("bg-sand p-4 text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-5", className)}
+        aria-label="Booking voucher preview"
+      >
+        <header className="flex items-center gap-3 border-b border-gold/30 pb-3">
+          <img src={logo.onLight} alt="Homes of Sanctuary" className="hidden h-11 w-auto shrink-0 sm:block" />
+          <div className="min-w-0 flex-1">
+            <h2 className="display-caps text-sm text-forest sm:text-lg">Booking voucher</h2>
+            <p className="text-xs text-stone-600">
+              {settings?.tradingName ?? "Homes of Sanctuary"} · at {settings?.addressLine1 ?? "Nandi Hills"}
+            </p>
+          </div>
+          <span className="shrink-0 rounded bg-forest px-2.5 py-1 text-[11px] tracking-wider text-sand uppercase">
+            {data.statusLabel}
+          </span>
+        </header>
+        <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-forest/20 ring-1 ring-forest/25 lg:grid-cols-3 [&>div:last-child:nth-child(odd)]:col-span-2 lg:[&>div:last-child:nth-child(odd)]:col-span-1">
+          {rows
+            .filter(([, name]) => name !== "Booking status")
+            .map(([Icon, name, value, extra]) => (
+              <div key={name} className="bg-white px-3 py-2">
+                <dt className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.12em] text-forest uppercase">
+                  <Icon className="size-3.5 shrink-0 text-gold-700" aria-hidden />
+                  {name}
+                </dt>
+                <dd className="mt-0.5 text-sm font-medium break-words">
+                  {value}
+                  {extra && <span className="ml-1.5 text-xs font-normal text-stone-600">{extra}</span>}
+                </dd>
+              </div>
+            ))}
+        </dl>
+        {data.arrangements.length > 0 && (
+          <p className="mt-2 text-xs text-ink/80">
+            <span className="label-caps text-gold-700">We have noted · </span>
+            {data.arrangements.join(" · ")}
+          </p>
+        )}
+        <p className="mt-2 text-xs text-stone-600">
+          Standard check-in {data.arrival}, check-out {data.departure}
+          {important.length > 0 && ` · ${important.join(" · ")}`}
+        </p>
+      </article>
+    );
+  }
 
   return (
     <article

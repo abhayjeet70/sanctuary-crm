@@ -25,7 +25,7 @@ const ROLES = {
   admin: {
     email: "admin@gmail.com",
     routes: ["dashboard", "frontdesk", "bookings", "bookings/new", "payments", "villas", "customers", "calendar", "food", "requests",
-      "housekeeping", "lost-found", "maintenance", "amenities", "wifi", "enquiries", "waitlist", "quotes", "followups", "feedback",
+      "housekeeping", "lost-found", "maintenance", "amenities", "media", "wifi", "enquiries", "waitlist", "quotes", "followups", "feedback",
       "invoices", "cancellations", "reports", "employees", "expenses", "roles", "activity", "settings"],
   },
   guest: {
