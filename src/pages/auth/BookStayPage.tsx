@@ -397,10 +397,10 @@ export default function BookStayPage() {
       </div>
       <div aria-hidden className="fixed inset-0 bg-ink/75 backdrop-blur-[2px]" />
 
-      <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-6 sm:px-8">
+      <div className="relative mx-auto flex min-h-dvh max-w-7xl flex-col px-3 py-3 sm:px-6">
         <header className="flex items-center justify-between">
           <Link to="/login" aria-label="Back to sign in">
-            <Logo variant="onDark" size="h-14" />
+            <Logo variant="onDark" size="h-10" />
           </Link>
           <Button asChild variant="ghost" className="text-sand/80 hover:bg-white/10 hover:text-white">
             <Link to="/login">
@@ -432,7 +432,7 @@ export default function BookStayPage() {
             />
           </div>
 
-          <div className="mt-6 space-y-5">
+          <div className="mt-4 space-y-4">
             {needsConfirmation ? (
               <div className="py-8 text-center">
                 <Heading
@@ -503,7 +503,7 @@ export default function BookStayPage() {
                       title="Choose your house"
                       description={`${nights} ${nights === 1 ? "night" : "nights"} · ${Number(adults) + Number(children)} guests`}
                     />
-                    <ul className="space-y-4">
+                    <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                       {results.map((row) => {
                         const villa = villas.find((v) => v.id === row.villa_id);
                         const free = row.villa_mode === "split" ? row.free_rooms > 0 : row.whole_available;
@@ -521,19 +521,24 @@ export default function BookStayPage() {
                           <li key={row.villa_id}>
                             <div
                               className={cn(
-                                "overflow-hidden rounded-2xl bg-white shadow-soft ring-1 transition-all sm:grid sm:grid-cols-[16rem_1fr_14rem]",
+                                "flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-soft ring-1 transition-all",
                                 picked ? "ring-2 ring-gold" : "ring-ink/[0.07] hover:ring-gold/40",
                                 !free && "opacity-85",
                               )}
                             >
                               <button
                                 type="button"
-                                className="group relative block h-48 w-full sm:h-full sm:min-h-52"
+                                className="group relative block h-40 w-full shrink-0 xl:h-44"
                                 onClick={() => setDetailsFor(row)}
                                 aria-label={`View photos and details of ${row.villa_name}`}
                               >
                                 {villa?.image && (
                                   <img src={villa.image} alt="" className="absolute inset-0 size-full object-cover" />
+                                )}
+                                {free && (
+                                  <span className="absolute top-3 right-3">
+                                    <StatusBadge label="Available" tone="confirmed" />
+                                  </span>
                                 )}
                                 <span className="absolute top-3 left-3 rounded-md bg-white/90 px-2 py-1 text-xs font-medium text-ink shadow-soft">
                                   {row.villa_mode === "split" ? "Rooms or villa" : "Entire villa"}
@@ -544,7 +549,7 @@ export default function BookStayPage() {
                                 </span>
                               </button>
 
-                              <div className="min-w-0 space-y-3 p-4 sm:p-5">
+                              <div className="min-w-0 flex-1 space-y-2 p-4">
                                 <div>
                                   <h3 className="font-display text-xl text-ink">{row.villa_name}</h3>
                                   <p className="mt-1 flex flex-wrap items-center gap-x-4 text-xs text-stone-600">
@@ -558,7 +563,7 @@ export default function BookStayPage() {
                                     </span>
                                   </p>
                                 </div>
-                                <ul className="space-y-1.5 text-sm">
+                                <ul className="space-y-1 text-xs sm:text-sm">
                                   {highlights.map((h, i) => (
                                     <li key={h} className="flex items-start gap-2 text-ink/85">
                                       <Check
@@ -578,17 +583,21 @@ export default function BookStayPage() {
                                 </button>
                               </div>
 
-                              <div className="flex flex-col justify-end gap-1 border-t border-ink/10 p-4 text-right sm:border-t-0 sm:border-l sm:p-5">
+                              <div className="flex items-end justify-between gap-3 border-t border-ink/10 p-4">
                                 {free ? (
                                   <>
-                                    <StatusBadge label="Available" tone="confirmed" />
-                                    <p className="mt-2 font-display text-3xl text-ink tabular-nums">{money(row.nightly_rate)}</p>
-                                    <p className="text-xs text-stone-600">+ {money(tax)} taxes &amp; fees</p>
-                                    <p className="text-xs text-stone-600">
-                                      per night · {money(stay + tax)} for {nights} {nights === 1 ? "night" : "nights"}
-                                    </p>
+                                    <div className="min-w-0">
+                                      <p className="font-display text-2xl text-ink tabular-nums">
+                                        {money(row.nightly_rate)}
+                                        <span className="ml-1 font-sans text-xs text-stone-600">/ night</span>
+                                      </p>
+                                      <p className="text-xs text-stone-600">
+                                        + {money(tax)} tax · <strong className="text-ink">{money(stay + tax)}</strong> for {nights}{" "}
+                                        {nights === 1 ? "night" : "nights"}
+                                      </p>
+                                    </div>
                                     <Button
-                                      className="mt-3 w-full"
+                                      className="shrink-0"
                                       variant={picked ? "secondary" : "default"}
                                       aria-pressed={picked}
                                       onClick={() => void pickVilla(row)}
@@ -600,9 +609,8 @@ export default function BookStayPage() {
                                 ) : (
                                   <>
                                     <StatusBadge label="Not available" tone="cancelled" />
-                                    <p className="mt-2 text-sm text-stone-600">Held for these dates.</p>
                                     <Button
-                                      className="mt-3 w-full"
+                                      className="shrink-0"
                                       variant="outline"
                                       onClick={() => joinInstead(row.villa_id, row.villa_name)}
                                     >
@@ -720,7 +728,7 @@ export default function BookStayPage() {
 
                 {/* ------------------------------------------------ 4. review */}
                 {step === 3 && (
-                  <form className="space-y-5" onSubmit={finish} noValidate>
+                  <form className="space-y-4" onSubmit={finish} noValidate>
                     <Heading
                       title={waitlistFor ? "Almost done" : "Your voucher"}
                       description={
@@ -730,8 +738,9 @@ export default function BookStayPage() {
                       }
                     />
 
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_22rem] lg:items-start">
                     {!waitlistFor && chosen && (
-                      <>
+                      <div className="space-y-3 lg:max-h-[calc(100dvh-15rem)] lg:overflow-y-auto lg:pr-1">
                         <VoucherCard
                           className="rounded-xl"
                           settings={info}
@@ -768,10 +777,10 @@ export default function BookStayPage() {
                             />
                           </div>
                         </details>
-                      </>
+                      </div>
                     )}
 
-                    <div className="space-y-3 rounded-xl bg-white p-4 ring-1 ring-ink/[0.07]">
+                    <div className="space-y-3 rounded-xl bg-white p-4 ring-1 ring-ink/[0.07] lg:sticky lg:top-4">
                       <p className="text-sm font-medium text-ink">
                         {returning ? `Sign in as ${email}` : "Create your login to continue"}
                       </p>
@@ -797,7 +806,6 @@ export default function BookStayPage() {
                       >
                         {returning ? "New here? Create a login instead" : "Already have an account? Sign in instead"}
                       </button>
-                    </div>
 
                     {error && (
                       <p role="alert" className="text-sm text-status-cancelled">
@@ -805,7 +813,7 @@ export default function BookStayPage() {
                       </p>
                     )}
 
-                    <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+                    <Button type="submit" disabled={saving} className="w-full">
                       {saving && <Loader2 className="animate-spin" aria-hidden />}
                       {saving
                         ? "Saving…"
@@ -813,6 +821,8 @@ export default function BookStayPage() {
                           ? "Create account & join waiting list"
                           : "Sign in & continue"}
                     </Button>
+                    </div>
+                    </div>
                   </form>
                 )}
 
@@ -1074,7 +1084,7 @@ function PriceBlock({ row, nights, total }: { row: Availability; nights: number;
 function Heading({ title, description }: { title: string; description: React.ReactNode }) {
   return (
     <div>
-      <h1 className="font-display text-2xl text-ink sm:text-3xl">{title}</h1>
+      <h1 className="font-display text-xl text-ink sm:text-2xl">{title}</h1>
       <p className="mt-1 text-sm text-stone-600">{description}</p>
     </div>
   );

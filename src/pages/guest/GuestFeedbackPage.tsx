@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { MessageSquareQuote, Star } from "lucide-react";
+import { ExternalLink, MessageSquareQuote, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, ErrorState, Eyebrow } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
 import { useSession } from "@/services/session";
-import { useMockData } from "@/hooks/useData";
+import { useMockData, useSettings } from "@/hooks/useData";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Feedback } from "@/types";
@@ -18,6 +18,7 @@ export default function GuestFeedbackPage() {
   const { view, feedback } = useGuestStay();
   const { session } = useSession();
   const { createFeedback } = useMockData();
+  const reviewUrl = useSettings()?.googleReviewUrl;
 
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -75,9 +76,31 @@ export default function GuestFeedbackPage() {
         <Eyebrow className="text-gold-700">How was it?</Eyebrow>
         <h1 className="display-caps mt-2 text-3xl text-ink sm:text-4xl">Feedback</h1>
         <p className="mt-2 max-w-lg text-sm text-stone-600">
-          Honestly, please. It goes straight to the owner rather than a review site.
+          Honestly, please. Feedback here goes straight to the owner; a Google review is public.
         </p>
       </header>
+
+      {reviewUrl && (
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-ink p-5 text-sand ring-1 ring-gold/30 sm:p-6">
+          <div className="min-w-0">
+            <Eyebrow className="text-gold-400">Enjoyed your stay?</Eyebrow>
+            <p className="mt-1 font-display text-xl text-white">Share it on Google</p>
+            <p className="mt-1 text-sm text-sand/70">
+              A public review helps other families find us. It takes a minute.
+            </p>
+          </div>
+          <Button
+            asChild
+            className="bg-gold/20 text-gold-200 ring-1 ring-gold/40 hover:bg-gold/30 hover:text-white"
+          >
+            <a href={reviewUrl} target="_blank" rel="noreferrer">
+              <Star aria-hidden />
+              Review us on Google
+              <ExternalLink aria-hidden />
+            </a>
+          </Button>
+        </section>
+      )}
 
       <form
         onSubmit={(event) => void submit(event)}

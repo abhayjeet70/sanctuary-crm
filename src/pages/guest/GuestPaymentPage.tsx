@@ -13,6 +13,8 @@ import { paymentStatus, titleCase } from "@/lib/status";
 import { orderTotal } from "@/services/domain";
 import { formatDateTime, money } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { usePartialPayments } from "@/hooks/usePartialPayments";
+import { PartialPaymentPanel } from "@/components/payment/PartialPaymentPanel";
 import type { Payment, PaymentMethod } from "@/types";
 import {
   ACCEPTED_RECEIPT_TYPES,
@@ -27,6 +29,7 @@ export default function GuestPaymentPage() {
   const { view, payments, orders } = useGuestStay();
   const { addPayment } = useMockData();
   const settings = useSettings();
+  const partial = usePartialPayments(view?.booking.id);
 
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -59,12 +62,22 @@ export default function GuestPaymentPage() {
   );
   const pendingFoodTotal = pendingFood.reduce((sum, o) => sum + orderTotal(o.lines), 0);
 
+  // 100% in advance, unless a part-payment was approved — then the first
+  // instalment is the floor until it is paid.
+  const approved = partial.approved;
+  const minimum =
+    approved && totals.paid < approved.amountNow
+      ? Math.min(approved.amountNow - totals.paid, totals.balance)
+      : totals.balance;
+
   const errors = {
     file: !file ? "Attach the receipt from your bank or UPI app." : undefined,
     amount:
       !amount || Number(amount) <= 0
         ? "Enter the amount you transferred."
-        : undefined,
+        : Number(amount) < minimum
+          ? `We take the full amount in advance — at least ${money(minimum)}. Need to pay in parts? Request it above.`
+          : undefined,
     reference:
       method === "bank_transfer" && !reference.trim()
         ? "A bank transfer needs its UTR — it is how we match your payment to the statement."
@@ -212,6 +225,16 @@ export default function GuestPaymentPage() {
 
       {totals.balance > 0 && (
         <>
+          <PartialPaymentPanel
+            reference={booking.reference}
+            balance={totals.balance}
+            whatsappNumber={(settings?.contactPhone ?? "").replace(/D/g, "")}
+            pending={partial.pending}
+            approved={partial.approved}
+            latest={partial.requests[0]}
+            onRequest={partial.request}
+          />
+
           {/* ------------------------------------------------- instructions */}
           <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
             <Eyebrow className="text-gold-700">How to pay</Eyebrow>
@@ -399,10 +422,12 @@ export default function GuestPaymentPage() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setAmount(String(totals.balance))}
+                      onClick={() => setAmount(String(minimum))}
                       className="text-xs text-clay-600 underline underline-offset-4"
                     >
-                      Use the full balance, {money(totals.balance)}
+                      {minimum < totals.balance
+                        ? `Use the approved instalment, ${money(minimum)}`
+                        : `Use the full balance, ${money(totals.balance)}`}
                     </button>
                   )}
                 </div>

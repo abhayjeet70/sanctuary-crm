@@ -774,6 +774,9 @@ export interface PropertySettings {
 
   /** Days a guest has to pay for nights added by a stay extension. */
   extensionPaymentDays: number;
+
+  /** Where guests are sent to leave a Google review. Empty hides the button. */
+  googleReviewUrl: string;
 }
 
 /** Cancelled at least `days` before check-in earns `refundPercent` of what was paid. */

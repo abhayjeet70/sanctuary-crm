@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ChefHat, Phone, X } from "lucide-react";
+import { ChefHat, Phone, Plus, X } from "lucide-react";
+import { ManualOrderDialog } from "@/components/food/ManualOrderDialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,6 +36,7 @@ export default function KitchenPage() {
   const preferences = useStayPreferences();
   const { setFoodOrderStatus, logActivity } = useMockData();
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const active = orders.filter((o) => o.order.status !== "cancelled");
   const inProgress = active.filter((o) => o.order.status !== "billed");
@@ -71,7 +73,14 @@ export default function KitchenPage() {
         eyebrow="Kitchen board"
         title="Food orders"
         description="Every order from placed to billed. Billed orders join the guest's booking total."
+        actions={
+          <Button size="sm" onClick={() => setManualOpen(true)}>
+            <Plus aria-hidden />
+            Manual order
+          </Button>
+        }
       />
+      <ManualOrderDialog open={manualOpen} onOpenChange={setManualOpen} />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="In progress" value={inProgress.length} icon={<ChefHat className="size-4" />} />

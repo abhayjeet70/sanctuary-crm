@@ -361,6 +361,7 @@ export default function SettingsPage() {
               <Field id="trading-name" label="Trading name" value={draft.tradingName} onChange={(v) => set("tradingName", v)} />
               <Field id="contact-email" label="Contact email" value={draft.contactEmail} onChange={(v) => set("contactEmail", v)} />
               <Field id="contact-phone" label="Contact phone" value={draft.contactPhone} onChange={(v) => set("contactPhone", v)} />
+              <Field id="google-review" label="Google review link" value={draft.googleReviewUrl} onChange={(v) => set("googleReviewUrl", v)} />
               <Field id="address1" label="Address line 1" value={draft.addressLine1} onChange={(v) => set("addressLine1", v)} />
               <Field id="address2" label="Address line 2" value={draft.addressLine2} onChange={(v) => set("addressLine2", v)} />
               <Field id="city" label="City" value={draft.city} onChange={(v) => set("city", v)} />

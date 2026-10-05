@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, Eyebrow, PageHeader, StatusBadge } from "@/components/common";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
 import { RejectPaymentDialog } from "@/components/payment/RejectPaymentDialog";
+import { PartialPaymentRequests } from "@/components/payment/PartialPaymentRequests";
 import { FinancialBreakdown } from "@/components/booking/FinancialBreakdown";
 import { useMockData, usePaymentVerificationQueue } from "@/hooks/useData";
 import { bookingSource, paymentStatus, titleCase } from "@/lib/status";
@@ -39,6 +40,7 @@ export default function PaymentQueuePage() {
           title="Payment verification"
           description="Receipts uploaded by guests land here for a decision."
         />
+        <PartialPaymentRequests />
         <EmptyState
           icon={<CheckCheck className="size-5" />}
           title="The queue is clear"
@@ -86,6 +88,7 @@ export default function PaymentQueuePage() {
         title="Payment verification"
         description="Newest first. Open the receipt, check the amount and the reference, then decide."
       />
+      <PartialPaymentRequests />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[19rem_1fr]">
         {/* ------------------------------------------------------- the queue */}

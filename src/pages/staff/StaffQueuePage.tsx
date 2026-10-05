@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ChefHat, ClipboardList, LogOut, MapPin, RefreshCw } from "lucide-react";
+import { ChefHat, ClipboardList, LogOut, MapPin, RefreshCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ManualOrderDialog } from "@/components/food/ManualOrderDialog";
 import {
   EmptyState,
   Eyebrow,
@@ -64,6 +65,7 @@ export default function StaffQueuePage() {
   const department = useDepartment(session?.departmentId);
   const may = (key: string) => session?.permissions?.includes(key as never) ?? false;
   const isKitchen = may("kitchen.work");
+  const [manualOpen, setManualOpen] = useState(false);
   const isFrontDesk = may("frontdesk.view");
 
   // RLS already scopes what arrives here to this team, but the page must not
@@ -310,6 +312,15 @@ export default function StaffQueuePage() {
         )}
 
         {/* ------------------------------------------------- kitchen only */}
+        {isKitchen && (
+          <div>
+            <Button size="sm" onClick={() => setManualOpen(true)}>
+              <Plus aria-hidden />
+              Manual order
+            </Button>
+            <ManualOrderDialog open={manualOpen} onOpenChange={setManualOpen} />
+          </div>
+        )}
         {isKitchen && liveOrders.length > 0 && (
           <section>
             <Eyebrow className="mb-3 text-gold-700">Orders on the pass</Eyebrow>

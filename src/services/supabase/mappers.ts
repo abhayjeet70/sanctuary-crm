@@ -413,6 +413,7 @@ export const toSettings = (row: unknown): PropertySettings => {
     lostFoundHighValueRetentionDays: x.lost_found_high_value_retention_days ?? 180,
     lostFoundSensitiveRetentionDays: x.lost_found_sensitive_retention_days ?? 30,
     extensionPaymentDays: x.extension_payment_days ?? 1,
+    googleReviewUrl: x.google_review_url ?? "",
   };
 };
 
@@ -463,6 +464,7 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   lostFoundHighValueRetentionDays: "lost_found_high_value_retention_days",
   lostFoundSensitiveRetentionDays: "lost_found_sensitive_retention_days",
   extensionPaymentDays: "extension_payment_days",
+  googleReviewUrl: "google_review_url",
 };
 
 export const toDepartment = (row: unknown): Department => {

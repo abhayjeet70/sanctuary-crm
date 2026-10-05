@@ -43,6 +43,7 @@ import { SendBookingDetails } from "@/components/booking/SendBookingDetails";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
 import { CancelBookingDialog } from "@/components/booking/CancelBookingDialog";
 import { ExtendStayDialog } from "@/components/booking/ExtendStayDialog";
+import { usePartialPayments } from "@/hooks/usePartialPayments";
 import { RefundSummary, refundBadge } from "@/components/booking/RefundSummary";
 import { RejectPaymentDialog } from "@/components/payment/RejectPaymentDialog";
 import {
@@ -97,6 +98,7 @@ export default function BookingDetailPage() {
   const [note, setNote] = useState("");
   const [confirming, setConfirming] = useState<"cancel" | "no_show" | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const partial = usePartialPayments(id);
 
   if (!view) {
     return (
@@ -188,6 +190,17 @@ export default function BookingDetailPage() {
             </Button>
             {["confirmed", "checked_in", "in_house"].includes(booking.status) && (
               <ExtendStayDialog view={view} />
+            )}
+            {partial.approved && totals.balance > 0 && (
+              <span className="text-xs text-stone-600">
+                Part-payment agreed · {money(totals.balance)} left, next payment by{" "}
+                <strong className="text-ink">{formatDate(partial.approved.nextDueDate)}</strong>
+              </span>
+            )}
+            {partial.pending && (
+              <Link to="/admin/payments" className="text-xs text-clay-600 underline underline-offset-2">
+                Part-payment requested — decide
+              </Link>
             )}
             {booking.extensionDueAt && totals.balance > 0 && (
               <span className="text-xs text-stone-600">
