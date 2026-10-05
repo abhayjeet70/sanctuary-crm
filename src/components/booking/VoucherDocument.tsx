@@ -1,5 +1,5 @@
-import { CalendarDays, Coffee, Home, IndianRupee, Phone, Ticket, User, Users, UtensilsCrossed } from "lucide-react";
-import { logo } from "@/lib/assets";
+import { CalendarDays, Clock, Coffee, Home, IndianRupee, Info, Phone, Ticket, User, Users, UtensilsCrossed } from "lucide-react";
+import { logo, photo } from "@/lib/assets";
 import { usePreferencesForBooking, useSettings } from "@/hooks/useData";
 import { formatDate, money, nightsBetween } from "@/lib/format";
 import { bookingStatus } from "@/lib/status";
@@ -32,6 +32,9 @@ export interface VoucherData {
   statusLabel: string;
   reference?: string;
   arrangements: string[];
+  /** Compact layout only: the villa's photograph and one line about it. */
+  image?: string;
+  blurb?: string;
 }
 
 /**
@@ -46,6 +49,7 @@ export function VoucherCard({
   settings,
   className,
   compact = false,
+  footer,
 }: {
   data: VoucherData;
   settings: Partial<PropertySettings> | null | undefined;
@@ -53,6 +57,8 @@ export function VoucherCard({
   /** Landscape layout that fits one screen — the booking window's review step.
    *  Same facts; the printed voucher keeps the full document layout. */
   compact?: boolean;
+  /** Compact layout only: rendered at the foot, e.g. the terms. */
+  footer?: React.ReactNode;
 }) {
   const nights = nightsBetween(data.checkIn, data.checkOut);
   const guests =
@@ -76,49 +82,89 @@ export function VoucherCard({
   ];
 
   if (compact) {
+    const cells = rows.filter(([, name]) => name !== "Booking status");
     return (
       <article
-        className={cn("bg-sand p-4 text-ink shadow-soft ring-1 ring-ink/[0.07] sm:p-5", className)}
+        className={cn("relative overflow-hidden bg-sand p-4 text-ink shadow-soft ring-1 ring-gold/25 sm:p-5", className)}
         aria-label="Booking voucher preview"
       >
-        <header className="flex items-center gap-3 border-b border-gold/30 pb-3">
-          <img src={logo.onLight} alt="Homes of Sanctuary" className="hidden h-11 w-auto shrink-0 sm:block" />
-          <div className="min-w-0 flex-1">
-            <h2 className="display-caps text-sm text-forest sm:text-lg">Booking voucher</h2>
-            <p className="text-xs text-stone-600">
-              {settings?.tradingName ?? "Homes of Sanctuary"} · at {settings?.addressLine1 ?? "Nandi Hills"}
+        {/* misty hills, the reference's backdrop */}
+        <img
+          src={photo.hills}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-48 w-full object-cover opacity-[0.12] [mask-image:linear-gradient(to_bottom,black,transparent)]"
+        />
+
+        <header className="relative flex items-center gap-4 sm:gap-6">
+          <img src={logo.onLight} alt="Homes of Sanctuary" className="h-11 w-auto shrink-0 rounded-md sm:h-14" />
+          <span aria-hidden className="h-11 w-px bg-gold/50 sm:h-14" />
+          <div className="min-w-0">
+            <h2 className="font-display text-2xl leading-none tracking-wide text-forest uppercase sm:text-[2rem]">
+              Booking voucher
+            </h2>
+            <p className="mt-1.5 text-[10px] tracking-[0.3em] text-gold-700 uppercase sm:text-[11px]">
+              {settings?.tradingName ?? "Homes of Sanctuary"}
+            </p>
+            <p className="text-[10px] tracking-[0.3em] text-gold-700 uppercase">
+              at {settings?.addressLine1 ?? "Nandi Hills"}
             </p>
           </div>
-          <span className="shrink-0 rounded bg-forest px-2.5 py-1 text-[11px] tracking-wider text-sand uppercase">
-            {data.statusLabel}
-          </span>
         </header>
-        <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-forest/20 ring-1 ring-forest/25 lg:grid-cols-3 [&>div:last-child:nth-child(odd)]:col-span-2 lg:[&>div:last-child:nth-child(odd)]:col-span-1">
-          {rows
-            .filter(([, name]) => name !== "Booking status")
-            .map(([Icon, name, value, extra]) => (
-              <div key={name} className="bg-white px-3 py-2">
-                <dt className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.12em] text-forest uppercase">
-                  <Icon className="size-3.5 shrink-0 text-gold-700" aria-hidden />
-                  {name}
-                </dt>
-                <dd className="mt-0.5 text-sm font-medium break-words">
-                  {value}
-                  {extra && <span className="ml-1.5 text-xs font-normal text-stone-600">{extra}</span>}
-                </dd>
+
+        {/* the villa */}
+        <section className="relative mt-3 flex flex-col gap-4 rounded-xl bg-white/80 p-2.5 ring-1 ring-ink/[0.06] sm:flex-row sm:items-center">
+          {data.image && (
+            <img src={data.image} alt="" className="h-24 w-full shrink-0 rounded-lg object-cover sm:w-44" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="flex flex-wrap items-center gap-2">
+              <span className="font-display text-2xl text-ink">{data.villa}</span>
+              {data.rooms && (
+                <span className="rounded-md bg-forest/10 px-2 py-0.5 text-xs font-medium text-forest">{data.rooms}</span>
+              )}
+            </p>
+            {data.blurb && <p className="mt-0.5 line-clamp-2 text-sm text-stone-600">{data.blurb}</p>}
+          </div>
+          <div className="shrink-0 text-center sm:border-l sm:border-ink/10 sm:pl-4">
+            <span className="inline-flex items-center gap-2 rounded-lg bg-forest px-3 py-2 text-xs font-semibold tracking-wider text-sand uppercase">
+              <Clock className="size-4" aria-hidden />
+              {data.statusLabel}
+            </span>
+            <p className="mt-1.5 text-[11px] text-stone-600">Confirmed once your payment is verified.</p>
+          </div>
+        </section>
+
+        {/* the facts */}
+        <dl className="relative mt-3 grid grid-cols-2 overflow-hidden rounded-xl bg-white/80 ring-1 ring-ink/[0.08] lg:grid-cols-3">
+          {cells.map(([Icon, name, value, extra]) => (
+            <div key={name} className="flex gap-3 border-b border-ink/[0.07] px-3 py-2.5 max-lg:odd:border-r sm:px-4 lg:border-r lg:[&:nth-child(3n)]:border-r-0">
+              <Icon className="hidden size-6 shrink-0 text-gold-700 sm:block" strokeWidth={1.4} aria-hidden />
+              <div className="min-w-0">
+                <dt className="text-[10px] font-semibold tracking-[0.14em] text-ink/70 uppercase">{name}</dt>
+                <dd className="mt-0.5 font-medium break-words text-ink">{value}</dd>
+                {extra && <dd className="text-xs text-stone-600">{extra}</dd>}
               </div>
-            ))}
+            </div>
+          ))}
         </dl>
+
         {data.arrangements.length > 0 && (
-          <p className="mt-2 text-xs text-ink/80">
+          <p className="relative mt-3 text-xs text-ink/80">
             <span className="label-caps text-gold-700">We have noted · </span>
             {data.arrangements.join(" · ")}
           </p>
         )}
-        <p className="mt-2 text-xs text-stone-600">
-          Standard check-in {data.arrival}, check-out {data.departure}
-          {important.length > 0 && ` · ${important.join(" · ")}`}
+
+        <p className="relative mt-2.5 flex items-start gap-2.5 rounded-xl bg-forest/[0.07] px-3 py-2 text-xs leading-relaxed text-ink/85">
+          <Info className="mt-px size-4 shrink-0 text-forest" aria-hidden />
+          <span>
+            Standard check-in {data.arrival}, check-out {data.departure}
+            {important.map((l) => ` • ${l}`).join("")}
+          </span>
         </p>
+
+        {footer && <div className="relative mt-2.5">{footer}</div>}
       </article>
     );
   }

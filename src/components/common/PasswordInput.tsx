@@ -18,7 +18,7 @@ export function PasswordInput({
 }: ComponentProps<typeof Input> & { dark?: boolean }) {
   const [shown, setShown] = useState(false);
   return (
-    <>
+    <div className="relative">
       <Input {...props} type={shown ? "text" : "password"} className={cn("pr-10", className)} />
       <button
         type="button"
@@ -34,6 +34,6 @@ export function PasswordInput({
       >
         {shown ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
       </button>
-    </>
+    </div>
   );
 }

@@ -3,6 +3,11 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  ArrowRight,
+  ChevronDown,
+  FileText,
+  Leaf,
+  ShieldCheck,
   BedDouble,
   Check,
   Expand,
@@ -415,8 +420,9 @@ export default function BookStayPage() {
           </Button>
         </header>
 
-        <main className="mt-4 flex-1 rounded-2xl bg-sand p-4 shadow-lift sm:mt-6 ring-1 ring-gold/30 sm:p-8">
+        <main className={cn("mt-3 flex-1 rounded-2xl bg-sand p-4 shadow-lift ring-1 ring-gold/30", step === 3 ? "sm:p-5" : "sm:mt-6 sm:p-8")}>
           {/* ---------------------------------------------------- progress bar */}
+          {step !== 3 && (<>
           <div className="flex items-baseline justify-between text-xs text-stone-600">
             <span className="label-caps text-gold-700">
               Step {step + 1} of {STEPS.length} · {STEPS[step]}
@@ -436,8 +442,9 @@ export default function BookStayPage() {
               style={{ width: `${pct}%` }}
             />
           </div>
+          </>)}
 
-          <div className="mt-4 space-y-4">
+          <div className={cn("space-y-4", step !== 3 && "mt-4")}>
             {needsConfirmation ? (
               <div className="py-8 text-center">
                 <Heading
@@ -732,104 +739,141 @@ export default function BookStayPage() {
 
                 {/* ------------------------------------------------ 4. review */}
                 {step === 3 && (
-                  <form className="space-y-4" onSubmit={finish} noValidate>
-                    <Heading
-                      title={waitlistFor ? "Almost done" : "Your voucher"}
-                      description={
-                        waitlistFor
-                          ? "Create your account and we will hold your place in the queue."
-                          : "This is how it will read. It shows payment pending until you have paid and we have checked your receipt."
-                      }
-                    />
-
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_22rem] lg:items-start">
+                  <form onSubmit={finish} noValidate>
+                    <h1 className="sr-only">{waitlistFor ? "Almost done" : "Review your voucher"}</h1>
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_21rem] lg:items-start">
                     {!waitlistFor && chosen && (
-                      <div className="space-y-3">
-                        <VoucherCard
-                          compact
-                          className="rounded-xl"
-                          settings={info}
-                          data={{
-                            guestName: name.trim(),
-                            phone: phone.trim(),
-                            villa: chosen.villa_name,
-                            rooms: isSplit ? chosenRoomRows.map((r) => r.name).join(", ") : "Whole villa",
-                            checkIn,
-                            checkOut,
-                            arrival: arrival || "2:00 PM",
-                            departure: departure || "11:00 AM",
-                            adults: Number(adults) || 1,
-                            children: Number(children) || 0,
-                            total,
-                            paid: 0,
-                            balance: total,
-                            meals: "Chosen in your portal after booking",
-                            statusLabel: "Pending payment",
-                            arrangements: requests.trim() ? [requests.trim()] : [],
-                          }}
-                        />
-                        <details className="rounded-xl bg-sand-200/50 p-4">
-                          <summary className="cursor-pointer text-sm font-medium text-ink">Terms &amp; policies</summary>
-                          <div className="mt-3">
-                            <PaymentAndPolicies
-                              settings={{ ...info, ...policyFields(chosenVillaRecord?.cancellation_policy, info) }}
-                              payment={false}
-                            />
-                          </div>
-                        </details>
-                      </div>
+                      <VoucherCard
+                        compact
+                        className="rounded-2xl"
+                        settings={info}
+                        data={{
+                          guestName: name.trim(),
+                          phone: phone.trim(),
+                          villa: chosen.villa_name,
+                          rooms: isSplit ? chosenRoomRows.map((r) => r.name).join(", ") : "Whole villa",
+                          checkIn,
+                          checkOut,
+                          arrival: arrival || "2:00 PM",
+                          departure: departure || "11:00 AM",
+                          adults: Number(adults) || 1,
+                          children: Number(children) || 0,
+                          total,
+                          paid: 0,
+                          balance: total,
+                          meals: "Chosen in your portal after booking",
+                          statusLabel: "Pending payment",
+                          arrangements: requests.trim() ? [requests.trim()] : [],
+                          image: chosenVillaRecord?.image,
+                          blurb: chosenVillaRecord?.description,
+                        }}
+                        footer={
+                          <details className="group rounded-xl bg-white/80 ring-1 ring-ink/[0.06]">
+                            <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 font-display text-ink">
+                              <FileText className="size-5 text-ink/70" aria-hidden />
+                              <span className="flex-1">Terms &amp; policies</span>
+                              <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+                            </summary>
+                            <div className="px-4 pb-4">
+                              <PaymentAndPolicies
+                                settings={{ ...info, ...policyFields(chosenVillaRecord?.cancellation_policy, info) }}
+                                payment={false}
+                              />
+                            </div>
+                          </details>
+                        }
+                      />
                     )}
 
-                    <div className="space-y-3 rounded-xl bg-white p-4 ring-1 ring-ink/[0.07] lg:sticky lg:top-4">
-                      {!waitlistFor && chosen && (
-                        <div className="rounded-lg bg-ink p-3 text-sand">
-                          <p className="label-caps text-gold-400">Total to pay · 100% advance</p>
-                          <p className="font-display text-3xl text-white tabular-nums">{money(total)}</p>
-                          <p className="text-xs text-sand/70">
-                            {nights} {nights === 1 ? "night" : "nights"} · incl. GST · payment pending until we verify your receipt
+                    <div className="space-y-3 lg:sticky lg:top-4">
+                      {/* progress */}
+                      <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-ink/[0.06]">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sand ring-1 ring-gold/30">
+                          <FileText className="size-5 text-gold-700" aria-hidden />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="flex items-baseline justify-between gap-2">
+                            <span className="label-caps text-ink">Step 4 of 4 · Review</span>
+                            <span className="text-sm font-semibold text-gold-700">100%</span>
                           </p>
+                          <p className="text-xs text-stone-600">
+                            {waitlistFor ? "Create your account to join the queue" : "Please review your booking details"}
+                          </p>
+                          <div className="mt-1.5 h-1.5 rounded-full bg-gradient-to-r from-gold to-clay" />
+                        </div>
+                      </div>
+
+                      {/* total */}
+                      {!waitlistFor && chosen && (
+                        <div className="relative overflow-hidden rounded-2xl bg-forest p-4 text-sand shadow-lift">
+                          <Leaf aria-hidden className="absolute -right-4 -bottom-6 size-32 -rotate-12 text-white/10" strokeWidth={1} />
+                          <p className="relative text-[11px] font-semibold tracking-[0.18em] text-gold-200 uppercase">
+                            Total to pay · 100% advance
+                          </p>
+                          <p className="relative mt-1 font-display text-4xl text-white tabular-nums">{money(total)}</p>
+                          <p className="relative mt-1 text-sm text-sand/85">
+                            {nights} {nights === 1 ? "night" : "nights"} · incl. GST
+                          </p>
+                          <p className="relative text-sm text-sand/70">Payment pending until we verify your receipt.</p>
                         </div>
                       )}
-                      <p className="text-sm font-medium text-ink">
-                        {returning ? `Sign in as ${email}` : "Create your login to continue"}
-                      </p>
-                      <Field
-                        label={returning ? "Password" : "Choose a password"}
-                        htmlFor="pb-password"
-                        hint={returning ? undefined : "At least 8 characters — this signs you back in to pay and manage your stay."}
-                      >
-                        <PasswordInput
-                          id="pb-password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          autoComplete={returning ? "current-password" : "new-password"}
-                        />
-                      </Field>
-                      <button
-                        type="button"
-                        className="text-xs text-clay-600 underline underline-offset-2"
-                        onClick={() => {
-                          setReturning((r) => !r);
-                          setError(null);
-                        }}
-                      >
-                        {returning ? "New here? Create a login instead" : "Already have an account? Sign in instead"}
-                      </button>
 
-                    {error && (
-                      <p role="alert" className="text-sm text-status-cancelled">
-                        {error}
-                      </p>
-                    )}
+                      {/* login */}
+                      <div className="space-y-2.5 rounded-2xl bg-white p-4 shadow-soft ring-1 ring-ink/[0.06]">
+                        <div>
+                          <p className="font-display text-lg text-ink">
+                            {returning ? `Sign in as ${email}` : "Create your login to continue"}
+                          </p>
+                          
+                        </div>
+                        <Field
+                          label={returning ? "Password" : "Choose a password"}
+                          htmlFor="pb-password"
+                          hint={returning ? undefined : "At least 8 characters — this signs you back in to pay and manage your stay."}
+                        >
+                          <PasswordInput
+                            id="pb-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            autoComplete={returning ? "current-password" : "new-password"}
+                          />
+                        </Field>
+                        <button
+                          type="button"
+                          className="text-xs text-clay-600 underline underline-offset-2"
+                          onClick={() => {
+                            setReturning((r) => !r);
+                            setError(null);
+                          }}
+                        >
+                          {returning ? "New here? Create a login instead" : "Already have an account? Sign in instead"}
+                        </button>
+                        {error && (
+                          <p role="alert" className="text-sm text-status-cancelled">
+                            {error}
+                          </p>
+                        )}
+                        <Button type="submit" disabled={saving} size="lg" className="w-full bg-forest hover:bg-forest/90">
+                          {saving && <Loader2 className="animate-spin" aria-hidden />}
+                          {saving
+                            ? "Saving…"
+                            : waitlistFor
+                              ? "Create account & join waiting list"
+                              : "Sign in & continue"}
+                          {!saving && <ArrowRight aria-hidden />}
+                        </Button>
+                      </div>
 
-                    <Button type="submit" disabled={saving} className="w-full">
-                      {saving && <Loader2 className="animate-spin" aria-hidden />}
-                      {saving
-                        ? "Saving…"
-                        : waitlistFor
-                          ? "Create account & join waiting list"
-                          : "Sign in & continue"}
-                    </Button>
+                      {/* reassurance */}
+                      <div className="flex items-center gap-3 rounded-2xl bg-sand-200/60 p-3 ring-1 ring-gold/20">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-gold/30">
+                          <ShieldCheck className="size-5 text-gold-700" aria-hidden />
+                        </span>
+                        <p className="text-xs text-stone-600">
+                          <span className="block text-sm font-medium text-ink">Your information is secure</span>
+                          Your password is encrypted and never shared.
+                        </p>
+                      </div>
                     </div>
                     </div>
                   </form>

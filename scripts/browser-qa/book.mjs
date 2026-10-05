@@ -79,7 +79,7 @@ for (const [label, viewport] of [
   await page.type("#pb-email", "qa.test@example.com");
   await shot("4-about");
   await clickText(page, "Continue");
-  await wait(page, () => document.body.innerText.includes("Your voucher"));
+  await wait(page, () => document.body.textContent.includes("Step 4 of 4"));
   await new Promise((r) => setTimeout(r, 800));
   const voucherHeight = await shot("5-voucher");
   problems.push(
