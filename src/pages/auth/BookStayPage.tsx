@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ChevronDown,
   FileText,
-  Leaf,
   ShieldCheck,
   BedDouble,
   Check,
@@ -408,9 +407,10 @@ export default function BookStayPage() {
       <div aria-hidden className="fixed inset-0 bg-ink/75 backdrop-blur-[2px]" />
 
       <div className="relative mx-auto flex min-h-dvh max-w-7xl flex-col px-3 py-3 sm:px-6">
-        <header className="flex items-center justify-between">
-          <Link to="/login" aria-label="Back to sign in">
-            <Logo variant="onDark" size="h-10" />
+        <header className="flex items-center justify-between min-[1560px]:justify-end">
+          {/* Wide screens: in the empty margin left of the card, a little larger. */}
+          <Link to="/login" aria-label="Back to sign in" className="z-20 min-[1560px]:fixed min-[1560px]:top-6 min-[1560px]:left-8">
+            <Logo variant="onDark" size="h-12 min-[1560px]:h-24" />
           </Link>
           <Button asChild variant="ghost" className="text-sand/80 hover:bg-white/10 hover:text-white">
             <Link to="/login">
@@ -806,7 +806,6 @@ export default function BookStayPage() {
                       {/* total */}
                       {!waitlistFor && chosen && (
                         <div className="relative overflow-hidden rounded-2xl bg-forest p-4 text-sand shadow-lift">
-                          <Leaf aria-hidden className="absolute -right-4 -bottom-6 size-32 -rotate-12 text-white/10" strokeWidth={1} />
                           <p className="relative text-[11px] font-semibold tracking-[0.18em] text-gold-200 uppercase">
                             Total to pay · 100% advance
                           </p>
