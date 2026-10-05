@@ -24,7 +24,8 @@ import { Logo } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/services/session";
 import { useNotifications, useMockData } from "@/hooks/useData";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, money } from "@/lib/format";
+import { useGuestStay } from "@/hooks/useGuest";
 import type { AppNotification } from "@/types";
 
 /** Mobile-first: the five things a guest actually does live in a thumb-reachable
@@ -272,6 +273,8 @@ export function GuestShell() {
         </div>
       </header>
 
+      <PaymentDueBar />
+
       <main className="mx-auto max-w-5xl">
         <Outlet />
       </main>
@@ -313,6 +316,42 @@ export function GuestShell() {
       </nav>
 
       <p className="sr-only">Signed in as {session?.name}</p>
+    </div>
+  );
+}
+
+/**
+ * Money still owed, on every guest page until it is paid — red, because an
+ * unpaid booking is not yet a confirmed one. Not shown to companions (the
+ * money is the holder's) or once the stay is over.
+ */
+function PaymentDueBar() {
+  const { view, isCompanion } = useGuestStay();
+  if (!view || isCompanion) return null;
+  const { booking, totals } = view;
+  if (totals.balance <= 0) return null;
+  if (["cancelled", "rejected", "no_show", "checked_out", "completed"].includes(booking.status)) return null;
+  const checking = booking.paymentStatus === "uploaded";
+  return (
+    <div role="alert" className="sticky top-0 z-30 bg-status-cancelled-solid text-white shadow-soft">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2.5 text-sm sm:px-8">
+        <span className="min-w-0 flex-1">
+          <strong className="font-semibold">
+            {booking.status === "pending_payment" ? "Payment pending" : "Balance due"}: {money(totals.balance)}
+          </strong>{" "}
+          {checking
+            ? "— your receipt is with us and being checked."
+            : "— complete your payment to confirm your booking."}
+        </span>
+        {!checking && (
+          <Link
+            to="/guest/payment"
+            className="shrink-0 rounded-md bg-white px-3 py-1 text-xs font-semibold text-status-cancelled-solid hover:bg-white/90"
+          >
+            Pay now
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

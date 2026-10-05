@@ -46,7 +46,7 @@ const LINKS = [
 export default function GuestDashboardPage() {
   const { session } = useSession();
   const { refunds } = useMockData();
-  const { view, orders, requests, today, isCompanion } = useGuestStay();
+  const { view, bookings, orders, requests, today, isCompanion } = useGuestStay();
   // A companion's quick links are the ones they can use. The money and the
   // booking are the holder's — RLS returns nothing there to them anyway.
   const links = isCompanion
@@ -66,15 +66,25 @@ export default function GuestDashboardPage() {
     draftSent.current = true;
     void loadAnyDraft().then(async (draft) => {
       if (!draft) return;
+      const alreadyBooked = bookings.some(
+        (v) =>
+          v.booking.villaId === draft.villaId &&
+          v.booking.checkIn === draft.checkIn &&
+          v.booking.checkOut === draft.checkOut,
+      );
+      if (alreadyBooked) return void clearDraft();
       const result = await submitDraft(draft);
       if (result.error) {
+        await clearDraft();
         toast.error("We could not place the booking you chose", { description: result.error });
         return;
       }
-      clearDraft();
+      await clearDraft();
       toast.success(result.waitlisted ? "You are on the waiting list" : "Booking held — payment pending");
       window.location.assign(result.waitlisted ? "/guest/waitlist" : "/guest/payment");
     });
+    // Runs once per visit (draftSent); `bookings` is read at that moment on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCompanion, session?.role]);
 
   // No booking yet is a perfectly normal state for a new account — it is an

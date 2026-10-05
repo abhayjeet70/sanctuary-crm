@@ -365,7 +365,7 @@ export default function BookStayPage() {
       setSaving(false);
       return setError(result.error);
     }
-    clearDraft();
+    await clearDraft();
     toast.success(result.waitlisted ? "You are on the waiting list" : "Booking held — payment pending");
     // A full load, not a route change: the portal's data was fetched before this
     // guest had an account, so it has to be fetched again to show their stay.

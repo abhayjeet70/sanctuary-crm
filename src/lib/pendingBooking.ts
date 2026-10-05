@@ -56,14 +56,14 @@ export async function loadAnyDraft(): Promise<BookingDraft | null> {
   return (data.user?.user_metadata?.pending_booking as BookingDraft | undefined) ?? null;
 }
 
-export const clearDraft = () => {
+export const clearDraft = async () => {
   try {
     localStorage.removeItem(KEY);
   } catch {
     // nothing to clear
   }
   // Signed in by the time this runs; without a session it is a harmless no-op.
-  void supabase.auth.updateUser({ data: { pending_booking: null } });
+  await supabase.auth.updateUser({ data: { pending_booking: null } });
 };
 
 /** Send a draft to the database as the signed-in guest. */
