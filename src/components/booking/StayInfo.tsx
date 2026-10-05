@@ -86,7 +86,6 @@ export function PaymentAndPolicies({ settings: s, payment = true }: { settings: 
       <Block title="Terms" text={s.stayTerms} />
       <Block title="Cancellation & refunds" text={policyLines(s).join("\n")} />
       <Block title="Booking policy" text={s.bookingPolicy} />
-      <Block title="Pet policy" text={s.petPolicy} />
     </div>
   );
 }

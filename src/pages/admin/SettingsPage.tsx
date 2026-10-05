@@ -28,7 +28,7 @@ import type { PropertySettings } from "@/types";
  */
 /** One active style for all of them, so none drifts. */
 const TAB =
-  "data-[state=active]:bg-ink data-[state=active]:text-sand data-[state=active]:shadow-soft rounded-lg px-3 py-1.5 text-stone-600 hover:text-ink";
+  "data-[state=active]:bg-ink data-[state=active]:text-sand data-[state=active]:shadow-soft shrink-0 rounded-lg px-3 py-1.5 text-stone-600 hover:text-ink";
 
 export default function SettingsPage() {
   const villas = useVillas();
@@ -85,7 +85,7 @@ export default function SettingsPage() {
       />
 
       <Tabs defaultValue="payment">
-        <TabsList className="h-auto flex-wrap justify-start gap-1 p-1.5">
+        <TabsList className="scrollbar-none h-auto w-full justify-start gap-1 overflow-x-auto p-1.5 sm:w-fit sm:flex-wrap">
           <TabsTrigger value="payment" className={TAB}>Payment</TabsTrigger>
           <TabsTrigger value="invoice" className={TAB}>Invoice</TabsTrigger>
           <TabsTrigger value="guestinfo" className={TAB}>Guest info</TabsTrigger>
@@ -286,7 +286,6 @@ export default function SettingsPage() {
                   ["addons", "Optional add-ons", 6, "High tea — ₹350 per person"],
                   ["stayTerms", "Stay terms", 5, "Maximum 8 adults per villa"],
                   ["bookingPolicy", "Booking & cancellation policy", 5, "100% advance to confirm"],
-                  ["petPolicy", "Pet policy", 5, "Pets are welcome with prior approval"],
                   ["importantInfo", "Important information (on the voucher)", 4, "Carry a government ID"],
                 ] as const
               ).map(([key, label, rows, placeholder]) => (

@@ -138,8 +138,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Right — the way in */}
-          <div className="flex flex-col gap-4">
+          {/* Right — the way in. First on a phone, where the photographs
+              would otherwise push it below the fold. */}
+          <div className="order-first flex flex-col gap-4 lg:order-none">
             {/* New guests do not need an account before they can look — dates
                 and villas are public reading. Signing in is for owners, staff
                 and guests coming back, which is what the panel below is. */}

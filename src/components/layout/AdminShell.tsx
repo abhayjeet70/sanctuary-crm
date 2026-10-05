@@ -419,9 +419,10 @@ export function AdminShell() {
                   <Logo variant="onDark" size="h-20" />
                 </SheetTitle>
               </SheetHeader>
-              <div className="scrollbar-slim overflow-y-auto px-3 pb-4">
+              <div className="scrollbar-slim min-h-0 flex-1 overflow-y-auto px-3 pb-4">
                 <NavItems onNavigate={() => setMobileOpen(false)} />
-                <hr className="rule-gold my-3" />
+              </div>
+              <div className="border-t border-gold/20 px-3 py-3">
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-[0.8125rem] text-sand/60 hover:bg-white/8 hover:text-sand"
