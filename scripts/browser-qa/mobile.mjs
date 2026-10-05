@@ -114,60 +114,33 @@ for (const width of WIDTHS) {
       await page.goto(`${BASE}${path}`, { waitUntil: "networkidle0" });
       await audit(page, path, width);
     }
-    await page.goto(`${BASE}/login`, { waitUntil: "networkidle0" });
-    await click(page, "Book a stay");
-    await waitText(page, /step 1 of 5/);
-    await audit(page, "popup step 1 dates", width);
+    // The booking window is its own page now (/book), four steps, no food step.
+    await page.goto(`${BASE}/book`, { waitUntil: "networkidle0" });
+    await waitText(page, /step 1 of 4/);
+    await audit(page, "book step 1 dates", width);
     await click(page, "Check availability");
-    await waitText(page, /step 2 of 5/);
+    await waitText(page, /step 2 of 4/);
     await sleep(600);
-    await audit(page, "popup step 2 villas", width);
-    await click(page, "Select villa");
-    await click(page, "Choose rooms");
+    await audit(page, "book step 2 villas", width);
+    await click(page, "View all details");
+    await sleep(900);
+    await audit(page, "book villa page", width);
+    await page.goBack();
+    await waitText(page, /step 2 of 4/);
+    await click(page, "Choose rooms", true);
     await sleep(900);
     await page.evaluate(() => document.querySelector("input[type=checkbox]:not(:disabled)")?.click());
-    await audit(page, "popup step 2 rooms chosen", width);
+    await audit(page, "book step 2 rooms chosen", width);
     await click(page, "Continue");
-    await waitText(page, /step 3 of 5/);
-    await audit(page, "popup step 3 about you", width);
+    await waitText(page, /step 3 of 4/);
+    await audit(page, "book step 3 about you", width);
     await page.type("#pb-name", "QA Guest");
     await page.type("#pb-phone", "9988029296");
-    await page.type("#pb-email", "dollarsidestories@gmial.com");
-    await click(page, "Continue");
-    await sleep(400);
-    await audit(page, "popup step 3 with email error", width);
-    await page.focus("#pb-email");
-    await page.keyboard.down("Control"); await page.keyboard.press("KeyA"); await page.keyboard.up("Control");
-    await page.keyboard.press("Backspace");
     await page.type("#pb-email", "qa.mobile@gmail.com");
     await click(page, "Continue");
-    await waitText(page, /step 4 of 5/);
-    await page.waitForSelector("button[aria-haspopup=listbox]", { timeout: 10000 }).catch(() => {});
-    await sleep(500);
-    await audit(page, "popup step 4 food (closed)", width);
-    const triggers = await page.$$("button[aria-haspopup=listbox]");
-    if (triggers[0]) {
-      await triggers[0].click();
-      await page.waitForSelector("[role=listbox] input[type=checkbox]").catch(() => {});
-      const boxes = await page.$$("[role=listbox] input[type=checkbox]");
-      if (boxes[0]) await boxes[0].click();
-      if (boxes[1]) await boxes[1].click();
-      await audit(page, "popup step 4 dropdown open", width);
-      await page.keyboard.press("Escape");
-      await sleep(300);
-    }
-    if (triggers[1]) {
-      await triggers[1].click();
-      await page.waitForSelector("[role=listbox] input[type=checkbox]").catch(() => {});
-      for (const b of await page.$$("[role=listbox] input[type=checkbox]")) await b.click();
-      await page.keyboard.press("Escape");
-      await sleep(300);
-    }
-    await audit(page, "popup step 4 with many chips", width);
-    await click(page, "Continue");
-    await waitText(page, /step 5 of 5/);
+    await waitText(page, /step 4 of 4/);
     await page.evaluate(() => document.querySelectorAll("details").forEach((d) => (d.open = true)));
-    await audit(page, "popup step 5 voucher preview", width);
+    await audit(page, "book step 4 voucher", width);
     await page.close();
   }
   // ---- guest portal
