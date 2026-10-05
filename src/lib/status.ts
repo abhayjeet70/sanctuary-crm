@@ -32,12 +32,12 @@ export const toneClasses: Record<Tone, string> = {
 /** Solid fills, for calendar bars where a tinted background needs to read
  *  against photography and neighbouring bars. */
 export const toneSolid: Record<Tone, string> = {
-  pending: "bg-status-pending text-white",
-  uploaded: "bg-status-uploaded text-white",
-  confirmed: "bg-status-confirmed text-white",
-  inhouse: "bg-status-inhouse text-white",
-  cancelled: "bg-status-cancelled text-white",
-  completed: "bg-status-completed text-white",
+  pending: "bg-status-pending-solid text-white",
+  uploaded: "bg-status-uploaded-solid text-white",
+  confirmed: "bg-status-confirmed-solid text-white",
+  inhouse: "bg-status-inhouse-solid text-white",
+  cancelled: "bg-status-cancelled-solid text-white",
+  completed: "bg-status-completed-solid text-white",
 };
 
 /** Outlined variant, elegant on dark backgrounds. */
