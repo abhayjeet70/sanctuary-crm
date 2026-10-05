@@ -316,6 +316,11 @@
   [data-print-flow] svg {
     break-inside: avoid;
   }
+  /* …except a card taller than a sheet, which can never fit on one: kept
+     whole, it is pushed to the next page and leaves a blank one behind. */
+  [data-print-flow] [data-print-breakable] {
+    break-inside: auto !important;
+  }
   /* Nothing scrolls on paper: an overflow container would clip a wide table at the margin. */
   [data-print-flow] [class*="overflow-x-auto"],
   [data-print-flow] [class*="overflow-auto"] {

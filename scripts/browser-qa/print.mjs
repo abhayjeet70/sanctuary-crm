@@ -47,6 +47,7 @@ for (let i = 0; i < names.length; i++) {
     return {
       text: flow?.innerText.trim().length ?? 0,
       widthShare: (r?.width ?? 0) / window.innerWidth,
+      height: r?.height ?? 0,
       top: Math.round(r?.top ?? -1),
       overflowing,
       darkCards: dark.length,
@@ -65,6 +66,10 @@ for (let i = 0; i < names.length; i++) {
   check(`${names[i]} (${orient}): no blank band above the title`, m.top >= 0 && m.top < 60, `starts ${m.top}px down`);
   check(`${names[i]} (${orient}): nothing runs off the right edge`, m.overflowing === 0, `${m.overflowing} elements overflow`);
   check(`${names[i]} (${orient}): dark cards keep their fill`, m.darkCards === 0 || m.colourAdjust === "exact", `print-color-adjust=${m.colourAdjust}`);
+  // Printable height at 96 dpi: A4 minus 14 mm margins, by orientation.
+  const sheet = orient === "landscape" ? 688 : 1017;
+  const needed = Math.max(1, Math.ceil(m.height / sheet));
+  check(`${names[i]} (${orient}): no blank pages (${pages} for ~${needed} of content)`, pages <= needed + 1);
   check(`${names[i]} (${orient}): a sensible page count (${pages})`, pages >= 1 && pages <= 6);
 
   await page.emulateMediaType("screen");
