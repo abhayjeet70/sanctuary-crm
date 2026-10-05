@@ -127,7 +127,7 @@ export function VoucherCard({
             {data.blurb && <p className="mt-0.5 line-clamp-2 text-sm text-stone-600">{data.blurb}</p>}
           </div>
           <div className="shrink-0 text-center sm:border-l sm:border-ink/10 sm:pl-4">
-            <span className="inline-flex items-center gap-2 rounded-lg bg-forest px-3 py-2 text-xs font-semibold tracking-wider text-sand uppercase">
+            <span className={cn("inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold tracking-wider text-white uppercase", data.balance > 0 ? "bg-status-cancelled-solid" : "bg-forest")}>
               <Clock className="size-4" aria-hidden />
               {data.statusLabel}
             </span>

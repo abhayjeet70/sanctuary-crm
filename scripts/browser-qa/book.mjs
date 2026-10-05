@@ -44,6 +44,22 @@ for (const [label, viewport] of [
 
   await page.goto(`${BASE}/book`, { waitUntil: "networkidle2" });
   await shot("1-dates");
+  // Date rules: a check-in typed past check-out drags check-out along; a
+  // check-out typed before check-in is refused.
+  const setDate = (sel, v) => page.evaluate((sel, v) => {
+    const el = document.querySelector(sel);
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(el, v);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }, sel, v);
+  const dates = () => page.evaluate(() => [document.querySelector("#pb-checkin").value, document.querySelector("#pb-checkout").value]);
+  const inTen = new Date(Date.now() + 10 * 864e5).toISOString().slice(0, 10);
+  await setDate("#pb-checkin", inTen);
+  let [ci, co] = await dates();
+  if (!(co > ci)) problems.push(`${label}: check-in after check-out was allowed (${ci} → ${co})`);
+  await setDate("#pb-checkout", ci);
+  [ci, co] = await dates();
+  if (!(co > ci)) problems.push(`${label}: check-out on/before check-in was allowed (${ci} → ${co})`);
+  else problems.push(`${label}: date rules hold (${ci} → ${co})`);
   await clickText(page, "Check availability");
   await wait(page, () => document.body.innerText.includes("Choose your house"));
   await new Promise((r) => setTimeout(r, 1500)); // images

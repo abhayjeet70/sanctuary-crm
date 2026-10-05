@@ -176,6 +176,26 @@ export default function BookStayPage() {
     setWaitlistFor(null);
   }, [checkIn, checkOut]);
 
+  // Typing can get past the inputs' min, so the rule is enforced here too:
+  // moving check-in on or past check-out carries check-out along, and a
+  // check-out on or before check-in is refused.
+  const changeCheckIn = (value: string) => {
+    if (!value) return;
+    const earliest = toISODate(new Date());
+    const next = value < earliest ? earliest : value;
+    setCheckIn(next);
+    if (checkOut <= next) setCheckOut(addDays(next, 1));
+  };
+  const changeCheckOut = (value: string) => {
+    if (!value) return;
+    if (value <= checkIn) {
+      toast.error("Check-out must be after check-in");
+      setCheckOut(addDays(checkIn, 1));
+      return;
+    }
+    setCheckOut(value);
+  };
+
   const search = async () => {
     if (nights < 1) return toast.error("Set your dates first");
     if (Number(adults) < 1) return toast.error("At least one adult, please");
@@ -357,7 +377,7 @@ export default function BookStayPage() {
           type="button"
           onClick={chatOnWhatsApp}
           aria-label="Chat with us on WhatsApp"
-          className="fixed right-3 bottom-24 z-40 flex items-center gap-2 rounded-full bg-[#25D366] p-3 sm:right-6 sm:px-4 text-sm font-medium text-white shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:right-6 lg:bottom-6"
+          className={cn("fixed right-3 bottom-24 z-40 flex items-center gap-2 rounded-full bg-[#25D366] p-3 text-sm font-medium text-white shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none sm:right-6 sm:px-4", !detailsFor && chosen && total > 0 && !needsConfirmation ? "lg:bottom-24" : "lg:bottom-6")}
         >
           <MessageCircle className="size-5" aria-hidden />
           <span className="hidden sm:inline">Chat with us</span>
@@ -474,7 +494,7 @@ export default function BookStayPage() {
                           type="date"
                           min={toISODate(new Date())}
                           value={checkIn}
-                          onChange={(e) => setCheckIn(e.target.value)}
+                          onChange={(e) => changeCheckIn(e.target.value)}
                         />
                       </Field>
                       <Field label="Check-out" htmlFor="pb-checkout">
@@ -483,7 +503,7 @@ export default function BookStayPage() {
                           type="date"
                           min={addDays(checkIn, 1)}
                           value={checkOut}
-                          onChange={(e) => setCheckOut(e.target.value)}
+                          onChange={(e) => changeCheckOut(e.target.value)}
                         />
                       </Field>
                       <Field label="Adults" htmlFor="pb-adults">
@@ -506,34 +526,24 @@ export default function BookStayPage() {
                       {searching ? "Checking…" : "Check availability"}
                     </Button>
 
-                    <section aria-label="Homes of Sanctuary" className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-[1fr_1.5fr]">
-                      <figure className="relative flex flex-col justify-center overflow-hidden rounded-2xl bg-forest p-6 text-sand sm:p-8">
-                        <span aria-hidden className="absolute -top-6 left-4 font-display text-[9rem] leading-none text-white/10">
-                          &ldquo;
-                        </span>
-                        <blockquote className="relative font-display text-2xl leading-snug text-white sm:text-3xl">
-                          Some places you visit. Others, you return to — in your mind, long after you leave.
-                        </blockquote>
-                        <hr className="rule-gold relative my-5 w-24" />
-                        <figcaption className="relative text-[11px] tracking-[0.3em] text-gold-200 uppercase">
-                          Three houses above the clouds · Nandi Hills
-                        </figcaption>
-                      </figure>
-                      <ul className="grid h-64 grid-cols-3 grid-rows-2 gap-2 sm:h-72">
-                        {backdrop.slice(0, 3).map((src, i) => (
-                          <li
-                            key={src + i}
-                            className={cn("overflow-hidden rounded-xl", i === 0 && "col-span-2 row-span-2")}
-                          >
-                            <img
-                              src={src}
-                              alt=""
-                              loading="lazy"
-                              className="size-full object-cover transition-transform duration-700 hover:scale-105"
-                            />
+                    <section aria-label="Homes of Sanctuary" className="relative mt-5 h-52 overflow-hidden rounded-2xl sm:h-56">
+                      <ul aria-hidden className="flex size-full gap-1.5">
+                        {backdrop.slice(0, 4).map((src, i) => (
+                          <li key={src + i} className={cn("h-full min-w-0 overflow-hidden", i === 0 ? "flex-[2]" : "flex-1")}>
+                            <img src={src} alt="" className="size-full object-cover" />
                           </li>
                         ))}
                       </ul>
+                      <div className="absolute inset-0 bg-gradient-to-r from-forest/95 via-forest/70 to-forest/10" />
+                      <figure className="absolute inset-0 flex max-w-xl flex-col justify-center p-6 text-sand sm:p-8">
+                        <blockquote className="font-display text-xl leading-snug text-white sm:text-2xl">
+                          &ldquo;Some places you visit. Others, you return to — in your mind, long after you leave.&rdquo;
+                        </blockquote>
+                        <hr className="rule-gold my-4 w-20" />
+                        <figcaption className="text-[10px] tracking-[0.3em] text-gold-200 uppercase">
+                          Three houses above the clouds · Nandi Hills
+                        </figcaption>
+                      </figure>
                     </section>
                   </>
                 )}
