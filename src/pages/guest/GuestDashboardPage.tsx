@@ -30,7 +30,8 @@ import { useMockData } from "@/hooks/useData";
 import { refundBadge } from "@/components/booking/RefundSummary";
 import { GuestAttentionDialog } from "@/components/guest/GuestAttentionDialog";
 import { CompanionProfileCard } from "@/components/guest/CompanionProfileCard";
-import { clearDraft, loadDraft, submitDraft } from "@/lib/pendingBooking";
+import { clearDraft, loadAnyDraft, submitDraft } from "@/lib/pendingBooking";
+import { StayWishesDialog } from "@/components/guest/StayWishesDialog";
 
 const LINKS = [
   { to: "/guest/booking", label: "Booking", hint: "Dates, rooms and guests", icon: Receipt },
@@ -55,13 +56,17 @@ export default function GuestDashboardPage() {
   // A booking chosen in the wizard before sign-up could not be submitted if the
   // account needed an emailed confirmation first. It was kept on this device;
   // send it now that there is a session, then reload so the stay appears.
+  //
+  // Keyed on the role, not `customerId`: a brand-new guest has no customer row
+  // until `request_booking` makes one, so waiting for it meant the draft was
+  // never sent and the portal asked them to book all over again.
   const draftSent = useRef(false);
   useEffect(() => {
-    if (draftSent.current || isCompanion || !session?.customerId) return;
-    const draft = loadDraft();
-    if (!draft) return;
+    if (draftSent.current || isCompanion || session?.role !== "guest") return;
     draftSent.current = true;
-    void submitDraft(draft).then((result) => {
+    void loadAnyDraft().then(async (draft) => {
+      if (!draft) return;
+      const result = await submitDraft(draft);
       if (result.error) {
         toast.error("We could not place the booking you chose", { description: result.error });
         return;
@@ -70,7 +75,7 @@ export default function GuestDashboardPage() {
       toast.success(result.waitlisted ? "You are on the waiting list" : "Booking held — payment pending");
       window.location.assign(result.waitlisted ? "/guest/waitlist" : "/guest/payment");
     });
-  }, [isCompanion, session?.customerId]);
+  }, [isCompanion, session?.role]);
 
   // No booking yet is a perfectly normal state for a new account — it is an
   // invitation to book, not an error.
@@ -181,7 +186,22 @@ export default function GuestDashboardPage() {
 
   return (
     <div className="pb-8">
-      <GuestAttentionDialog />
+      {/* Payment + food & wishes come first for a fresh booking; the general
+          attention dialog takes over once those are answered. */}
+      {!isCompanion && !concluded ? (
+        <StayWishesDialog fallback={<GuestAttentionDialog />} />
+      ) : (
+        <GuestAttentionDialog />
+      )}
+      {booking.extensionDueAt && !isCompanion && totals.balance > 0 && (
+        <p role="status" className="bg-status-pending-bg px-5 py-3 text-sm text-ink sm:px-8">
+          <strong>Your stay has been extended</strong> to {formatDate(booking.checkOut)}. The
+          balance of {money(totals.balance)} is due by {formatDate(booking.extensionDueAt.slice(0, 10))}.{" "}
+          <Link to="/guest/payment" className="text-clay-600 underline underline-offset-2">
+            Pay now
+          </Link>
+        </p>
+      )}
       {/* ------------------------------------------------------------- hero */}
       <section className="relative overflow-hidden">
         <Photo

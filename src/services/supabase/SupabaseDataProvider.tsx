@@ -464,6 +464,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
           const columns: Record<string, unknown> = {};
           if (patch.internalNotes !== undefined) columns.internal_notes = patch.internalNotes;
           if (patch.specialRequests !== undefined) columns.special_requests = patch.specialRequests;
+          if (patch.extensionDueAt !== undefined) columns.extension_due_at = patch.extensionDueAt;
           if (Object.keys(columns).length) {
             const { error } = await supabase.from("bookings").update(columns).eq("id", id);
             if (report(error, "Could not save the note")) return;
@@ -976,6 +977,7 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             columns.cancellation_policy = patch.cancellationPolicy;
           }
           if (patch.image !== undefined) columns.image = patch.image || null;
+          if (patch.gallery !== undefined) columns.gallery = patch.gallery;
           if (!Object.keys(columns).length) return;
 
           const { error } = await supabase.from("villas").update(columns).eq("id", villaId);
@@ -1030,6 +1032,8 @@ export function SupabaseDataProvider({ children }: { children: ReactNode }) {
             name: room.name,
             capacity: room.capacity ?? 2,
             base_rate: room.baseRate ?? 0,
+            ...(room.gallery !== undefined && { gallery: room.gallery }),
+            ...(room.description !== undefined && { description: room.description }),
           };
           const { error } = room.id
             ? await supabase.from("rooms").update(columns).eq("id", room.id)

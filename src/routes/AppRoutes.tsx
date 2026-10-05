@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import LoginPage from "@/pages/auth/LoginPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import BookStayPage from "@/pages/auth/BookStayPage";
 import DesignSystemPage from "@/pages/DesignSystemPage";
 import { AdminShell } from "@/components/layout/AdminShell";
 import DashboardPage from "@/pages/admin/DashboardPage";
@@ -27,6 +28,7 @@ import HousekeepingPage from "@/pages/admin/HousekeepingPage";
 import MaintenancePage from "@/pages/admin/MaintenancePage";
 import AmenitiesPage from "@/pages/admin/AmenitiesPage";
 import EnquiriesPage from "@/pages/admin/EnquiriesPage";
+import MediaPage from "@/pages/admin/MediaPage";
 import QuotesPage from "@/pages/admin/QuotesPage";
 import FollowUpsPage from "@/pages/admin/FollowUpsPage";
 import ActivityLogPage from "@/pages/admin/ActivityLogPage";
@@ -137,6 +139,7 @@ export function AppRoutes() {
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/book" element={<BookStayPage />} />
       <Route path="/design-system" element={<DesignSystemPage />} />
       {/* Where a network controller sends a guest who joins the Wi-Fi. Public:
           it signs them in itself, with the same guest account as the portal. */}
@@ -171,6 +174,7 @@ export function AppRoutes() {
         <Route path="lost-found" element={<LostFoundPage />} />
         <Route path="maintenance" element={<MaintenancePage />} />
         <Route path="amenities" element={<AmenitiesPage />} />
+        <Route path="media" element={<MediaPage />} />
         <Route path="wifi" element={<CaptiveWifiPage />} />
         <Route path="enquiries" element={<EnquiriesPage />} />
         <Route path="waitlist" element={<WaitlistPage />} />

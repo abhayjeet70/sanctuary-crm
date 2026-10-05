@@ -120,13 +120,23 @@ export function SupabaseSessionProvider({ children }: { children: ReactNode }) {
    * here is ignored: the database trigger reads the role from app_metadata only,
    * because user_metadata is whatever the browser chose to send.
    */
-  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+  const signUp = useCallback(async (
+    email: string,
+    password: string,
+    fullName: string,
+    metadata?: Record<string, unknown>,
+  ) => {
     const problem = emailProblem(email);
     if (problem) return { error: problem, needsConfirmation: false, alreadyRegistered: false };
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { full_name: fullName.trim() } },
+      options: {
+        data: { ...metadata, full_name: fullName.trim() },
+        // Back to this site's portal, not the project's default Site URL — a
+        // different origin has a different localStorage.
+        emailRedirectTo: `${window.location.origin}/guest`,
+      },
     });
 
     if (error) return { error: error.message, needsConfirmation: false, alreadyRegistered: false };

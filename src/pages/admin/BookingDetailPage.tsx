@@ -42,6 +42,7 @@ import { EmailGuestButton, GuestAccessPanel } from "@/components/booking/GuestAc
 import { SendBookingDetails } from "@/components/booking/SendBookingDetails";
 import { ReceiptViewer } from "@/components/payment/ReceiptViewer";
 import { CancelBookingDialog } from "@/components/booking/CancelBookingDialog";
+import { ExtendStayDialog } from "@/components/booking/ExtendStayDialog";
 import { RefundSummary, refundBadge } from "@/components/booking/RefundSummary";
 import { RejectPaymentDialog } from "@/components/payment/RejectPaymentDialog";
 import {
@@ -185,6 +186,14 @@ export default function BookingDetailPage() {
             <Button asChild variant="outline" size="sm">
               <Link to={`/admin/bookings/${booking.id}/edit`}>Edit booking</Link>
             </Button>
+            {["confirmed", "checked_in", "in_house"].includes(booking.status) && (
+              <ExtendStayDialog view={view} />
+            )}
+            {booking.extensionDueAt && totals.balance > 0 && (
+              <span className="text-xs text-stone-600">
+                Extension balance due by {formatDate(booking.extensionDueAt.slice(0, 10))}
+              </span>
+            )}
             {["inquiry", "pending_payment", "payment_uploaded", "payment_approved", "confirmed"].includes(booking.status) && (
               <>
                 <Button

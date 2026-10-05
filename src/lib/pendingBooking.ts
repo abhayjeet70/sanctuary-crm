@@ -45,12 +45,25 @@ export const loadDraft = (): BookingDraft | null => {
   }
 };
 
+/**
+ * The draft from this device, else the copy signup stored on the account —
+ * which is what survives opening the confirmation email on a phone.
+ */
+export async function loadAnyDraft(): Promise<BookingDraft | null> {
+  const local = loadDraft();
+  if (local) return local;
+  const { data } = await supabase.auth.getUser();
+  return (data.user?.user_metadata?.pending_booking as BookingDraft | undefined) ?? null;
+}
+
 export const clearDraft = () => {
   try {
     localStorage.removeItem(KEY);
   } catch {
     // nothing to clear
   }
+  // Signed in by the time this runs; without a session it is a harmless no-op.
+  void supabase.auth.updateUser({ data: { pending_booking: null } });
 };
 
 /** Send a draft to the database as the signed-in guest. */

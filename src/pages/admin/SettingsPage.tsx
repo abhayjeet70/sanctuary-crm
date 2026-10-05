@@ -396,6 +396,23 @@ export default function SettingsPage() {
             </div>
           </Section>
 
+          <Section
+            title="Stay extensions"
+            note="When the desk extends a stay, the guest's portal access runs to the new departure and the extra nights are due within this many days."
+          >
+            <div className="max-w-xs space-y-1.5">
+              <Label htmlFor="ext-days">Days to pay for an extension</Label>
+              <Input
+                id="ext-days"
+                type="number"
+                min={0}
+                max={60}
+                value={draft.extensionPaymentDays}
+                onChange={(e) => set("extensionPaymentDays", Math.min(60, Math.max(0, Math.round(Number(e.target.value) || 0))))}
+              />
+            </div>
+          </Section>
+
           <section className="rounded-xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.06]">
             <Eyebrow className="text-gold-700">This build</Eyebrow>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-stone-600">

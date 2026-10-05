@@ -24,6 +24,9 @@ export interface Room {
   /** The flag housekeeping set, which a stay can sit on top of. */
   operational?: RoomStatus;
   baseRate: number;
+  /** Photos guests see when choosing rooms. Managed in Admin → Media. */
+  gallery?: string[];
+  description?: string;
 }
 
 export interface Villa {
@@ -167,6 +170,8 @@ export interface Booking {
   amountPaid: number;
   specialRequests?: string;
   internalNotes?: string;
+  /** Set when the desk extends the stay: the extra balance is due by then. */
+  extensionDueAt?: ISODateTime;
   createdAt: ISODateTime;
 }
 
@@ -766,6 +771,9 @@ export interface PropertySettings {
   lostFoundRetentionDays: number;
   lostFoundHighValueRetentionDays: number;
   lostFoundSensitiveRetentionDays: number;
+
+  /** Days a guest has to pay for nights added by a stay extension. */
+  extensionPaymentDays: number;
 }
 
 /** Cancelled at least `days` before check-in earns `refundPercent` of what was paid. */

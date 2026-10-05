@@ -5,7 +5,6 @@ import { Eyebrow, Logo } from "@/components/common";
 import { collage } from "@/lib/assets";
 import { useSession } from "@/services/session";
 import { AuthPanel } from "./AuthPanel";
-import { PublicBookingDialog } from "@/components/booking/PublicBookingDialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -144,13 +143,12 @@ export default function LoginPage() {
             {/* New guests do not need an account before they can look — dates
                 and villas are public reading. Signing in is for owners, staff
                 and guests coming back, which is what the panel below is. */}
-            <PublicBookingDialog
-              trigger={
-                <Button
-                  type="button"
-                  className="h-auto w-full justify-between gap-3 rounded-2xl bg-gold/15 px-5 py-4 text-left text-gold-100 ring-1 ring-gold/40 hover:bg-gold/25 hover:text-white"
-                  variant="ghost"
-                >
+            <Button
+              asChild
+              className="h-auto w-full justify-between gap-3 rounded-2xl bg-gold/15 px-5 py-4 text-left text-gold-100 ring-1 ring-gold/40 hover:bg-gold/25 hover:text-white"
+              variant="ghost"
+            >
+                <Link to="/book">
                   <span className="flex items-center gap-3">
                     <CalendarPlus className="size-5 shrink-0" aria-hidden />
                     <span>
@@ -161,9 +159,8 @@ export default function LoginPage() {
                     </span>
                   </span>
                   <ArrowRight className="size-4 shrink-0" aria-hidden />
-                </Button>
-              }
-            />
+                </Link>
+            </Button>
 
             <div className="flex items-center gap-3 text-xs text-sand/45">
               <span className="h-px flex-1 bg-gold/20" aria-hidden />

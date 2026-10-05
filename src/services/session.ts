@@ -17,6 +17,8 @@ export interface SessionContextValue {
     email: string,
     password: string,
     fullName: string,
+    /** Extra user_metadata — the booking wizard parks its draft here. */
+    metadata?: Record<string, unknown>,
   ) => Promise<{
     error: string | null;
     needsConfirmation: boolean;

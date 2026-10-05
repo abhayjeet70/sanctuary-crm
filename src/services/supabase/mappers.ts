@@ -47,6 +47,8 @@ export const toRoom = (row: unknown): Room => {
     capacity: x.capacity,
     status: x.status,
     baseRate: x.base_rate,
+    gallery: x.gallery ?? [],
+    description: x.description ?? "",
   };
 };
 
@@ -143,6 +145,7 @@ export const toBooking = (row: unknown): Booking => {
     amountPaid: x.amount_paid,
     specialRequests: x.special_requests ?? undefined,
     internalNotes: x.internal_notes ?? undefined,
+    extensionDueAt: x.extension_due_at ?? undefined,
     createdAt: x.created_at,
   };
 };
@@ -409,6 +412,7 @@ export const toSettings = (row: unknown): PropertySettings => {
     lostFoundRetentionDays: x.lost_found_retention_days ?? 90,
     lostFoundHighValueRetentionDays: x.lost_found_high_value_retention_days ?? 180,
     lostFoundSensitiveRetentionDays: x.lost_found_sensitive_retention_days ?? 30,
+    extensionPaymentDays: x.extension_payment_days ?? 1,
   };
 };
 
@@ -458,6 +462,7 @@ export const settingsColumns: Record<keyof PropertySettings, string> = {
   lostFoundRetentionDays: "lost_found_retention_days",
   lostFoundHighValueRetentionDays: "lost_found_high_value_retention_days",
   lostFoundSensitiveRetentionDays: "lost_found_sensitive_retention_days",
+  extensionPaymentDays: "extension_payment_days",
 };
 
 export const toDepartment = (row: unknown): Department => {
