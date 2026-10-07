@@ -4,6 +4,8 @@
  * The session and data contexts are filled directly from the fixtures, so this
  * exercises the real page components while staying entirely offline — the
  * Supabase client is never imported. Run: npm run smoke */
+import { readdirSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { TooltipProvider } from "../src/components/ui/tooltip";
@@ -77,6 +79,43 @@ const ROUTES = [
 ];
 
 let failed = 0;
+
+/* Pages are lazy-loaded, and renderToString shows a lazy page's fallback
+ * until its code has landed. Load every page module now, then render each
+ * route a few times — one pass per level of lazy nesting (shell, then page) —
+ * so that by the checks below every lazy component renders synchronously. */
+{
+  const files = readdirSync("src", { recursive: true, encoding: "utf8" })
+    .filter((f) => /^(pages|components[\\/]layout)[\\/].*\.tsx$/.test(f) && !f.endsWith(".test.tsx"));
+  await Promise.all(files.map((f) => import(pathToFileURL(`src/${f}`).href)));
+  const sessions: MockSession[] = [
+    { role: "admin", name: "Anjali Rao" },
+    { role: "staff", name: "Lakshmi (Housekeeping)", team: "housekeeping" },
+    { role: "guest", name: "Pooja Bothra", customerId: "c-pooja" },
+  ];
+  for (let pass = 0; pass < 3; pass++) {
+    for (const session of sessions) {
+      for (const route of ROUTES) {
+        try {
+          renderToString(
+            <SessionContext.Provider value={{ session, loading: false } as never}>
+              <MockDataProvider>
+                <TooltipProvider>
+                  <MemoryRouter initialEntries={[route]}>
+                    <AppRoutes />
+                  </MemoryRouter>
+                </TooltipProvider>
+              </MockDataProvider>
+            </SessionContext.Provider>,
+          );
+        } catch {
+          // A warm-up render only starts imports; the real checks report errors.
+        }
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}
 
 for (const role of ["admin", "staff", "guest"] as const) {
   const session: MockSession =

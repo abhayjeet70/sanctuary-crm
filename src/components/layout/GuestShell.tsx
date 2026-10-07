@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { PageLoading } from "@/components/common";
 import {
   Bell,
   CalendarCheck,
@@ -276,7 +277,9 @@ export function GuestShell() {
       <PaymentDueBar />
 
       <main className="mx-auto max-w-5xl">
-        <Outlet />
+        <Suspense fallback={<PageLoading />}>
+          <Outlet />
+        </Suspense>
       </main>
 
       {/* Mobile bottom bar */}

@@ -9,10 +9,10 @@ export const logo = {
 };
 
 export const photo = {
-  hills: "/villas/nandi-hills.png",
-  maaya: "/villas/villa-maya.png",
-  praana: "/villas/villa-prana.png",
-  nirvaana: "/villas/villa-norvana.png",
+  hills: "/villas/nandi-hills.webp",
+  maaya: "/villas/villa-maya.webp",
+  praana: "/villas/villa-prana.webp",
+  nirvaana: "/villas/villa-norvana.webp",
 };
 
 /** The four property photographs, for collages and galleries. */

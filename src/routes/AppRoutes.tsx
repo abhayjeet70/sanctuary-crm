@@ -1,62 +1,66 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import LoginPage from "@/pages/auth/LoginPage";
-import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
-import BookStayPage from "@/pages/auth/BookStayPage";
-import DesignSystemPage from "@/pages/DesignSystemPage";
-import { AdminShell } from "@/components/layout/AdminShell";
-import DashboardPage from "@/pages/admin/DashboardPage";
-import FrontDeskPage from "@/pages/admin/FrontDeskPage";
-import BookingsListPage from "@/pages/admin/BookingsListPage";
-import BookingDetailPage from "@/pages/admin/BookingDetailPage";
-import NewBookingPage from "@/pages/admin/NewBookingPage";
-import EditBookingPage from "@/pages/admin/EditBookingPage";
-import PaymentQueuePage from "@/pages/admin/PaymentQueuePage";
-import VillasListPage from "@/pages/admin/VillasListPage";
-import VillaDetailPage from "@/pages/admin/VillaDetailPage";
-import CustomersListPage from "@/pages/admin/CustomersListPage";
-import CustomerDetailPage from "@/pages/admin/CustomerDetailPage";
-import CalendarPage from "@/pages/admin/CalendarPage";
-import KitchenPage from "@/pages/admin/KitchenPage";
-import RequestsPage from "@/pages/admin/RequestsPage";
-import FeedbackPage from "@/pages/admin/FeedbackPage";
-import InvoicesPage from "@/pages/admin/InvoicesPage";
-import SettingsPage from "@/pages/admin/SettingsPage";
-import EmployeesPage from "@/pages/admin/EmployeesPage";
-import ReportsPage from "@/pages/admin/ReportsPage";
-import HousekeepingPage from "@/pages/admin/HousekeepingPage";
-import MaintenancePage from "@/pages/admin/MaintenancePage";
-import AmenitiesPage from "@/pages/admin/AmenitiesPage";
-import EnquiriesPage from "@/pages/admin/EnquiriesPage";
-import MediaPage from "@/pages/admin/MediaPage";
-import QuotesPage from "@/pages/admin/QuotesPage";
-import FollowUpsPage from "@/pages/admin/FollowUpsPage";
-import ActivityLogPage from "@/pages/admin/ActivityLogPage";
-import RolesPage from "@/pages/admin/RolesPage";
-import ExpensesPage from "@/pages/admin/ExpensesPage";
-import WaitlistPage from "@/pages/admin/WaitlistPage";
-import LostFoundPage from "@/pages/admin/LostFoundPage";
-import { GuestShell } from "@/components/layout/GuestShell";
-import GuestDashboardPage from "@/pages/guest/GuestDashboardPage";
-import GuestBookPage from "@/pages/guest/GuestBookPage";
-import CancellationsPage from "@/pages/admin/CancellationsPage";
-import CaptiveWifiPage from "@/pages/admin/CaptiveWifiPage";
-import WifiPortalPage from "@/pages/wifi/WifiPortalPage";
-import GuestWaitlistPage from "@/pages/guest/GuestWaitlistPage";
-import GuestVoucherPage from "@/pages/guest/GuestVoucherPage";
-import GuestPeoplePage from "@/pages/guest/GuestPeoplePage";
-import GuestLostFoundPage from "@/pages/guest/GuestLostFoundPage";
-import GuestBookingPage from "@/pages/guest/GuestBookingPage";
-import GuestPaymentPage from "@/pages/guest/GuestPaymentPage";
-import GuestInvoicePage from "@/pages/guest/GuestInvoicePage";
-import GuestAmenitiesPage from "@/pages/guest/GuestAmenitiesPage";
-import GuestFoodPage from "@/pages/guest/GuestFoodPage";
-import GuestRequestsPage from "@/pages/guest/GuestRequestsPage";
-import GuestFeedbackPage from "@/pages/guest/GuestFeedbackPage";
-import StaffQueuePage from "@/pages/staff/StaffQueuePage";
-import NotFoundPage from "@/pages/NotFoundPage";
 import { useSession } from "@/services/session";
+import { PageLoading } from "@/components/common";
 import type { Role } from "@/types";
+
+// Every page but sign-in loads on demand, so the first visit downloads one screen, not the whole app.
+const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
+const BookStayPage = lazy(() => import("@/pages/auth/BookStayPage"));
+const DesignSystemPage = lazy(() => import("@/pages/DesignSystemPage"));
+const AdminShell = lazy(() => import("@/components/layout/AdminShell").then((m) => ({ default: m.AdminShell })));
+const DashboardPage = lazy(() => import("@/pages/admin/DashboardPage"));
+const FrontDeskPage = lazy(() => import("@/pages/admin/FrontDeskPage"));
+const BookingsListPage = lazy(() => import("@/pages/admin/BookingsListPage"));
+const BookingDetailPage = lazy(() => import("@/pages/admin/BookingDetailPage"));
+const NewBookingPage = lazy(() => import("@/pages/admin/NewBookingPage"));
+const EditBookingPage = lazy(() => import("@/pages/admin/EditBookingPage"));
+const PaymentQueuePage = lazy(() => import("@/pages/admin/PaymentQueuePage"));
+const VillasListPage = lazy(() => import("@/pages/admin/VillasListPage"));
+const VillaDetailPage = lazy(() => import("@/pages/admin/VillaDetailPage"));
+const CustomersListPage = lazy(() => import("@/pages/admin/CustomersListPage"));
+const CustomerDetailPage = lazy(() => import("@/pages/admin/CustomerDetailPage"));
+const CalendarPage = lazy(() => import("@/pages/admin/CalendarPage"));
+const KitchenPage = lazy(() => import("@/pages/admin/KitchenPage"));
+const RequestsPage = lazy(() => import("@/pages/admin/RequestsPage"));
+const FeedbackPage = lazy(() => import("@/pages/admin/FeedbackPage"));
+const InvoicesPage = lazy(() => import("@/pages/admin/InvoicesPage"));
+const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
+const EmployeesPage = lazy(() => import("@/pages/admin/EmployeesPage"));
+const ReportsPage = lazy(() => import("@/pages/admin/ReportsPage"));
+const HousekeepingPage = lazy(() => import("@/pages/admin/HousekeepingPage"));
+const MaintenancePage = lazy(() => import("@/pages/admin/MaintenancePage"));
+const AmenitiesPage = lazy(() => import("@/pages/admin/AmenitiesPage"));
+const EnquiriesPage = lazy(() => import("@/pages/admin/EnquiriesPage"));
+const MediaPage = lazy(() => import("@/pages/admin/MediaPage"));
+const QuotesPage = lazy(() => import("@/pages/admin/QuotesPage"));
+const FollowUpsPage = lazy(() => import("@/pages/admin/FollowUpsPage"));
+const ActivityLogPage = lazy(() => import("@/pages/admin/ActivityLogPage"));
+const RolesPage = lazy(() => import("@/pages/admin/RolesPage"));
+const ExpensesPage = lazy(() => import("@/pages/admin/ExpensesPage"));
+const WaitlistPage = lazy(() => import("@/pages/admin/WaitlistPage"));
+const LostFoundPage = lazy(() => import("@/pages/admin/LostFoundPage"));
+const GuestShell = lazy(() => import("@/components/layout/GuestShell").then((m) => ({ default: m.GuestShell })));
+const GuestDashboardPage = lazy(() => import("@/pages/guest/GuestDashboardPage"));
+const GuestBookPage = lazy(() => import("@/pages/guest/GuestBookPage"));
+const CancellationsPage = lazy(() => import("@/pages/admin/CancellationsPage"));
+const CaptiveWifiPage = lazy(() => import("@/pages/admin/CaptiveWifiPage"));
+const WifiPortalPage = lazy(() => import("@/pages/wifi/WifiPortalPage"));
+const GuestWaitlistPage = lazy(() => import("@/pages/guest/GuestWaitlistPage"));
+const GuestVoucherPage = lazy(() => import("@/pages/guest/GuestVoucherPage"));
+const GuestPeoplePage = lazy(() => import("@/pages/guest/GuestPeoplePage"));
+const GuestLostFoundPage = lazy(() => import("@/pages/guest/GuestLostFoundPage"));
+const GuestBookingPage = lazy(() => import("@/pages/guest/GuestBookingPage"));
+const GuestPaymentPage = lazy(() => import("@/pages/guest/GuestPaymentPage"));
+const GuestInvoicePage = lazy(() => import("@/pages/guest/GuestInvoicePage"));
+const GuestAmenitiesPage = lazy(() => import("@/pages/guest/GuestAmenitiesPage"));
+const GuestFoodPage = lazy(() => import("@/pages/guest/GuestFoodPage"));
+const GuestRequestsPage = lazy(() => import("@/pages/guest/GuestRequestsPage"));
+const GuestFeedbackPage = lazy(() => import("@/pages/guest/GuestFeedbackPage"));
+const StaffQueuePage = lazy(() => import("@/pages/staff/StaffQueuePage"));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
+
 
 /**
  * Role-aware routing over the mock session.
@@ -135,6 +139,7 @@ function RootRedirect() {
 
 export function AppRoutes() {
   return (
+    <Suspense fallback={<PageLoading />}>
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
@@ -267,5 +272,6 @@ export function AppRoutes() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
   );
 }

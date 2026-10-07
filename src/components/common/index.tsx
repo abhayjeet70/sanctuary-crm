@@ -206,3 +206,13 @@ export { SignedPhoto } from "./SignedPhoto";
 export { PreferenceBadges, ArrangedTime } from "./PreferenceBadges";
 export { PasswordInput } from "./PasswordInput";
 export { ActivityTimeline } from "./ActivityTimeline";
+
+/** While a page's code downloads. Quiet on purpose — it is usually a blink. */
+export function PageLoading() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-live="polite">
+      <span className="sr-only">Loading…</span>
+      <span aria-hidden className="size-6 animate-spin rounded-full border-2 border-stone-300 border-t-ink" />
+    </div>
+  );
+}

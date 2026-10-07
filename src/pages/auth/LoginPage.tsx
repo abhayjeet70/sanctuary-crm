@@ -8,7 +8,7 @@ import { AuthPanel } from "./AuthPanel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const HERO = "/loginbg.png";
+const HERO = "/loginbg.webp";
 
 /**
  * Demo accounts, seeded by supabase/migrations/..._demo_auth_users.sql.
@@ -79,6 +79,7 @@ export default function LoginPage() {
     <main className="relative min-h-dvh overflow-hidden bg-ink text-sand">
       <img
         src={HERO}
+        fetchPriority="high"
         alt=""
         aria-hidden
         className="absolute inset-0 size-full object-cover opacity-70 transition-transform duration-700 ease-out"
