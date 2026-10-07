@@ -204,7 +204,7 @@ function WhatsAppChats() {
                 {r.phone && (
                   <Button asChild size="sm" variant="outline">
                     <a
-                      href={`https://wa.me/${r.phone.replace(/D/g, "")}`}
+                      href={`https://wa.me/${r.phone.replace(/\D/g, "")}`}
                       target="_blank"
                       rel="noreferrer"
                     >

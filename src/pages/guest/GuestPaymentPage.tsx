@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useLocation } from "react-router-dom";
 import { Building, Smartphone, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,13 @@ export default function GuestPaymentPage() {
   // which is a real resource rather than a piece of state.
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+
+  // "Pay now" from another page lands here with #pay — the router won't scroll for us.
+  const { hash } = useLocation();
+  const hasView = Boolean(view);
+  useEffect(() => {
+    if (hash === "#pay" && hasView) document.getElementById("pay")?.scrollIntoView({ behavior: "smooth" });
+  }, [hash, hasView]);
 
   if (!view) {
     return <ErrorState className="m-5" title="No stay found" />;
@@ -228,7 +236,7 @@ export default function GuestPaymentPage() {
           <PartialPaymentPanel
             reference={booking.reference}
             balance={totals.balance}
-            whatsappNumber={(settings?.contactPhone ?? "").replace(/D/g, "")}
+            whatsappNumber={(settings?.contactPhone ?? "").replace(/\D/g, "")}
             pending={partial.pending}
             approved={partial.approved}
             latest={partial.requests[0]}
@@ -236,7 +244,7 @@ export default function GuestPaymentPage() {
           />
 
           {/* ------------------------------------------------- instructions */}
-          <section className="rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
+          <section id="pay" className="scroll-mt-16 rounded-2xl bg-white p-6 shadow-soft ring-1 ring-ink/[0.07]">
             <Eyebrow className="text-gold-700">How to pay</Eyebrow>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="rounded-xl bg-sand-200/60 p-4">

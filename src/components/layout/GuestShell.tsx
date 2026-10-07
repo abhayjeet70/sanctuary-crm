@@ -345,7 +345,9 @@ function PaymentDueBar() {
         </span>
         {!checking && (
           <Link
-            to="/guest/payment"
+            to="/guest/payment#pay"
+            // Already on the payment page the link alone would do nothing — jump to the instructions.
+            onClick={() => document.getElementById("pay")?.scrollIntoView({ behavior: "smooth" })}
             className="shrink-0 rounded-md bg-white px-3 py-1 text-xs font-semibold text-status-cancelled-solid hover:bg-white/90"
           >
             Pay now

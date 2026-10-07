@@ -51,13 +51,20 @@ export function PartialPaymentPanel({
   const send = async (event: React.FormEvent) => {
     event.preventDefault();
     if (invalid) return toast.error(invalid);
+    // Open the tab now, while we still have the click: browsers block a
+    // window.open that comes after an await as an unwanted popup.
+    const chat = whatsappNumber ? window.open("", "_blank") : null;
     setSending(true);
     const { error } = await onRequest(amountNow, nextDue, note.trim());
     setSending(false);
-    if (error) return toast.error("Could not send the request", { description: error });
+    if (error) {
+      chat?.close();
+      return toast.error("Could not send the request", { description: error });
+    }
     toast.success("Request sent — we will reply shortly");
     setOpen(false);
-    if (whatsappNumber) {
+    if (chat) {
+      chat.opener = null;
       const message = [
         `Hello, I have requested a part-payment for booking ${reference}.`,
         `Pay now: ${money(amountNow)}`,
@@ -66,7 +73,7 @@ export function PartialPaymentPanel({
       ]
         .filter(Boolean)
         .join("\n");
-      window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, "_blank", "noopener");
+      chat.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     }
   };
 
