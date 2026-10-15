@@ -212,7 +212,22 @@ function WhatsAppButton() {
     : pathname.includes("food")
       ? "a question about food"
       : "a question about my stay";
-  const href = waLink(settings?.contactPhone, `Hello, I have ${topic}.`);
+  const { session } = useSession();
+  const { view } = useGuestStay();
+  const href = waLink(
+    settings?.contactPhone,
+    [
+      `Hello, I have ${topic}.`,
+      session?.name && `Name: ${session.name}`,
+      view && `Booking: ${view.booking.reference}`,
+      view?.villa && `Villa: ${view.villa.name}`,
+      view?.villa && view.booking.roomIds.length > 0 &&
+        `Room: ${view.villa.rooms.filter((r) => view.booking.roomIds.includes(r.id)).map((r) => r.name).join(", ")}`,
+    ]
+      .filter(Boolean)
+      .join("
+"),
+  );
   if (!href) return null;
   return (
     <a
