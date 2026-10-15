@@ -357,18 +357,31 @@ export function GuestShell() {
  * money is the holder's) or once the stay is over.
  */
 function PaymentDueBar() {
-  const { view, isCompanion } = useGuestStay();
+  const { view, isCompanion, payments } = useGuestStay();
   if (!view || isCompanion) return null;
   const { booking, totals } = view;
   if (totals.balance <= 0) return null;
   if (["cancelled", "rejected", "no_show", "checked_out", "completed"].includes(booking.status)) return null;
-  const checking = booking.paymentStatus === "uploaded";
+  // The booking row isn't touched when a receipt goes in, so look at the payments too.
+  const checking =
+    booking.paymentStatus === "uploaded" || payments.some((p) => p.status === "uploaded");
   return (
-    <div role="alert" className="sticky top-0 z-30 bg-status-cancelled-solid text-white shadow-soft">
+    <div
+      role="alert"
+      className={cn(
+        "sticky top-0 z-30 text-white shadow-soft",
+        checking ? "bg-gold-700" : "bg-status-cancelled-solid",
+      )}
+    >
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2.5 text-sm sm:px-8">
         <span className="min-w-0 flex-1">
           <strong className="font-semibold">
-            {booking.status === "pending_payment" ? "Payment pending" : "Balance due"}: {money(totals.balance)}
+            {checking
+              ? "Receipt uploaded"
+              : booking.status === "pending_payment"
+                ? "Payment pending"
+                : "Balance due"}
+            : {money(totals.balance)}
           </strong>{" "}
           {checking
             ? "— your receipt is with us and being checked."
