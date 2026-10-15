@@ -33,20 +33,14 @@ export function PartialPaymentPanel({
   onRequest: (amountNow: number, nextDue: string, note: string) => Promise<{ error: string | null }>;
 }) {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState(String(Math.round(balance / 2)));
   const [nextDue, setNextDue] = useState(addDays(toISODate(new Date()), 7));
   const [note, setNote] = useState("");
   const [sending, setSending] = useState(false);
 
-  const amountNow = Number(amount);
+  // Only a half-and-half split is offered.
+  const amountNow = Math.round(balance / 2);
   const invalid =
-    !amountNow || amountNow <= 0
-      ? "Enter how much you can pay now."
-      : amountNow >= balance
-        ? "That is the whole balance — no request needed."
-        : !nextDue || nextDue < toISODate(new Date())
-          ? "Choose a date for the rest."
-          : null;
+    !nextDue || nextDue < toISODate(new Date()) ? "Choose a date for the rest." : null;
 
   const send = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -113,7 +107,7 @@ export function PartialPaymentPanel({
         <div className="min-w-0">
           <Eyebrow className="text-gold-700">We take the full amount in advance</Eyebrow>
           <p className="mt-1 text-sm text-stone-600">
-            Need to pay in parts? Ask us — once approved you can pay part now and the rest later.
+            Need to pay in parts? Ask us — once approved you can pay half now and the rest later.
             {latest?.status === "rejected" && " Your last request was declined."}
           </p>
         </div>
@@ -128,11 +122,9 @@ export function PartialPaymentPanel({
       {open && (
         <form onSubmit={(e) => void send(e)} noValidate className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="pp-amount">I can pay now (₹)</Label>
-            <Input id="pp-amount" type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <p className="text-xs text-stone-600">
-              Remaining {money(Math.max(0, balance - (amountNow || 0)))}
-            </p>
+            <Label htmlFor="pp-amount">Pay now (half)</Label>
+            <Input id="pp-amount" readOnly value={money(amountNow)} />
+            <p className="text-xs text-stone-600">Remaining {money(balance - amountNow)}</p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="pp-date">I will pay the rest by</Label>

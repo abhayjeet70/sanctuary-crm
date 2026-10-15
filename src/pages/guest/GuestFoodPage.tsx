@@ -15,11 +15,11 @@ import {
 import { EmptyState, ErrorState, Eyebrow, StatusBadge, Photo } from "@/components/common";
 import { useGuestStay } from "@/hooks/useGuest";
 import { useSession } from "@/services/session";
-import { useMenuForVilla, useMockData } from "@/hooks/useData";
+import { useMenuForVilla, useMockData, useSettings } from "@/hooks/useData";
 import { foodOrderStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateTime, money } from "@/lib/format";
 import { orderTotal } from "@/services/domain";
-import { cn } from "@/lib/utils";
+import { cn, waLink } from "@/lib/utils";
 import type { FoodOrder, MenuCategory } from "@/types";
 
 const ALL = "all";
@@ -52,12 +52,15 @@ export default function GuestFoodPage() {
   // A villa may run its own card, so the menu follows the stay.
   const menu = useMenuForVilla(view?.booking.villaId);
   const { createFoodOrder } = useMockData();
+  const settings = useSettings();
 
   const [category, setCategory] = useState<MenuCategory | typeof ALL>(ALL);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [notes, setNotes] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [placing, setPlacing] = useState(false);
+  // Selection, then an explicit confirm before anything is sent.
+  const [reviewing, setReviewing] = useState(false);
 
   const categories = useMemo(
     () => Array.from(new Set(menu.map((item) => item.category))),
@@ -95,6 +98,9 @@ export default function GuestFoodPage() {
 
   const placeOrder = async () => {
     if (lines.length === 0) return;
+    // Open the tab while we still have the click; a window.open after the
+    // await is blocked as a popup.
+    const chat = settings?.contactPhone ? window.open("", "_blank") : null;
     setPlacing(true);
     const order: FoodOrder = {
       id: `f-${Date.now()}`,
@@ -114,11 +120,32 @@ export default function GuestFoodPage() {
     // on a timer, so an order the server refused still read as sent.
     const { error } = await createFoodOrder(order);
     setPlacing(false);
-    if (error) return;
+    if (error) {
+      chat?.close();
+      return;
+    }
+    // The order also goes to the desk on WhatsApp, so the manager can pass it
+    // to the kitchen without watching the board.
+    const href = waLink(
+      settings?.contactPhone,
+      [
+        `New food order ${order.reference} — ${view.booking.reference}`,
+        ...lines.map((l) => `${l.quantity}× ${l.name}`),
+        `Total: ${money(total)}`,
+        order.notes && `Note: ${order.notes}`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    );
+    if (chat && href) {
+      chat.opener = null;
+      chat.location.href = href;
+    } else chat?.close();
 
     setCart({});
     setNotes("");
     setCartOpen(false);
+    setReviewing(false);
     toast.success("Order sent to the kitchen", {
       description: "We will call you to confirm before we start cooking.",
     });
@@ -137,7 +164,7 @@ export default function GuestFoodPage() {
         </div>
 
         {/* Cart — a sheet, so ordering never leaves the menu */}
-        <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+        <Sheet open={cartOpen} onOpenChange={(o) => { setCartOpen(o); if (!o) setReviewing(false); }}>
           <SheetTrigger asChild>
             <Button
               className={cn(
@@ -218,9 +245,22 @@ export default function GuestFoodPage() {
                 <p className="text-xs text-stone-600">
                   Added to your room bill. We will call to confirm before cooking.
                 </p>
-                <Button onClick={() => void placeOrder()} disabled={placing}>
-                  {placing ? "Sending…" : "Place order"}
-                </Button>
+                {reviewing ? (
+                  <>
+                    <p role="status" className="rounded-lg bg-sand-200/60 p-3 text-sm text-ink">
+                      {itemCount} item{itemCount === 1 ? "" : "s"} · {money(total)}. Confirming sends
+                      the order to the kitchen and opens WhatsApp with the details — tap Send there.
+                    </p>
+                    <Button onClick={() => void placeOrder()} disabled={placing}>
+                      {placing ? "Sending…" : "Confirm order"}
+                    </Button>
+                    <Button variant="ghost" onClick={() => setReviewing(false)} disabled={placing}>
+                      Back to cart
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => setReviewing(true)}>Review order</Button>
+                )}
               </SheetFooter>
             )}
           </SheetContent>

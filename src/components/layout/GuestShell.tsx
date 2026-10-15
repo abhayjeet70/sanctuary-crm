@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { PageLoading } from "@/components/common";
 import {
   Bell,
@@ -9,6 +9,7 @@ import {
   ConciergeBell,
   Home,
   LogOut,
+  MessageCircle,
   MessageSquareQuote,
   Hourglass,
   Receipt,
@@ -22,9 +23,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/common";
-import { cn } from "@/lib/utils";
+import { cn, waLink } from "@/lib/utils";
 import { useSession } from "@/services/session";
-import { useNotifications, useMockData } from "@/hooks/useData";
+import { useNotifications, useMockData, useSettings } from "@/hooks/useData";
 import { formatDateTime, money } from "@/lib/format";
 import { useGuestStay } from "@/hooks/useGuest";
 import type { AppNotification } from "@/types";
@@ -202,6 +203,31 @@ function GuestNotificationTray() {
   );
 }
 
+/** Floating WhatsApp chat, with an opening line that fits the page. */
+function WhatsAppButton() {
+  const settings = useSettings();
+  const { pathname } = useLocation();
+  const topic = pathname.includes("payment")
+    ? "a question about my payment"
+    : pathname.includes("food")
+      ? "a question about food"
+      : "a question about my stay";
+  const href = waLink(settings?.contactPhone, `Hello, I have ${topic}.`);
+  if (!href) return null;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Chat with us on WhatsApp"
+      className="fixed right-3 bottom-24 z-40 flex items-center gap-2 rounded-full bg-[#25D366] p-3 text-sm font-medium text-white shadow-lift transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ink focus-visible:outline-none sm:right-6 sm:px-4 lg:bottom-6"
+    >
+      <MessageCircle className="size-5" aria-hidden />
+      <span className="hidden sm:inline">Chat with us</span>
+    </a>
+  );
+}
+
 export function GuestShell() {
   const { session, signOut } = useSession();
   const isCompanion = Boolean(session?.companionId);
@@ -317,6 +343,8 @@ export function GuestShell() {
           ))}
         </ul>
       </nav>
+
+      <WhatsAppButton />
 
       <p className="sr-only">Signed in as {session?.name}</p>
     </div>
