@@ -130,6 +130,9 @@ export default function GuestFoodPage() {
       settings?.contactPhone,
       [
         `New food order ${order.reference} — ${view.booking.reference}`,
+        `Guest: ${session?.name ?? ""}`,
+        `Villa: ${view.villa?.name ?? ""}`,
+        `Room: ${view.villa?.rooms.find((r) => r.id === order.roomId)?.name ?? "Whole villa"}`,
         ...lines.map((l) => `${l.quantity}× ${l.name}`),
         `Total: ${money(total)}`,
         order.notes && `Note: ${order.notes}`,
