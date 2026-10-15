@@ -225,8 +225,7 @@ function WhatsAppButton() {
         `Room: ${view.villa.rooms.filter((r) => view.booking.roomIds.includes(r.id)).map((r) => r.name).join(", ")}`,
     ]
       .filter(Boolean)
-      .join("
-"),
+      .join("\n"),
   );
   if (!href) return null;
   return (
