@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState, PageHeader, StatusBadge, Photo } from "@/components/common";
 import { useBookingViews, useVillas } from "@/hooks/useData";
-import { bookingSource, bookingStatus, paymentStatus, sourceOptions } from "@/lib/status";
+import { sourceLabel, bookingStatus, paymentStatus, sourceOptions } from "@/lib/status";
 import { formatDateRange, formatShortDate, money, nightsBetween } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { BookingView } from "@/hooks/useData";
@@ -315,7 +315,7 @@ export default function BookingsListPage() {
                         {booking.adults + booking.children}
                       </TableCell>
                       <TableCell className="text-stone-600">
-                        {bookingSource[booking.source]}
+                        {sourceLabel(booking)}
                       </TableCell>
                       <TableCell>
                         <StatusBadge label={status.label} tone={status.tone} />
@@ -445,7 +445,7 @@ function BookingCard({ view }: { view: BookingView }) {
           </dl>
           <hr className="rule-gold" />
           <div className="flex items-baseline justify-between text-sm">
-            <span className="text-stone-600">{bookingSource[booking.source]}</span>
+            <span className="text-stone-600">{sourceLabel(booking)}</span>
             <span className={cn("tabular-nums", totals.balance > 0 ? "text-clay-600" : "text-stone-600")}>
               {totals.balance > 0 ? `${money(totals.balance)} due` : "Settled"}
             </span>

@@ -6,6 +6,7 @@ import { isDueSoon, isOverdue } from "../lib/lostFound";
 import { companionAccess, stayIsLive } from "../lib/companions";
 import { hardwarePlan, hostOf, parsePortalRedirect, walledGarden } from "../lib/captiveWifi";
 import { cleanPhone, isPhone } from "../lib/format";
+import { safeEqual, toRanges } from "../../supabase/functions/channel-sync/ranges";
 import { csvField, toCsv } from "../lib/csv";
 import { emailProblem, isValidEmail } from "../lib/email";
 import { hasPreferences, mealChoiceLines, EMPTY_PREFERENCES } from "../lib/preferences";
@@ -589,5 +590,22 @@ assert.equal(omada.mac, "aa:bb:cc:dd:ee:ff");
 assert.equal(omada.portal.radioId, "1");
 assert.equal(parsePortalRedirect(new URLSearchParams("mac=not-a-mac")).mac, undefined, "a malformed MAC is dropped, not forwarded");
 assert.equal(parsePortalRedirect(new URLSearchParams("url=javascript:alert(1)")).original, undefined, "only http(s) may be offered as the way back");
+
+// Channel sync: 365 daily rows collapse into ranges Channex accepts.
+const ranges = toRanges([
+  { room_type_id: "maaya", day: "2026-11-02", availability: 0 },
+  { room_type_id: "maaya", day: "2026-11-01", availability: 1 },
+  { room_type_id: "maaya", day: "2026-11-03", availability: 0 },
+  { room_type_id: "maaya", day: "2026-11-04", availability: 1 },
+  { room_type_id: "room-a", day: "2026-11-01", availability: 1 },
+  { room_type_id: "room-a", day: "2026-11-02", availability: 1 },
+]);
+assert.deepEqual(
+  ranges.map((r) => `${r.room_type_id} ${r.date_from}..${r.date_to}=${r.availability}`),
+  ["maaya 2026-11-01..2026-11-01=1", "maaya 2026-11-02..2026-11-03=0", "maaya 2026-11-04..2026-11-04=1", "room-a 2026-11-01..2026-11-02=1"],
+  "consecutive equal days merge, per unit, across month ends unsorted input included",
+);
+assert.equal(toRanges([{ room_type_id: "x", day: "2026-10-31", availability: 1 }, { room_type_id: "x", day: "2026-11-01", availability: 1 }]).length, 1, "month boundary is still consecutive");
+assert.ok(safeEqual("abc123", "abc123") && !safeEqual("abc123", "abc124") && !safeEqual("abc", "abc123"), "token compare");
 
 console.log("domain.ts — all checks passed");

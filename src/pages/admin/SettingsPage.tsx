@@ -15,6 +15,7 @@ import { SignatureUpload } from "@/components/admin/SignatureUpload";
 import { TaxManager } from "./TaxManager";
 import { DepartmentManager } from "./DepartmentManager";
 import { AccountSettings } from "./AccountSettings";
+import { ChannelsSettings } from "./ChannelsSettings";
 import { useDemoData, useMockData, useSettings, useVillas } from "@/hooks/useData";
 import { useSession } from "@/services/session";
 import { money } from "@/lib/format";
@@ -73,7 +74,7 @@ export default function SettingsPage() {
       <PageHeader
         eyebrow="Property configuration"
         title="Settings"
-        description="Payment details, invoice identity and the kitchen menu."
+        description="Payment details, invoice identity, the kitchen menu and OTA channel sync."
         actions={
           dirty && (
             <Button onClick={save} disabled={saving}>
@@ -96,6 +97,7 @@ export default function SettingsPage() {
           <TabsTrigger value="menu" className={TAB}>Menu</TabsTrigger>
           <TabsTrigger value="mealchoices" className={TAB}>Guest menu choices</TabsTrigger>
           <TabsTrigger value="villas" className={TAB}>Villas</TabsTrigger>
+          <TabsTrigger value="channels" className={TAB}>Channels</TabsTrigger>
           <TabsTrigger value="account" className={TAB}>Account</TabsTrigger>
           <TabsTrigger value="demo" className={TAB}>
             <Database aria-hidden className="mr-1 inline size-3.5" />
@@ -480,6 +482,10 @@ export default function SettingsPage() {
           </section>
         </TabsContent>
         {/* ------------------------------------------------------- account */}
+        <TabsContent value="channels" className="pt-5">
+          <ChannelsSettings />
+        </TabsContent>
+
         <TabsContent value="account" className="pt-5">
           <AccountSettings />
         </TabsContent>

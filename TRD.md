@@ -634,3 +634,25 @@ Nothing above requires a server-rendered framework:
 The CRM ships as static files on any CDN. The marketing site stays on Next.js.
 They may eventually share a Supabase project and a types package; they remain two
 frontends.
+
+## 17. OTA channel sync (Channex)
+
+OTAs (Goibibo/MMT, Booking.com, Airbnb, Agoda, Expedia) connect to Channex. The CRM connects only to Channex.
+
+| Piece | Where |
+|---|---|
+| Schema, Vault tokens, ingest + availability SQL | `supabase/migrations/20261019091000_channel_sync.sql` |
+| Bridge (owner actions, webhook, push) | `supabase/functions/channel-sync/index.ts` (deploy with `--no-verify-jwt`; it checks each caller itself) |
+| Client calls | `src/services/channels.ts` |
+| Owner UI + in-app guide | `src/pages/admin/ChannelsSettings.tsx` (Settings → Channels) |
+| Client-facing guide | `docs/guide/guide.html`, Part 3 |
+
+**Flow.**
+- *Inbound:* the Channex webhook arrives with the `x-channel-token` header. The function pulls `booking_revisions/feed` using our key; the webhook body itself is not trusted. Each revision goes to `channel_ingest_booking()`, which is idempotent on the revision ID and on `bookings.channel_booking_id`. The function then acks the revision to Channex.
+- *Outbound:* any change to `booking_rooms` or to a villa's status fires a statement-level trigger, which uses `pg_net` to call `channel-sync` `push`. That reads `channel_availability()` (365 days, derived from the same rows the exclusion constraint guards), compresses it with `toRanges()` and makes a single `POST /availability`.
+
+**Secrets.** The API key goes into Vault through the `channel_save_api_key()` RPC, which is owner-only and write-only. The webhook token and the internal token are generated inside Vault by the migration. `channel_secret()` can be executed by `service_role` only. No response contains a key, the function sets `Cache-Control: no-store`, and the UI empties the input after saving. Only `api_key_last4` is readable. `functions_url` is pinned to `*.supabase.co/functions/v1` so the internal token can't be sent anywhere else. Key save and disconnect are written to `activity_events`; the value is never logged.
+
+**Inventory rule.** A whole-villa unit can be sold only if all of its bedrooms are free; a room unit can be sold only if that room is free. An OTA booking that overlaps is refused by the constraint and recorded as a `conflict` event, with a notification. It is never forced in.
+
+**Not verified here.** The Channex request and response shapes follow its published API but were not run against a live account from this repo. Check them on staging (see the guide), then adjust `normalise()` if a field differs.

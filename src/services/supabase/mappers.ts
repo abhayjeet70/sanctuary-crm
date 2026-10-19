@@ -129,6 +129,8 @@ export const toBooking = (row: unknown): Booking => {
     adults: x.adults,
     children: x.children,
     source: x.source,
+    channel: x.channel ?? undefined,
+    externalRef: x.external_ref ?? undefined,
     status: x.status,
     paymentStatus: x.payment_status,
     charges: {
