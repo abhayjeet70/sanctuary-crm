@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Homes of Sanctuary — User Guide</title>
+<style>
+@page { size: A4; margin: 14mm 15mm; }
+:root { --ink:#142731; --sand:#F4EFE8; --stone:#A69C8E; --clay:#B5654A; --sage:#6F8A6E; --rose:#B07A7A; --gold:#9A7B3C; }
+* { box-sizing: border-box; }
+body { font-family: "Segoe UI", Inter, Arial, sans-serif; color: var(--ink); font-size: 10.6pt; line-height: 1.5; margin: 0; background:#fff; }
+.page { page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+h1 { font-family: Georgia, "Playfair Display", serif; font-size: 26pt; font-weight: 500; margin: 0 0 2mm; }
+h2 { font-family: Georgia, serif; font-weight: 500; font-size: 17pt; margin: 0 0 1mm; }
+h3 { font-size: 10pt; letter-spacing: .12em; text-transform: uppercase; color: var(--clay); margin: 4mm 0 1.5mm; }
+.kicker { font-size: 8.5pt; letter-spacing: .2em; text-transform: uppercase; color: var(--stone); }
+.lead { color:#3c4b52; margin: 0 0 3mm; }
+p { margin: 0 0 2mm; }
+ul, ol { margin: 0 0 2mm; padding-left: 5mm; } li { margin-bottom: .8mm; }
+.band { background: var(--sand); border-radius: 8px; padding: 3mm 4mm; margin: 2mm 0 3mm; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+table { width: 100%; border-collapse: collapse; font-size: 9.6pt; margin-bottom: 2mm; }
+th { text-align: left; font-size: 8pt; letter-spacing: .12em; text-transform: uppercase; color: var(--stone); border-bottom: 1px solid var(--stone); padding: 1.2mm 2mm; }
+td { border-bottom: 1px solid #e6dfd5; padding: 1.4mm 2mm; vertical-align: top; }
+.tip { border-left: 3px solid var(--clay); padding: 1.5mm 3mm; background: #fbf8f4; font-size: 9.6pt; margin: 2mm 0; }
+svg { width: 100%; height: auto; display: block; margin: 1mm 0 2mm; }
+svg text { font-family: "Segoe UI", Arial, sans-serif; }
+.foot { font-size: 8pt; color: var(--stone); margin-top: 3mm; }
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#142731"/></marker>
+<marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#B07A7A"/></marker>
+</defs></svg>
+
+<!-- ================= PAGE 1 ================= -->
+<section class="page">
+<div class="kicker">Homes of Sanctuary · Operations CRM &amp; Guest Portal</div>
+<h1>A simple guide to how it all works</h1>
+<p class="lead">This guide explains, in everyday language, how guests book and stay with us, and how the team runs the villas from one place. It covers <b>Villa Maaya, Villa Praana and Villa Nirvaana</b>, each with four bedrooms.</p>
+
+<h3>The big picture</h3>
+<p>The public website is where people discover us. This system is everything that happens <i>after</i> someone shows interest: the booking, the payment, the stay itself, and the goodbye.</p>
+<svg viewBox="0 0 720 210">
+ <g font-size="12" text-anchor="middle">
+  <rect x="10" y="20" width="150" height="56" rx="10" fill="#F4EFE8" stroke="#A69C8E"/><text x="85" y="44" font-weight="600">Public website</text><text x="85" y="62" fill="#6b6257">guest finds a villa</text>
+  <rect x="10" y="120" width="150" height="56" rx="10" fill="#F4EFE8" stroke="#A69C8E"/><text x="85" y="144" font-weight="600">Phone / WhatsApp</text><text x="85" y="162" fill="#6b6257">Goibibo · walk-in</text>
+  <rect x="250" y="62" width="200" height="72" rx="12" fill="#142731"/><text x="350" y="94" fill="#fff" font-weight="600" font-size="14">Sanctuary CRM</text><text x="350" y="114" fill="#d9cfc2">one shared record of every stay</text>
+  <rect x="545" y="10" width="165" height="50" rx="10" fill="#fff" stroke="#B5654A"/><text x="627" y="31" font-weight="600">Guest Portal</text><text x="627" y="48" fill="#6b6257">guest's phone</text>
+  <rect x="545" y="74" width="165" height="50" rx="10" fill="#fff" stroke="#B5654A"/><text x="627" y="95" font-weight="600">Admin / Manager</text><text x="627" y="112" fill="#6b6257">front desk computer</text>
+  <rect x="545" y="138" width="165" height="50" rx="10" fill="#fff" stroke="#B5654A"/><text x="627" y="159" font-weight="600">Staff queue</text><text x="627" y="176" fill="#6b6257">kitchen · housekeeping</text>
+ </g>
+ <g stroke="#142731" stroke-width="1.6" fill="none" marker-end="url(#a)">
+  <path d="M160 48 C205 48 210 85 248 88"/><path d="M160 148 C205 148 210 112 248 110"/>
+  <path d="M450 88 C500 80 505 40 543 36"/><path d="M450 98 L543 99"/><path d="M450 110 C500 118 505 160 543 162"/>
+ </g>
+</svg>
+
+<h3>Who uses it</h3>
+<table>
+<tr><th>Person</th><th>Where they land</th><th>What they do there</th></tr>
+<tr><td><b>Owner</b></td><td>Admin dashboard</td><td>Everything: bookings, payments, villas, guests, money, reports, staff and settings.</td></tr>
+<tr><td><b>Manager</b></td><td>Admin dashboard</td><td>Day-to-day operations. Cannot change settings, the staff roster or approve payments.</td></tr>
+<tr><td><b>Staff</b> (kitchen, housekeeping…)</td><td>Staff queue</td><td>Only their own department's list of jobs, e.g. food orders or rooms to clean.</td></tr>
+<tr><td><b>Guest</b></td><td>Guest portal</td><td>See their booking, pay, upload a receipt, order food, ask for help, leave feedback, get the Wi-Fi.</td></tr>
+</table>
+
+<h3>Two ways to sell a villa</h3>
+<div class="grid2">
+<div class="band"><b>Whole villa</b> — one group takes the entire villa and all four bedrooms. When it is booked, none of its rooms can be sold to anyone else.</div>
+<div class="band"><b>Split into rooms</b> — each bedroom (A-1, B-1, C-1, D-1) is sold on its own, so different guests can share a villa. Booking Room A leaves the other rooms free.</div>
+</div>
+<div class="tip">The system never lets the same bed be sold twice. If dates overlap with an existing booking for that villa or room, it refuses to save and tells you which booking is in the way.</div>
+</section>
+
+<!-- ================= PAGE 2 ================= -->
+<section class="page">
+<div class="kicker">Part 1 · For guests</div>
+<h2>How a new guest comes on board</h2>
+<p class="lead">From first click to "you're confirmed" — usually a few minutes for the guest, and one click for the front desk.</p>
+
+<svg viewBox="0 0 720 300">
+ <g font-size="11.5" text-anchor="middle">
+  <rect x="10"  y="20" width="125" height="64" rx="10" fill="#F4EFE8" stroke="#A69C8E"/><text x="72" y="44" font-weight="600">1. Pick dates</text><text x="72" y="61" fill="#6b6257">villa or rooms,</text><text x="72" y="75" fill="#6b6257">number of guests</text>
+  <rect x="155" y="20" width="125" height="64" rx="10" fill="#F4EFE8" stroke="#A69C8E"/><text x="217" y="44" font-weight="600">2. Create account</text><text x="217" y="61" fill="#6b6257">name, email,</text><text x="217" y="75" fill="#6b6257">phone, password</text>
+  <rect x="300" y="20" width="125" height="64" rx="10" fill="#F4EFE8" stroke="#A69C8E"/><text x="362" y="44" font-weight="600">3. Booking made</text><text x="362" y="61" fill="#B5654A">Pending Payment</text><text x="362" y="75" fill="#6b6257">voucher + price</text>
+  <rect x="445" y="20" width="125" height="64" rx="10" fill="#F4EFE8" stroke="#A69C8E"/><text x="507" y="44" font-weight="600">4. Pay advance</text><text x="507" y="61" fill="#6b6257">UPI or bank</text><text x="507" y="75" fill="#6b6257">transfer</text>
+  <rect x="590" y="20" width="125" height="64" rx="10" fill="#F4EFE8" stroke="#A69C8E"/><text x="652" y="44" font-weight="600">5. Upload receipt</text><text x="652" y="61" fill="#6b6257">screenshot, amount,</text><text x="652" y="75" fill="#6b6257">UTR number</text>
+
+  <rect x="545" y="140" width="170" height="60" rx="10" fill="#fff" stroke="#B5654A" stroke-width="1.6"/><text x="630" y="164" font-weight="600">6. Front desk checks it</text><text x="630" y="182" fill="#B5654A">Payment Uploaded</text>
+  <rect x="300" y="122" width="190" height="56" rx="10" fill="#E5EDE3" stroke="#6F8A6E"/><text x="395" y="146" font-weight="600">✓ Approved → Confirmed</text><text x="395" y="164" fill="#4d6a4c">guest gets the invoice</text>
+  <rect x="300" y="206" width="190" height="56" rx="10" fill="#F3E6E4" stroke="#B07A7A"/><text x="395" y="230" font-weight="600">✗ Rejected (with reason)</text><text x="395" y="248" fill="#8a5555">guest sees why, uploads again</text>
+  <rect x="10" y="122" width="230" height="56" rx="12" fill="#142731"/><text x="125" y="146" fill="#fff" font-weight="600">7. Guest portal opens up</text><text x="125" y="164" fill="#d9cfc2">stay details, Wi-Fi, food, help</text>
+ </g>
+ <g stroke="#142731" stroke-width="1.6" fill="none" marker-end="url(#a)">
+  <path d="M135 52 L153 52"/><path d="M280 52 L298 52"/><path d="M425 52 L443 52"/><path d="M570 52 L588 52"/>
+  <path d="M652 84 L652 138"/><path d="M545 160 L492 152"/><path d="M300 150 L242 150"/>
+ </g>
+ <path d="M545 182 L492 228" stroke="#B07A7A" stroke-width="1.6" fill="none" marker-end="url(#r)"/>
+ <path d="M490 252 C640 270 700 240 690 86" stroke="#B07A7A" stroke-width="1.4" stroke-dasharray="5 4" fill="none" marker-end="url(#r)"/>
+ <text x="610" y="288" font-size="10.5" fill="#8a5555" text-anchor="middle">re-upload</text>
+</svg>
+
+<h3>Step by step</h3>
+<ol>
+<li><b>Choose a stay.</b> The guest picks a villa (or individual rooms when the villa is split), dates and number of adults and children. Unavailable dates simply can't be chosen.</li>
+<li><b>Create an account</b> with name, email, phone and a password. Every new sign-up is a guest account — nobody can make themselves an admin.</li>
+<li><b>See the booking voucher.</b> It shows the full price breakdown: nightly rate × nights, weekend or season extras, food, add-ons, discount, GST, and the total.</li>
+<li><b>Pay</b> using the UPI ID or bank details shown on the payment screen.</li>
+<li><b>Upload the receipt</b> — attach the screenshot, type the amount and the transaction (UTR) number, and submit. Status changes to <b>Payment Uploaded</b>.</li>
+<li><b>Wait for approval.</b> The front desk compares the receipt with the booking. If it's approved the booking becomes <b>Confirmed</b>; if not, the guest is told the exact reason (wrong amount, unreadable, duplicate, wrong account, etc.) and can upload again.</li>
+</ol>
+<div class="tip"><b>Booked by phone or WhatsApp?</b> The front desk creates the booking for you. You can then sign in with the same email or phone number and your stay will already be waiting in your portal.</div>
+<div class="tip"><b>Dates sold out?</b> Guests can join the <b>waiting list</b>. If a booking is cancelled and those dates free up, the team is reminded to offer them to the next person in line.</div>
+</section>
+
+<!-- ================= PAGE 3 ================= -->
+<section class="page">
+<div class="kicker">Part 1 · For guests</div>
+<h2>During your stay — the guest portal</h2>
+<p class="lead">Built for the phone. Everything a guest would otherwise call reception about sits behind one of these tiles.</p>
+
+<table>
+<tr><th>Tile</th><th>What you'll find</th></tr>
+<tr><td><b>My stay</b></td><td>Villa, room, check-in and check-out dates and times, guests, nights, booking and payment status.</td></tr>
+<tr><td><b>Payment</b></td><td>Total, paid, balance due, every payment made, and the button to upload a new receipt.</td></tr>
+<tr><td><b>Invoice</b></td><td>A clean, printable invoice that you can print or save as PDF.</td></tr>
+<tr><td><b>Wi-Fi &amp; amenities</b></td><td>The network name and password, and what your villa offers (pool, verandah, kitchen…).</td></tr>
+<tr><td><b>Food</b></td><td>The menu with photos and prices. Add items to a cart and order to your villa.</td></tr>
+<tr><td><b>Requests</b></td><td>Ask for towels, housekeeping, maintenance, transport, a room setup and more, then track it.</td></tr>
+<tr><td><b>Feedback</b></td><td>Rate your stay out of five and leave a comment.</td></tr>
+</table>
+
+<h3>Ordering food</h3>
+<svg viewBox="0 0 720 112">
+ <g font-size="11" text-anchor="middle">
+  <rect x="5" y="10" width="110" height="46" rx="9" fill="#F4EFE8" stroke="#A69C8E"/><text x="60" y="31" font-weight="600">Browse menu</text><text x="60" y="47" fill="#6b6257">add to cart</text>
+  <rect x="130" y="10" width="95" height="46" rx="9" fill="#fff" stroke="#B5654A"/><text x="177" y="31" font-weight="600">Placed</text><text x="177" y="47" fill="#6b6257">order sent</text>
+  <rect x="240" y="10" width="105" height="46" rx="9" fill="#fff" stroke="#B5654A"/><text x="292" y="31" font-weight="600">Confirmed</text><text x="292" y="47" fill="#6b6257">kitchen calls you</text>
+  <rect x="360" y="10" width="85" height="46" rx="9" fill="#fff" stroke="#B5654A"/><text x="402" y="37" font-weight="600">Cooking</text>
+  <rect x="460" y="10" width="75" height="46" rx="9" fill="#fff" stroke="#B5654A"/><text x="497" y="37" font-weight="600">Ready</text>
+  <rect x="550" y="10" width="75" height="46" rx="9" fill="#E5EDE3" stroke="#6F8A6E"/><text x="587" y="37" font-weight="600">Served</text>
+  <rect x="640" y="10" width="75" height="46" rx="9" fill="#142731"/><text x="677" y="31" fill="#fff" font-weight="600">Billed</text><text x="677" y="47" fill="#d9cfc2">on your bill</text>
+  <text x="360" y="92" fill="#6b6257" font-size="10.5">You can see each step in the portal. A billed order is added to your booking's total automatically.</text>
+ </g>
+ <g stroke="#142731" stroke-width="1.5" fill="none" marker-end="url(#a)">
+  <path d="M115 33 L128 33"/><path d="M225 33 L238 33"/><path d="M345 33 L358 33"/><path d="M445 33 L458 33"/><path d="M535 33 L548 33"/><path d="M625 33 L638 33"/>
+ </g>
+</svg>
+
+<h3>Asking for help</h3>
+<svg viewBox="0 0 720 84">
+ <g font-size="11" text-anchor="middle">
+  <rect x="5" y="10" width="150" height="46" rx="9" fill="#F4EFE8" stroke="#A69C8E"/><text x="80" y="31" font-weight="600">You raise a request</text><text x="80" y="47" fill="#6b6257">type + short note</text>
+  <rect x="180" y="10" width="110" height="46" rx="9" fill="#fff" stroke="#B5654A"/><text x="235" y="37" font-weight="600">Pending</text>
+  <rect x="315" y="10" width="130" height="46" rx="9" fill="#fff" stroke="#B5654A"/><text x="380" y="31" font-weight="600">Assigned</text><text x="380" y="47" fill="#6b6257">to the right team</text>
+  <rect x="470" y="10" width="110" height="46" rx="9" fill="#fff" stroke="#B5654A"/><text x="525" y="37" font-weight="600">In progress</text>
+  <rect x="605" y="10" width="110" height="46" rx="9" fill="#E5EDE3" stroke="#6F8A6E"/><text x="660" y="37" font-weight="600">Completed</text>
+  <text x="360" y="76" fill="#6b6257" font-size="10.5">Housekeeping, kitchen, maintenance or the manager picks it up — no phone call needed.</text>
+ </g>
+ <g stroke="#142731" stroke-width="1.5" fill="none" marker-end="url(#a)"><path d="M155 33 L178 33"/><path d="M290 33 L313 33"/><path d="M445 33 L468 33"/><path d="M580 33 L603 33"/></g>
+</svg>
+
+<h3>Check-out and after</h3>
+<p>On departure day the team checks you out and settles any balance (including food that was billed). Your invoice stays in the portal, and you're invited to leave <b>feedback</b>. The owner reads every rating and can reply to you directly.</p>
+<div class="tip"><b>Lost something?</b> Report it from the portal. If the team finds it, they'll record it and get in touch.</div>
+</section>
+
+<!-- ================= PAGE 4 ================= -->
+<section class="page">
+<div class="kicker">Part 2 · For the owner, manager and front desk</div>
+<h2>Running the day</h2>
+<p class="lead">Start every morning on the <b>Dashboard</b>. It answers: who is arriving, who is leaving, who is staying, what money is waiting, and what needs attention.</p>
+
+<div class="grid2">
+<div>
+<h3>A typical morning</h3>
+<ol>
+<li><b>Dashboard</b> — read today's arrivals and departures, and the <i>Needs attention</i> list (payments to check, unpaid arrivals, urgent requests, late check-outs).</li>
+<li><b>Payments queue</b> — open each uploaded receipt beside its booking, compare the amount, then <b>Approve</b> or <b>Reject with a reason</b>. A warning shows if the amounts don't match.</li>
+<li><b>Front desk</b> — check guests in and out as they arrive and leave.</li>
+<li><b>Kitchen &amp; requests</b> — keep food orders and guest requests moving.</li>
+<li><b>Housekeeping</b> — mark rooms clean so they can be sold again.</li>
+</ol>
+</div>
+<div>
+<h3>Taking a booking by phone</h3>
+<ol>
+<li>Go to <b>Bookings → New booking</b>.</li>
+<li>Choose the source (phone, WhatsApp, Goibibo, walk-in, referral…).</li>
+<li>Pick the villa. If it's split into rooms, pick the rooms.</li>
+<li>Enter dates, guests and the guest's details. Existing guests are found by phone or email.</li>
+<li>Set rate, discount, tax and any advance received.</li>
+<li>Save. If the dates clash with another booking, it is blocked and the clashing booking is named.</li>
+</ol>
+</div>
+</div>
+
+<h3>The life of a booking</h3>
+<svg viewBox="0 0 720 170">
+ <g font-size="10.5" text-anchor="middle">
+  <rect x="5" y="14" width="78" height="40" rx="8" fill="#F4EFE8" stroke="#A69C8E"/><text x="44" y="38" font-weight="600">Inquiry</text>
+  <rect x="96" y="14" width="88" height="40" rx="8" fill="#FBEFE6" stroke="#B5654A"/><text x="140" y="31" font-weight="600">Pending</text><text x="140" y="45">Payment</text>
+  <rect x="197" y="14" width="88" height="40" rx="8" fill="#FBEFE6" stroke="#B5654A"/><text x="241" y="31" font-weight="600">Payment</text><text x="241" y="45">Uploaded</text>
+  <rect x="298" y="14" width="88" height="40" rx="8" fill="#E5EDE3" stroke="#6F8A6E"/><text x="342" y="31" font-weight="600">Payment</text><text x="342" y="45">Approved</text>
+  <rect x="399" y="14" width="88" height="40" rx="8" fill="#E5EDE3" stroke="#6F8A6E"/><text x="443" y="38" font-weight="600">Confirmed</text>
+  <rect x="500" y="14" width="96" height="40" rx="8" fill="#E5EDE3" stroke="#6F8A6E"/><text x="548" y="31" font-weight="600">Checked-in</text><text x="548" y="45">→ In-house</text>
+  <rect x="609" y="14" width="106" height="40" rx="8" fill="#142731"/><text x="662" y="31" fill="#fff" font-weight="600">Checked-out</text><text x="662" y="45" fill="#d9cfc2">→ Completed</text>
+  <rect x="180" y="104" width="360" height="40" rx="8" fill="#F3E6E4" stroke="#B07A7A"/><text x="360" y="129" font-weight="600">Can end early as: Cancelled · Rejected · No-show</text>
+ </g>
+ <g stroke="#142731" stroke-width="1.5" fill="none" marker-end="url(#a)">
+  <path d="M83 34 L94 34"/><path d="M184 34 L195 34"/><path d="M285 34 L296 34"/><path d="M386 34 L397 34"/><path d="M487 34 L498 34"/><path d="M596 34 L607 34"/>
+ </g>
+ <g stroke="#B07A7A" stroke-width="1.3" stroke-dasharray="4 3" fill="none" marker-end="url(#r)">
+  <path d="M140 54 L230 102"/><path d="M241 54 L300 102"/><path d="M443 54 L420 102"/><path d="M548 54 L500 102"/>
+ </g>
+</svg>
+<p>Each colour and label means the same thing everywhere in the system. Status is always written as a word, never shown by colour alone. Every booking keeps a <b>timeline</b> of what happened and who did it, plus internal notes the guest never sees.</p>
+
+<h3>Seeing the whole property</h3>
+<p>The <b>Calendar</b> shows a month grid and a timeline with all three villas — and each room when a villa is split. Click a booking to open it; click an empty date to start a new booking there. The <b>Villas</b> page is where you switch a villa between <i>Whole villa</i> and <i>Split into rooms</i>, and update rates, check-in times, amenities and the Wi-Fi password.</p>
+</section>
+
+<!-- ================= PAGE 5 ================= -->
+<section class="page">
+<div class="kicker">Part 2 · For the owner, manager and staff</div>
+<h2>Sales, guests, money and the team</h2>
+
+<h3>Turning interest into bookings</h3>
+<svg viewBox="0 0 720 92">
+ <g font-size="11" text-anchor="middle">
+  <rect x="5" y="10" width="150" height="50" rx="9" fill="#F4EFE8" stroke="#A69C8E"/><text x="80" y="31" font-weight="600">Enquiries</text><text x="80" y="48" fill="#6b6257">people asking about dates</text>
+  <rect x="190" y="10" width="150" height="50" rx="9" fill="#fff" stroke="#B5654A"/><text x="265" y="31" font-weight="600">Quotes</text><text x="265" y="48" fill="#6b6257">priced, not yet paid</text>
+  <rect x="375" y="10" width="150" height="50" rx="9" fill="#fff" stroke="#B5654A"/><text x="450" y="31" font-weight="600">Follow-ups</text><text x="450" y="48" fill="#6b6257">who to chase today</text>
+  <rect x="560" y="10" width="155" height="50" rx="9" fill="#E5EDE3" stroke="#6F8A6E"/><text x="637" y="31" font-weight="600">Confirmed booking</text><text x="637" y="48" fill="#4d6a4c">advance received</text>
+  <text x="360" y="84" fill="#6b6257" font-size="10.5">Follow-ups build themselves: unanswered enquiries, unpaid advances, balances after check-out, freed waitlist dates, low ratings without a reply.</text>
+ </g>
+ <g stroke="#142731" stroke-width="1.5" fill="none" marker-end="url(#a)"><path d="M155 35 L188 35"/><path d="M340 35 L373 35"/><path d="M525 35 L558 35"/></g>
+</svg>
+
+<table>
+<tr><th>Section</th><th>What it's for</th></tr>
+<tr><td><b>Customers</b></td><td>Every guest's contact details, past stays, total spend, invoices, requests, feedback and preferences (e.g. vegetarian, early breakfast).</td></tr>
+<tr><td><b>Invoices</b></td><td>One invoice per booking — rate × nights, food, add-ons, discount, GST, paid and balance. Print, download or email it.</td></tr>
+<tr><td><b>Kitchen</b></td><td>A board with a column for each step: Placed → Confirmation pending → Confirmed → Cooking → Ready → Served → Billed. Move a card forward with one click.</td></tr>
+<tr><td><b>Requests</b></td><td>All guest requests with priority (Low → Urgent). Assign each one to housekeeping, kitchen, maintenance or the manager.</td></tr>
+<tr><td><b>Feedback</b></td><td>Ratings and comments by villa and booking. Reply to a guest, or mark it reviewed.</td></tr>
+<tr><td><b>Housekeeping / Maintenance</b></td><td>Which rooms need cleaning today, and which rooms or villas are out of service for repairs.</td></tr>
+<tr><td><b>Expenses &amp; Reports</b></td><td>Owner only. Money going out, money coming in, occupancy and revenue over time.</td></tr>
+<tr><td><b>Employees &amp; Roles</b></td><td>Owner only. Add staff, put them in a department, and decide what each department can see and do.</td></tr>
+<tr><td><b>Activity log</b></td><td>A searchable record of everything that happened and who did it.</td></tr>
+</table>
+
+<h3>For kitchen and housekeeping staff</h3>
+<p>Staff sign in and see only their own queue — the kitchen sees food orders, housekeeping sees rooms and requests. Pick up the next job, move it forward, mark it done. Nothing else to learn.</p>
+
+<h3>Golden rules</h3>
+<div class="grid2">
+<ul>
+<li>A room or villa can never be booked twice for the same nights.</li>
+<li>A whole-villa booking blocks all four of its rooms.</li>
+<li>A booking is only <b>Confirmed</b> after a payment is approved.</li>
+</ul>
+<ul>
+<li>Rejecting a payment or cancelling a booking always asks "are you sure?" and records the reason.</li>
+<li>Billed food joins the guest's bill automatically.</li>
+<li>Guests only ever see their own stay.</li>
+</ul>
+</div>
+<p class="foot">Homes of Sanctuary · Villa Maaya · Villa Praana · Villa Nirvaana — Operations CRM &amp; Guest Portal user guide</p>
+</section>
+
+<!-- ================= OTA CHANNEL SYNC ================= -->
+<section class="page">
+<div class="kicker">Part 3 · For the owner</div>
+<h2>Connecting Goibibo, Booking.com, Airbnb and other OTAs</h2>
+<p class="lead">Online travel agencies don't let a small property connect to them directly. They connect through a certified <b>channel manager</b>. The CRM uses <b>Channex</b>: OTA bookings arrive in the CRM on their own, and every booking, move or cancellation in the CRM closes or reopens those dates on every OTA.</p>
+
+<svg viewBox="0 0 720 110">
+ <g font-size="11" text-anchor="middle">
+  <rect x="5" y="8" width="170" height="94" rx="9" fill="#F4EFE8" stroke="#A69C8E"/>
+  <text x="90" y="30" font-weight="600">OTAs</text><text x="90" y="50" fill="#6b6257">Goibibo / MakeMyTrip</text><text x="90" y="66" fill="#6b6257">Booking.com · Airbnb</text><text x="90" y="82" fill="#6b6257">Agoda · Expedia</text>
+  <rect x="275" y="28" width="170" height="54" rx="9" fill="#fff" stroke="#B5654A"/><text x="360" y="50" font-weight="600">Channex</text><text x="360" y="67" fill="#6b6257">channel manager</text>
+  <rect x="545" y="28" width="170" height="54" rx="9" fill="#E5EDE3" stroke="#6F8A6E"/><text x="630" y="50" font-weight="600">Sanctuary CRM</text><text x="630" y="67" fill="#4d6a4c">bookings · calendar</text>
+  <text x="495" y="20" fill="#6b6257" font-size="10">bookings in →</text>
+  <text x="495" y="104" fill="#6b6257" font-size="10">← availability out</text>
+ </g>
+ <g stroke="#142731" stroke-width="1.5" fill="none" marker-end="url(#a)"><path d="M175 45 L273 45"/><path d="M445 45 L543 45"/><path d="M543 68 L447 68"/><path d="M273 68 L177 68"/></g>
+</svg>
+
+<h3>One-time setup (about an hour)</h3>
+<ol>
+<li><b>Create a Channex account</b>: staging.channex.io (sandbox) first. Add the property (INR, Asia/Kolkata). Create a <b>room type</b> for each villa sold whole, or one per bedroom for a villa sold room by room, plus one <b>rate plan</b> each.</li>
+<li><b>Connect each OTA inside Channex, from your own OTA accounts.</b> Goibibo/MMT: add the channel in Channex and ask your MMT market manager (or the InGo-MMT extranet) to map the property to Channex. Booking.com: Extranet → Account → Connectivity provider → Channex. Airbnb: sign in through Airbnb's consent screen inside Channex. Then map each OTA room to a Channex room type.</li>
+<li><b>Create an API key</b>: Channex → Profile → API keys → Create ("Sanctuary CRM").</li>
+<li><b>In the CRM: Settings → Channels.</b> Follow the five steps on screen: environment and property ID, then paste the API key, map villas/rooms to room type IDs, <i>Test connection</i> and <i>Register webhook</i>, and finally turn on sync.</li>
+<li><b>Prove it works</b>: make a test booking in Channex staging. It appears in Bookings marked "via …". Block dates in the CRM, and Channex shows 0 availability. Then switch to Production with a production key.</li>
+</ol>
+
+<h3>What the client provides</h3>
+<table>
+<tr><th>Item</th><th>Where it comes from</th><th>Entered where</th></tr>
+<tr><td>Channex API key</td><td>Channex → Profile → API keys</td><td>CRM Settings → Channels (encrypted, write-only)</td></tr>
+<tr><td>Channex property ID</td><td>Channex property page address bar</td><td>CRM Settings → Channels</td></tr>
+<tr><td>Room type &amp; rate plan IDs</td><td>Channex → Room types / Rate plans</td><td>CRM mapping table</td></tr>
+<tr><td>OTA hotel codes (MMT Hotel Code, Booking.com Hotel ID, Airbnb login)</td><td>Each OTA extranet</td><td>Inside Channex only, never the CRM</td></tr>
+</table>
+
+<div class="tip"><b>Security.</b> The API key goes straight into an encrypted vault on the server. It is never stored in the browser, never shown again (only its last four characters) and only the owner can change it. The webhook is protected by a secret only the server knows, and every incoming booking is re-fetched from Channex rather than trusted. <b>We never ask for OTA passwords.</b> If a key leaks or someone leaves, delete it in Channex and paste a new one.</div>
+
+<h3>When something needs attention</h3>
+<ul>
+<li><b>Unmapped</b>: an OTA sold a room type the CRM doesn't know. Add it to the mapping and enter that booking by hand.</li>
+<li><b>Conflict</b>: those nights were already held in the CRM. The CRM never double-books: it refuses the OTA booking and alerts you. Move or cancel one stay.</li>
+<li><b>Nothing arriving</b>: Re-register webhook, then <i>Sync now</i>. It collects anything missed.</li>
+</ul>
+<p class="foot">No channel manager yet? Airbnb and Booking.com can swap calendar (.ics) links as a stopgap. These carry dates only and update every few hours. Goibibo doesn't support it.</p>
+</section>
+</body></html>

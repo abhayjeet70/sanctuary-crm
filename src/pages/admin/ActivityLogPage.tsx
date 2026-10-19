@@ -21,6 +21,7 @@ const ALL = "all";
 
 const KIND: Record<ActivityKind, { tone: Tone; section: string }> = {
   booking: { tone: "confirmed", section: "/admin/bookings" },
+  channel: { tone: "uploaded", section: "/admin/settings" },
   waitlist: { tone: "pending", section: "/admin/waitlist" },
   lost_found: { tone: "uploaded", section: "/admin/lost-found" },
   wifi: { tone: "inhouse", section: "/admin/wifi" },

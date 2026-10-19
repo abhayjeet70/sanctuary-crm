@@ -164,6 +164,10 @@ export interface Booking {
   adults: number;
   children: number;
   source: BookingSource;
+  /** Set when the stay came from a channel manager: "Booking.com", "Goibibo"… */
+  channel?: string;
+  /** The OTA's own reservation code, for matching against its extranet. */
+  externalRef?: string;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
   charges: BookingCharges;
@@ -663,6 +667,7 @@ export interface Feedback {
 
 export type ActivityKind =
   | "booking"
+  | "channel"
   | "waitlist"
   | "lost_found"
   | "wifi"

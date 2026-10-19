@@ -125,6 +125,10 @@ export const bookingSource: Record<BookingSource, string> = {
   other: "Other",
 };
 
+/** "via Booking.com · #4471230" for an OTA stay, else the plain source. */
+export const sourceLabel = (b: { source: BookingSource; channel?: string; externalRef?: string }) =>
+  b.channel ? `via ${b.channel}${b.externalRef ? ` · #${b.externalRef}` : ""}` : bookingSource[b.source];
+
 export const sourceOptions = Object.entries(bookingSource) as [BookingSource, string][];
 
 /** The forward path a food order takes on the kitchen board. */

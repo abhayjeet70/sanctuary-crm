@@ -54,7 +54,7 @@ import {
   useMockData,
   usePreferencesForBooking,
 } from "@/hooks/useData";
-import { bookingSource, bookingStatus, paymentStatus, titleCase } from "@/lib/status";
+import { sourceLabel, bookingStatus, paymentStatus, titleCase } from "@/lib/status";
 import { formatDate, formatDateTime, money, nightsBetween } from "@/lib/format";
 import { stayTimes } from "@/services/domain";
 import { hasPreferences } from "@/lib/preferences";
@@ -158,7 +158,7 @@ export default function BookingDetailPage() {
             <div className="absolute inset-x-6 bottom-5 flex flex-wrap items-end justify-between gap-4">
               <div className="min-w-0">
                 <Eyebrow className="text-gold-400">
-                  {booking.reference} · {bookingSource[booking.source]}
+                  {booking.reference} · {sourceLabel(booking)}
                 </Eyebrow>
                 <h1 className="display-caps mt-2 text-3xl text-white sm:text-4xl">
                   {customer?.name}
@@ -276,7 +276,7 @@ export default function BookingDetailPage() {
                     ? "Whole villa — all 4 bedrooms"
                     : roomNames.join(", ")}
                 </Detail>
-                <Detail label="Source">{bookingSource[booking.source]}</Detail>
+                <Detail label="Source">{sourceLabel(booking)}</Detail>
                 <Detail label="Check-in">
                   {formatDate(booking.checkIn)} from {times.arrival}
                   {times.arrivalArranged && (

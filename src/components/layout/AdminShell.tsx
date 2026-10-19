@@ -210,6 +210,7 @@ function destinationFor(item: AppNotification) {
     waitlist: "/admin/waitlist",
     lost_found: "/admin/lost-found",
     wifi: "/admin/wifi",
+    channel: "/admin/settings",
   }[item.kind];
 
   if (!item.entityId) return section;

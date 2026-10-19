@@ -9,6 +9,7 @@ import {
   StickyNote,
   Wallet,
   Wifi,
+  Cable,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
@@ -17,6 +18,7 @@ import { EmptyState } from "@/components/common";
 
 const ICONS: Record<ActivityKind, typeof BookOpen> = {
   booking: BookOpen,
+  channel: Cable,
   waitlist: Hourglass,
   lost_found: PackageSearch,
   wifi: Wifi,
